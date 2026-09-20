@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
+import { parsePancakeSalesSummary } from './lib/core.mjs';
 
 const original = {
   key: process.env.PANCAKE_POS_API_KEY_1,
@@ -12,6 +13,30 @@ const original = {
 process.env.APP_USER = 'Owner';
 process.env.APP_PASSWORD = 'selftest-password';
 process.env.APP_SECRET = 'selftest-secret-that-is-long-enough-for-tests';
+
+const captured = parsePancakeSalesSummary({
+  success: true,
+  summary: {
+    price: 22729100,
+    price_data: 22729100,
+    order_count: 1421,
+    total_order_count: 1431,
+    product_count: 2227,
+    cod: 26022500,
+    shipping_fee: 3330400,
+    discount: 20000,
+    prepaid: 17000
+  }
+});
+assert.deepEqual(captured, {
+  revenue: 227291,
+  orders: 1421,
+  products: 2227,
+  cod: 260225,
+  shippingFee: 33304,
+  discount: 200,
+  prepaid: 170
+}, 'captured Pancake statistics summary must parse from satang to baht');
 delete process.env.PANCAKE_POS_API_KEY_1;
 delete process.env.PANCAKE_SHOP_IDS_1;
 delete process.env.PANCAKE_LABEL_1;

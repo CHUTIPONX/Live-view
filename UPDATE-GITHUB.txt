@@ -1,0 +1,22 @@
+Pancake Live Sales Monitor v1.2.2
+
+Changed files from v1.2.1:
+- lib/core.mjs
+- scripts-selftest.mjs
+- package.json
+- package-lock.json
+- README.md
+
+Main fix:
+- Live total now reads Pancake statistics response.summary.price / 100
+- Live order count reads response.summary.order_count
+- Today's sales are fetched independently every poll
+- Previous 4 days are cached for 5 minutes
+- History failures cannot zero-out a valid live total or cause a fake cancellation effect
+
+To update GitHub manually:
+1. Open CHUTIPONX/Live-view.
+2. Replace the changed files above with the files from this package, preserving folders.
+3. Commit changes to main.
+4. Vercel should auto-deploy from main.
+5. If it does not, open Vercel > Deployments > Redeploy.

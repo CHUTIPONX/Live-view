@@ -1,6 +1,12 @@
-# Pancake Live Sales Monitor v1.2.1
+# Pancake Live Sales Monitor v1.2.2
 
 Database-free live Pancake POS sales monitor designed for Vercel and multiple devices.
+
+## v1.2.2 — Live sales summary fix
+
+The live amount now reads Pancake's real statistics response directly from `response.summary.price`. Pancake returns money in satang, so the app converts it using `summary.price / 100`. The order count uses `summary.order_count`.
+
+The current-day request is separate from historical cards. Previous-day history is cached for 5 minutes so the small 5-day view does not need to be recalculated every second. If historical parsing fails, it does not replace a valid current total with zero and does not trigger a fake cancellation animation.
 
 ## v1.2 — Shared multi-device mode
 
@@ -118,7 +124,13 @@ Change `APP_SECRET` to a long random value before public deployment. Changing it
 
 ```text
 GET https://pos.pages.fm/api/v1/shops?api_key=...
-GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/orders/statistics?api_key=...&start_date=...&end_date=...&group_by=date
+GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/orders/statistics?api_key=...&start_date=...&end_date=...
+
+Live total: `response.summary.price / 100`
+
+Live orders: `response.summary.order_count`
+
+Historical requests may also use `group_by=date`, with exact single-day summary fallback.
 ```
 
 ## Tests
