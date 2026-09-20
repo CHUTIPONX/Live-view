@@ -1,0 +1,30 @@
+Pancake Live Sales Monitor v1.2.0 — Vercel Multi-Device Setup
+
+Vercel > Project > Settings > Environment Variables
+
+Required / recommended:
+
+APP_USER=Owner
+APP_PASSWORD=<use the Owner password supplied for this project>
+APP_SECRET=<generate a long random secret, 32+ characters>
+
+Shared Pancake API:
+
+PANCAKE_POS_API_KEY_1=<your real Pancake POS API key>
+PANCAKE_LABEL_1=Main Account
+PANCAKE_SHOP_IDS_1=ALL
+
+Optional additional API keys:
+PANCAKE_POS_API_KEY_2=
+PANCAKE_LABEL_2=Second Account
+PANCAKE_SHOP_IDS_2=ALL
+
+PANCAKE_POS_API_KEY_3=
+PANCAKE_LABEL_3=Third Account
+PANCAKE_SHOP_IDS_3=ALL
+
+Use ALL to include every shop visible to that key.
+Or set comma-separated Shop IDs instead of ALL.
+
+After changing Vercel Environment Variables, redeploy the project.
+Every device will then use the same Pancake settings.

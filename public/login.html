@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080a10">
+  <title>Sign In · Pancake Live</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="login-page">
+  <div class="login-bg" aria-hidden="true"><i></i><i></i><i></i></div>
+  <form id="loginForm" class="login-card liquid-glass">
+    <div class="app-mark" aria-hidden="true"><span></span><span></span></div>
+    <div class="eyebrow">PANCAKE LIVE SALES</div>
+    <h1>Welcome back</h1>
+    <p>Sign in to your live sales display. <small>เข้าสู่ระบบเพื่อดูยอดขาย</small></p>
+
+    <label><span>Username</span><input id="username" autocomplete="username" value="Owner"></label>
+    <label><span>Password</span><input id="password" type="password" autocomplete="current-password" placeholder="Enter password"></label>
+    <div id="loginError" class="error hidden"></div>
+
+    <button class="primary liquid-control login-submit" type="submit"><span>Sign In</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg></button>
+    <small class="default-login">Use your Owner credentials</small>
+  </form>
+  <script src="/login.js" type="module"></script>
+</body>
+</html>

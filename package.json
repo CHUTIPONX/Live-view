@@ -1,0 +1,17 @@
+{
+  "name": "pancake-live-sales-monitor",
+  "version": "1.2.1",
+  "private": true,
+  "type": "module",
+  "description": "Database-free multi-device Pancake POS live sales monitor with shared Vercel environment configuration",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "check": "node scripts-check.mjs",
+    "selftest": "node scripts-selftest.mjs",
+    "test": "npm run check && npm run selftest"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
