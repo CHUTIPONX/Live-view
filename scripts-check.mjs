@@ -33,6 +33,8 @@ const ids=[...atmos.matchAll(/\bid:'([^']+)'/g)].map(x=>x[1]);
 if(ids.length!==12)throw new Error(`Expected 12 seasonal atmospheres, found ${ids.length}`);
 if(new Set(ids).size!==ids.length)throw new Error('Season atmospheres contain duplicate ids');
 if(!atmos.includes('SEASON_DURATION_MS = 60_000'))throw new Error('Season atmosphere must rotate every 60 seconds');
+if((atmos.match(/fx:\[/g)||[]).length!==12)throw new Error('Every season must declare multiple ambient effects');
+if(!engine.includes('Array.isArray(types)')||!engine.includes("type==='sparkle'")||!engine.includes("type==='stars'")||!engine.includes("type==='cloud-glow'"))throw new Error('Composite atmosphere effect engine is missing');
 for(const required of ['SPRING','SUMMER','MONSOON','TROPICAL','AUTUMN','WINTER','POLAR']){
   if(!atmos.includes(required))throw new Error(`Missing season coverage: ${required}`);
 }
@@ -51,10 +53,12 @@ if(!core.includes('fetchVerifiedOrderEvents')||!core.includes('/orders'))throw n
 if(!app.includes('reconcileIndividualOrderEvents')||!app.includes('playVerifiedOrderEvents'))throw new Error('Verified order animation is missing');
 if(!app.includes('animateScoreCounter')||!app.includes('exactFinish')||!app.includes('exactTail'))throw new Error('Slow-near-target scoreboard counter is missing');
 if(!index.includes('id="scoreHits"')||!app.includes('createScoreHit')||!app.includes('burstVerifiedPrices'))throw new Error('Main-score overlay hit system is missing');
-if(!css.includes('.score-hit')||!css.includes('right:-.02em'))throw new Error('Order amount is not positioned over the right-most score digits');
-if(!app.includes('playSaleSound')||!app.includes('AudioContext')||!app.includes('createOscillator'))throw new Error('Synthesized sale sound is missing');
+if(!css.includes('.score-hit')||!css.includes('right:calc(-.018em + var(--xshift))'))throw new Error('Order amount is not positioned over the right-most score digits');
+if(!css.includes('background:none!important')||!css.includes('@keyframes scoreHitDrop')||!css.includes('@keyframes scoreHitRise'))throw new Error('Text-only top-drop / bottom-rise score-hit animation is missing');
+if(/\.score-hit span\{[^}]*background:linear-gradient/s.test(css))throw new Error('Score hit still has a pill background');
+if(!app.includes('playSaleSound')||!app.includes('playSaleImpactSound')||!app.includes('AudioContext')||!app.includes('createOscillator'))throw new Error('Two-stage synthesized sale sound is missing');
 if(!index.includes('id="soundBtn"')||!app.includes('unlockSalesAudio'))throw new Error('Sale sound unlock/toggle UI is missing');
-if(!app.includes('await sleep(105)'))throw new Error('Verified order hits are not configured for rapid stacking');
+if(!app.includes('await sleep(78)'))throw new Error('Verified order hits are not configured for rapid stacking');
 
 if(!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Red security warning text is missing');
 if(!security.includes("key === 'f12'")||!security.includes("key === 'u'")||!security.includes("'contextmenu'"))throw new Error('Inspect/source shortcut deterrence is missing');
@@ -65,10 +69,10 @@ if(!handlers.includes('csrfOr403')||!handlers.includes('mutationGuard')||!handle
 if(!securityServer.includes("frame-ancestors 'none'")||!securityServer.includes("object-src 'none'"))throw new Error('Server CSP hardening is missing');
 if(!vercel.includes('Content-Security-Policy')||!vercel.includes('Permissions-Policy')||!vercel.includes('Strict-Transport-Security'))throw new Error('Vercel security headers are missing');
 if(!css.includes('IBM Plex Sans Thai')||!index.includes('fonts.googleapis.com/css2'))throw new Error('Refined Thai UI font styling is missing');
-if(pkg.version!=='1.7.1'||lock.version!=='1.7.1'||lock.packages?.['']?.version!=='1.7.1')throw new Error('Package version is not v1.7.1');
+if(pkg.version!=='1.7.2'||lock.version!=='1.7.2'||lock.packages?.['']?.version!=='1.7.2')throw new Error('Package version is not v1.7.2');
 
-console.log('Season checks: 12 atmospheres · 60s rotation · no people/animal/object graphics: PASS');
-console.log('Verified score-hit checks: real orders · rapid overlay · slow final count · sale chime: PASS');
+console.log('Season checks: 12 atmospheres · 60s rotation · layered ambient FX · no people/animal/object graphics: PASS');
+console.log('Verified score-hit checks: real orders · text-only drop/rise overlay · slow final count · two-stage sale chime: PASS');
 console.log('Security checks: CSRF · same-origin · CSP · inspect warning: PASS');
 console.log('Static integration checks: PASS');
 console.log('Syntax check: PASS');

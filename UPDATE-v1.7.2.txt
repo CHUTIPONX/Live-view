@@ -1,0 +1,11 @@
+v1.7.2
+======
+
+1. Real positive order amounts are text-only green overlays: no pill, box, border or background.
+2. Positive verified sales fall from above and land directly over the right-most digits of the main score.
+3. Verified decreases rise from below in red so reductions remain visually distinct.
+4. Multiple reconciled real orders can hit rapidly and overlap on the score in the same snapshot.
+5. The scoreboard still counts quickly while far away and slows to one-by-one digits near the verified target.
+6. Sale audio is now two-stage: a soft 'ting' on entry and a glassy landing chime on impact.
+7. Every 60-second season now layers multiple atmosphere effects; there are still no people, animals, vehicles or scene props.
+8. Pancake Employee Statistic remains the source of truth. Incomplete snapshots HOLD and animation never invents order amounts.

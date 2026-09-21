@@ -1,0 +1,34 @@
+Pancake Live Sales Monitor v1.7.2 — Test Report
+================================================
+
+npm test
+- Syntax checks: PASS
+- Pancake/API self-test: PASS
+- Complete-snapshot truth rules: PASS
+- Verified individual order reconciliation support: PASS
+- Security checks: PASS
+
+v1.7.2 visual/static integration
+- 12 atmosphere states: PASS
+- 60-second synchronized atmosphere rotation: PASS
+- Multiple ambient effects on every season: PASS
+- No people/animal/vehicle/object renderer: PASS
+- No background video element: PASS
+- Positive order hit = green text only, no card/background: PASS
+- Positive hit falls from above onto right-most total digits: PASS
+- Verified decrease rises from below: PASS
+- Rapid multi-order overlap interval: 78 ms: PASS
+- Slow-near-target scoreboard finish: PASS
+- Two-stage Web Audio sale sound (entry + landing): PASS
+- Sound unlock/toggle control: PASS
+
+Local HTTP smoke test
+- GET / => HTTP 200: PASS
+- Main score hit layer present: PASS
+- Season atmosphere root present: PASS
+
+Important runtime behavior
+- Browser autoplay policy requires one user gesture before Web Audio can produce sound.
+- Order-hit values remain real: only reconciled order events are shown individually.
+- If individual reconciliation cannot prove the split, the app shows only the exact verified aggregate movement.
+- Employee Statistic remains the final source of truth for the displayed total.

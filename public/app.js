@@ -3,7 +3,7 @@ import { startSeasonAtmosphereEngine } from './season-atmosphere-engine.js';
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v171';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v172';
 
 let stop = false;
 let polling = false;
@@ -15,7 +15,8 @@ let historyDays = null;
 const stopSeasonAtmospheres = startSeasonAtmosphereEngine();
 
 let audioCtx = null;
-let soundEnabled = localStorage.getItem('plsm_sales_sound_v171') !== 'off';
+const savedSoundPreference = localStorage.getItem('plsm_sales_sound_v172') ?? localStorage.getItem('plsm_sales_sound_v171');
+let soundEnabled = savedSoundPreference !== 'off';
 let soundUnlocked = false;
 let lastSoundAt = 0;
 
@@ -171,22 +172,41 @@ function tone(ctx,frequency,start,duration,gainValue,type='sine',pan=0){
   else{osc.connect(gain).connect(ctx.destination)}
   osc.start(start);osc.stop(start+duration+.02);
 }
+function playSaleImpactSound(amount,index=0){
+  if(!soundEnabled||!soundUnlocked)return;
+  const ctx=getAudioContext();
+  if(!ctx||ctx.state!=='running')return;
+  const now=ctx.currentTime+.004;
+  const positive=Number(amount)>=0;
+  if(positive){
+    const step=[0,2,4,7,9,11][index%6];
+    const root=523.25*Math.pow(2,step/12);
+    // Soft glassy landing: a low body + two quiet upper harmonics.
+    tone(ctx,root*.5,now,.23,.011,'sine',-.02);
+    tone(ctx,root*1.5,now+.012,.48,.020,'sine',.05);
+    tone(ctx,root*2.25,now+.036,.56,.009,'triangle',.12);
+  }else{
+    tone(ctx,329.63,now,.27,.012,'sine',-.04);
+    tone(ctx,246.94,now+.035,.38,.010,'triangle',.04);
+  }
+}
 function playSaleSound(amount,index=0){
   if(!soundEnabled||!soundUnlocked)return;
   const ctx=getAudioContext();
   if(!ctx||ctx.state!=='running')return;
-  const now=Math.max(ctx.currentTime+.005,lastSoundAt+.055);
+  const now=Math.max(ctx.currentTime+.005,lastSoundAt+.045);
   lastSoundAt=now;
   const positive=Number(amount)>=0;
   if(positive){
-    const step=[0,2,4,7,9][index%5];
-    const base=659.25*Math.pow(2,step/12);
-    tone(ctx,base,now,.34,.034,'sine',-.08);
-    tone(ctx,base*1.5,now+.055,.42,.022,'triangle',.10);
-    tone(ctx,base*2,now+.105,.31,.012,'sine',.18);
+    const step=[0,2,4,7,9,11][index%6];
+    const base=587.33*Math.pow(2,step/12);
+    // First 'ting' while the real price falls, then a softer 'shing' on impact.
+    tone(ctx,base,now,.24,.021,'sine',-.10);
+    tone(ctx,base*2,now+.018,.31,.008,'triangle',.08);
+    setTimeout(()=>playSaleImpactSound(amount,index),245);
   }else{
-    tone(ctx,392,now,.36,.025,'sine',-.08);
-    tone(ctx,293.66,now+.07,.42,.018,'triangle',.08);
+    tone(ctx,349.23,now,.25,.014,'sine',-.06);
+    setTimeout(()=>playSaleImpactSound(amount,index),245);
   }
 }
 function updateSoundButton(){
@@ -203,7 +223,7 @@ async function toggleSound(){
     return;
   }
   soundEnabled=!soundEnabled;
-  localStorage.setItem('plsm_sales_sound_v171',soundEnabled?'on':'off');
+  localStorage.setItem('plsm_sales_sound_v172',soundEnabled?'on':'off');
   if(soundEnabled)await unlockSalesAudio();
   updateSoundButton();
 }
@@ -222,8 +242,8 @@ async function burstVerifiedPrices(amounts){
     const node=createScoreHit(clean[i],i,clean.length);
     if(node)nodes.push(node);
     playSaleSound(clean[i],i);
-    // Rapid verified order hits. Every shown number came from reconciled real orders.
-    if(i<clean.length-1)await sleep(105);
+    // Rapid verified text hits. Positive sales fall from above; verified decreases rise from below.
+    if(i<clean.length-1)await sleep(78);
   }
   return nodes;
 }
@@ -321,8 +341,8 @@ async function playVerifiedOrderEvents(previous,current,events){
     animateScoreCounter(ordersShown,current.orders,{duration:Math.max(520,Math.min(1200,verified.length*115)),render:renderOrderScore,element:$('#orders')})
   ]);
 
-  // Keep several real prices visible over the score briefly, then peel them away
-  // in the same rapid rhythm they arrived.
+  // Keep several real prices overlapped on the right-most score digits, then fade them
+  // in the same rapid rhythm they arrived. The main score always ends on verified truth.
   nodes.forEach((node,i)=>removeScoreHit(node,780+i*85));
   await count;
   drawNumbers(current,{animate:false,showDelta:false});

@@ -5,7 +5,7 @@ let timer = null;
 let active = null;
 let stopped = false;
 
-function fxMarkup(type){
+function oneFx(type){
   if(type==='rain' || type==='rain-soft'){
     const count=type==='rain'?48:26;
     return `<div class="season-fx season-rain ${type==='rain-soft'?'soft':''}">${Array.from({length:count},(_,i)=>`<i style="--x:${(i*37)%101}%;--d:${(i%11)*.08}s;--s:${.72+(i%5)*.08}"></i>`).join('')}</div>`;
@@ -25,7 +25,15 @@ function fxMarkup(type){
   if(type==='sunset') return `<div class="season-fx season-sunset"></div>`;
   if(type==='frost') return `<div class="season-fx season-frost"></div>`;
   if(type==='aurora') return `<div class="season-fx season-aurora"><i></i><i></i></div>`;
+  if(type==='sparkle') return `<div class="season-fx season-sparkle">${Array.from({length:20},(_,i)=>`<i style="--x:${5+(i*47)%90}%;--y:${8+(i*31)%72}%;--d:${(i%8)*.33}s;--s:${.6+(i%5)*.13}"></i>`).join('')}</div>`;
+  if(type==='stars') return `<div class="season-fx season-stars">${Array.from({length:34},(_,i)=>`<i style="--x:${3+(i*53)%94}%;--y:${3+(i*29)%58}%;--d:${(i%9)*.37}s;--s:${.55+(i%5)*.12}"></i>`).join('')}</div>`;
+  if(type==='cloud-glow') return `<div class="season-fx season-cloud-glow"><i></i><i></i><i></i></div>`;
   return '';
+}
+
+function fxMarkup(types){
+  const list=Array.isArray(types)?types:[types];
+  return list.filter(Boolean).map(oneFx).join('');
 }
 
 function markup(item){

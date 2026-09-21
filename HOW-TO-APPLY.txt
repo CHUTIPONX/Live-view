@@ -1,18 +1,23 @@
-HOW TO APPLY v1.7.0
+HOW TO APPLY v1.7.2
 
-FULL ZIP
-1. Extract pancake-live-sales-monitor-v1.7.0.zip.
-2. Open the extracted folder until api/, lib/, public/, package.json and vercel.json are directly visible.
-3. Select everything INSIDE that folder.
+FULL ZIP (recommended)
+1. Extract pancake-live-sales-monitor-v1.7.2.zip.
+2. Open the extracted project folder until api/, lib/, public/, package.json and vercel.json are directly visible.
+3. Select everything INSIDE that folder (Ctrl+A).
 4. GitHub Live-view -> Add file -> Upload files.
 5. Upload all selected files and commit to main.
-6. Wait for Vercel Ready.
-7. Hard refresh with Ctrl+Shift+R.
+6. Wait for Vercel to show Ready.
+7. Hard refresh the dashboard with Ctrl+Shift+R.
+8. Click once anywhere on the dashboard to unlock browser audio, then leave the sound button enabled.
 
-HOTFIX FROM v1.6.4
-Extract Live-view-v1.7.0-hotfix.zip and upload every included file into matching repository paths.
+HOTFIX FROM v1.7.1
+Extract Live-view-v1.7.2-hotfix.zip and upload every included file into the matching repository paths.
 
 IMPORTANT
-- public/world-scenes.js and public/world-scene-engine.js are NEW and must be uploaded.
-- public/scenic-videos.js is no longer used. Leaving the old file in GitHub is harmless, but the full ZIP no longer contains it.
-- This release does not change Pancake sales calculation or account aggregation.
+- Positive verified orders are green text only and fall from above onto the score.
+- Verified decreases rise from below in red.
+- Several real order values can overlap rapidly.
+- Individual amounts are never guessed; they appear only after real-order reconciliation.
+- All 12 seasonal backgrounds rotate every 60 seconds and contain atmosphere effects only.
+- Browser autoplay policy requires one user gesture before sound can play.
+- This release does not loosen or replace the Pancake sales-truth logic.

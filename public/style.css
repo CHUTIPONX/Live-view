@@ -168,7 +168,7 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 
 
 /* =========================================================
-   v1.7.1 — SEASON ATMOSPHERES + SCORE HITS
+   v1.7.2 — SEASON ATMOSPHERES + TEXT-ONLY SCORE HITS
    No people / animals / scene-object graphics. One season each minute.
    ========================================================= */
 .season-atmosphere-shell{background:#0e1721;isolation:isolate}
@@ -192,6 +192,8 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 .season-sunset{background:radial-gradient(circle at 74% 31%,rgba(255,217,143,.20),transparent 28%)}
 .season-frost{background:linear-gradient(115deg,transparent 0 47%,rgba(255,255,255,.04) 49%,transparent 51% 100%);background-size:260% 100%;animation:seasonFrost 10s ease-in-out infinite alternate}
 .season-aurora i{position:absolute;left:7%;top:-17%;width:95%;height:70%;border-radius:50%;filter:blur(28px);opacity:.22;transform:rotate(-8deg);background:linear-gradient(120deg,transparent 12%,#5ff0b9 36%,#6e9fff 58%,transparent 78%);animation:seasonAurora 8s ease-in-out infinite alternate}.season-aurora i:nth-child(2){left:28%;top:-8%;opacity:.13;animation-delay:-4s;transform:rotate(11deg)}
+.season-sparkle i,.season-stars i{position:absolute;left:var(--x);top:var(--y);width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.78);opacity:.20;transform:scale(var(--s));box-shadow:0 0 16px rgba(255,255,255,.28);animation:seasonTwinkle 2.8s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.season-sparkle i:nth-child(3n){background:color-mix(in srgb,var(--accent) 72%,white);opacity:.28}.season-stars i{width:3px;height:3px;opacity:.45;animation-duration:3.6s}.season-cloud-glow i{position:absolute;left:-28%;width:58%;height:15%;border-radius:50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);filter:blur(24px);opacity:.55;animation:seasonCloudGlow 21s linear infinite}.season-cloud-glow i:nth-child(1){top:14%}.season-cloud-glow i:nth-child(2){top:33%;animation-delay:-8s;opacity:.34}.season-cloud-glow i:nth-child(3){top:54%;animation-delay:-15s;opacity:.22}
 @keyframes seasonLight{to{transform:translate(-1.6vw,1.2vh) scale(1.025)}}
 @keyframes seasonRain{to{transform:translate3d(-65px,125vh,0) rotate(9deg) scale(var(--s))}}
 @keyframes seasonSnow{0%{transform:translate3d(0,-8vh,0) scale(var(--s))}50%{transform:translate3d(34px,54vh,0) scale(var(--s))}100%{transform:translate3d(-20px,112vh,0) scale(var(--s))}}
@@ -200,21 +202,31 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 @keyframes seasonHeat{to{transform:translateX(14px) skewX(1.1deg)}}
 @keyframes seasonFrost{to{background-position:-160% 0}}
 @keyframes seasonAurora{to{transform:translateY(7vh) rotate(-2deg) scaleX(.92)}}
+@keyframes seasonTwinkle{0%,100%{opacity:.10;transform:scale(calc(var(--s)*.7))}50%{opacity:.58;transform:scale(calc(var(--s)*1.45))}}
+@keyframes seasonCloudGlow{from{transform:translateX(-10%)}to{transform:translateX(245%)}}
 
-/* Real order amounts hit directly over the right-most digits of the main score. */
-.score-hits{position:absolute;z-index:7;right:0;top:50%;height:1em;width:100%;transform:translateY(-52%);pointer-events:none;overflow:visible}
-.score-hit{--digits:3;--stack:0;position:absolute;right:-.02em;top:50%;display:flex;align-items:baseline;justify-content:flex-end;min-width:calc(var(--digits)*.61em);padding:.045em .04em .08em .02em;border-radius:.13em;opacity:0;transform:translateY(calc(-50% + (var(--stack)*-3px))) scale(.84);filter:blur(5px);font-family:"Manrope",var(--font);font-size:.92em;font-weight:850;letter-spacing:-.07em;font-variant-numeric:tabular-nums lining-nums;white-space:nowrap;will-change:transform,opacity,filter;text-shadow:0 .08em .22em rgba(0,0,0,.34);transition:opacity .16s ease,filter .16s ease,transform .27s cubic-bezier(.12,.92,.22,1)}
-.score-hit b{position:absolute;right:calc(100% + .03em);font-size:.45em;line-height:1;font-weight:800;letter-spacing:-.02em;opacity:.94}
-.score-hit span{display:block;padding:.03em .02em .065em;background:linear-gradient(180deg,rgba(5,50,34,.96),rgba(7,34,27,.94));border:1px solid rgba(133,255,200,.48);border-radius:.12em;box-shadow:0 .12em .36em rgba(0,0,0,.26),0 0 .22em rgba(88,255,178,.18),inset 0 1px rgba(255,255,255,.18)}
-.score-hit.gain{color:#8bffd0}.score-hit.loss{color:#ff8da4}.score-hit.loss span{background:linear-gradient(180deg,rgba(66,12,28,.96),rgba(39,8,19,.94));border-color:rgba(255,122,148,.46);box-shadow:0 .12em .36em rgba(0,0,0,.26),0 0 .22em rgba(255,92,125,.14),inset 0 1px rgba(255,255,255,.15)}
-.score-hit.is-live{opacity:1;filter:blur(0);transform:translateY(calc(-50% + (var(--stack)*-3px))) scale(1);animation:scoreHitPulse .7s cubic-bezier(.16,.88,.22,1) both}
-.score-hit.is-out{opacity:0;filter:blur(3px);transform:translateY(calc(-75% + (var(--stack)*-5px))) scale(.78)}
-.score-hit.lane-1{top:42%}.score-hit.lane-2{top:58%}.score-hit.lane-3{top:35%}.score-hit.lane-4{top:65%}
-@keyframes scoreHitPulse{0%{transform:translateY(calc(-50% + 10px)) scale(.75)}38%{transform:translateY(calc(-50% - 2px)) scale(1.08)}100%{transform:translateY(-50%) scale(1)}}
+/* v1.7.2 — REAL ORDER TEXT HITS
+   Text only. Positive orders fall from above onto the matching right-most digits;
+   verified decreases rise from below. No pill, box, border or background. */
+.score-hits{position:absolute;z-index:9;right:0;top:50%;height:1em;width:100%;transform:translateY(-52%);pointer-events:none;overflow:visible}
+.score-hit{--digits:3;--stack:0;--xshift:0em;position:absolute;right:calc(-.018em + var(--xshift));top:50%;display:flex;align-items:baseline;justify-content:flex-end;min-width:calc(var(--digits)*.565em);padding:0;opacity:0;filter:blur(5px);font-family:"Manrope",var(--font);font-size:.96em;font-weight:850;letter-spacing:-.073em;font-variant-numeric:tabular-nums lining-nums;white-space:nowrap;will-change:transform,opacity,filter;text-shadow:0 .075em .19em rgba(0,0,0,.40),0 0 .16em rgba(105,255,190,.20);transform:translate3d(0,-1.45em,0) scale(.86)}
+.score-hit b{position:absolute;right:calc(100% + .015em);top:.14em;font-size:.34em;line-height:1;font-weight:800;letter-spacing:-.02em;opacity:.92;text-shadow:0 .08em .18em rgba(0,0,0,.38)}
+.score-hit span{display:block;padding:0;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:inherit}
+.score-hit.gain{color:#79ffc1}.score-hit.loss{color:#ff879d;text-shadow:0 .075em .19em rgba(0,0,0,.40),0 0 .16em rgba(255,105,135,.18);transform:translate3d(0,1.45em,0) scale(.86)}
+.score-hit.is-live{opacity:1;filter:blur(0)}
+.score-hit.gain.is-live{animation:scoreHitDrop .72s cubic-bezier(.12,.9,.2,1) both}
+.score-hit.loss.is-live{animation:scoreHitRise .72s cubic-bezier(.12,.9,.2,1) both}
+.score-hit.gain.is-out{animation:scoreHitFadeUp .38s ease forwards}
+.score-hit.loss.is-out{animation:scoreHitFadeDown .38s ease forwards}
+.score-hit.lane-1{--xshift:-.035em}.score-hit.lane-2{--xshift:.025em}.score-hit.lane-3{--xshift:-.018em}.score-hit.lane-4{--xshift:.045em}
+@keyframes scoreHitDrop{0%{opacity:0;filter:blur(6px);transform:translate3d(0,-1.55em,0) scale(.78)}28%{opacity:1;filter:blur(0);transform:translate3d(0,.09em,0) scale(1.055)}52%{transform:translate3d(0,-.025em,0) scale(.995)}100%{opacity:1;transform:translate3d(0,calc(var(--stack)*-2px),0) scale(1)}}
+@keyframes scoreHitRise{0%{opacity:0;filter:blur(6px);transform:translate3d(0,1.55em,0) scale(.78)}28%{opacity:1;filter:blur(0);transform:translate3d(0,-.09em,0) scale(1.055)}52%{transform:translate3d(0,.025em,0) scale(.995)}100%{opacity:1;transform:translate3d(0,calc(var(--stack)*2px),0) scale(1)}}
+@keyframes scoreHitFadeUp{0%{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}100%{opacity:0;filter:blur(3px);transform:translate3d(0,-.38em,0) scale(.90)}}
+@keyframes scoreHitFadeDown{0%{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}100%{opacity:0;filter:blur(3px);transform:translate3d(0,.38em,0) scale(.90)}}
 
 .sound-btn{position:relative}.sound-btn:after{content:"";position:absolute;right:7px;bottom:7px;width:5px;height:5px;border-radius:50%;background:#ffb36d;box-shadow:0 0 10px currentColor;transition:.2s}.sound-btn.ready:after{background:#86f5c8}.sound-btn.muted:after{background:#ff7b91}.sound-btn.muted .sound-wave{opacity:.18}.sound-btn.ready{background:rgba(134,245,200,.075)}
 
 @media(max-width:700px){
-  .score-hit{font-size:.86em}.season-name{display:flex;max-width:calc(100vw - 18px);font-size:6px;gap:6px;overflow:hidden}.season-name span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+  .score-hit{font-size:.92em}.season-name{display:flex;max-width:calc(100vw - 18px);font-size:6px;gap:6px;overflow:hidden}.season-name span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){.season-atmosphere,.season-fx *,.score-hit{animation:none!important;transition:none!important}.season-atmosphere:not(.is-active){display:none}}
