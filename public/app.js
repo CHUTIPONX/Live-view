@@ -1,7 +1,7 @@
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const themes = [['spring','SPRING'],['summer','SUMMER'],['rain','RAIN'],['autumn','AUTUMN'],['winter','WINTER'],['sakura','SAKURA'],['aurora','AURORA'],['night','NIGHT']];
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v129';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v130';
 
 let theme = 0;
 let stop = false;

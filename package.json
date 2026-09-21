@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.2.9",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
-  "description": "Database-free Pancake POS live sales monitor with complete-snapshot-only totals and trusted delta animations",
+  "description": "Database-free Pancake POS live sales monitor with multi-account resilient Pancake Employee Statistic monitor with authoritative complete-snapshot totals",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
