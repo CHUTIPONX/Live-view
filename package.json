@@ -1,6 +1,6 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "type": "module",
   "description": "Database-free Pancake POS live sales monitor with fail-visible UI and separated live/history polling",

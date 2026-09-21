@@ -1,0 +1,18 @@
+Pancake Live Sales Monitor v1.2.6 - LARGE SHOP TIMEOUT FIX
+
+WHY v1.2.5 TIMED OUT
+- /api/sales used concurrency 8.
+- Accounts with ~50 selected stores were processed in several waves.
+- Vercel function maxDuration was 10 seconds, so the request could terminate with FUNCTION_INVOCATION_TIMEOUT.
+
+FIX
+- Live statistics for all selected stores start in parallel.
+- Each live Pancake request has a 4.5 second abort.
+- Shop discovery for multiple API connections runs in parallel.
+- Vercel maxDuration raised to 30 seconds as a safety margin.
+- History no longer fans out into four extra requests per store.
+- History polling starts after 8 seconds so live sales gets priority.
+- Dashboard shows selected shop count and live aggregation time after a successful refresh.
+
+IMPORTANT
+This fixes the Vercel timeout. It does not claim that /orders/statistics is the same private network request used by Pancake Employee Statistic. If the live response succeeds but the amount still differs from Employee Statistic, capture that page's real Network request next and bind the monitor to it.
