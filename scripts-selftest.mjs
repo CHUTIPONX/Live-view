@@ -14,6 +14,7 @@ process.env.APP_USER = 'Owner';
 process.env.APP_PASSWORD = 'selftest-password';
 process.env.APP_SECRET = 'selftest-secret-that-is-long-enough-for-tests';
 
+
 const captured = parsePancakeSalesSummary({
   success: true,
   summary: {
