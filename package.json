@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.5.1",
+  "version": "1.5.4",
   "private": true,
   "type": "module",
-  "description": "Pancake Employee Statistic live sales monitor with exact per-order delta queue, unlimited accounts, complete snapshots, and seasonal video backgrounds",
+  "description": "Pancake Employee Statistic live sales monitor with verified per-order popups, scoreboard counting, unlimited accounts, complete snapshots, and 1-minute crisp 4K scenic video rotation",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",

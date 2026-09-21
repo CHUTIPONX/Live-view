@@ -1,29 +1,22 @@
-# Pancake Live Sales Monitor v1.5.1
+# Pancake Live Sales Monitor v1.5.4
 
-Dashboard ยอดขายจาก Pancake POS Employee Statistic โดยยึด `summary.price / 100` เป็นยอดรวมจริงเท่านั้น
+## v1.5.4 — 1-minute 4K Scenic View Rotation
 
-## v1.5.1 — เด้งยอดทีละออเดอร์จริง
+รุ่นนี้ต่อยอดจาก v1.5.2 โดย **ไม่เปลี่ยน logic ยอดขาย** และปรับเฉพาะระบบพื้นหลัง:
 
-- ยอดรวมหลักยังมาจาก `GET /shops/{SHOP_ID}/analytics/sale` เท่านั้น
-- เมื่อ Complete Snapshot ใหม่มียอดและจำนวนออเดอร์เพิ่ม ระบบจะตรวจร้านที่เปลี่ยน แล้วเรียก `GET /shops/{SHOP_ID}/orders` เฉพาะช่วงระหว่าง Snapshot
-- ใช้ `total_price / 100` ของออเดอร์จริงเพื่อทำ animation ทีละบิล เช่น `+199`, `+199` แทนการเด้ง `+398` ก้อนเดียว
-- ก่อนเล่น animation ระบบ reconcile ทั้งจำนวนออเดอร์และยอดเงิน **รายร้าน** และ **ยอดรวม** ให้ตรงกับ Employee Statistic 100%
-- ถ้า order list ไม่ครบ, timeout, มีการแก้/ยกเลิกปน, หรือผลรวมไม่ตรง ระบบจะ **ไม่หารเฉลี่ยและไม่เดา**; จะอัปเดตยอดรวมจาก Employee Statistic โดยไม่สร้าง popup รายบิลปลอม
-- ลบ/ยกเลิกยังแสดง delta จาก Complete Employee Statistic ได้ แต่จะไม่ปลอมเป็นออเดอร์ใหม่
+- เปลี่ยนวิวอัตโนมัติทุก **5 นาที**
+- 12 วิว: พระอาทิตย์ขึ้น, แสงเช้า, ภูเขา, ทะเลหมอก, แม่น้ำ, golden hour, sunset, beach, twilight city และ night city
+- ใช้ Pexels video sources ที่หน้าแหล่งต้นทางระบุว่าเป็น Free Stock Video Footage / 4K & HD
+- ใช้ video 2 layer เพื่อ crossfade: วิวเดิมไม่หายจนกว่าวิวใหม่โหลดข้อมูลได้จริง
+- ตัด overscan เดิม (`inset:-5%`) และตัด artificial video zoom ออก (`transform:none`)
+- ลดม่านมืดและ blur ของ main panel เหลือ 1.5px เพื่อเห็นรายละเอียดวิวชัดขึ้น
+- ถ้าวิดีโอใหม่โหลดพลาด จะค้างวิวเดิมไว้ ไม่ทำพื้นหลังดำ
+- ทุกเครื่องเลือกวิวตามช่วงเวลา 5 นาทีเดียวกันโดยอัตโนมัติ
 
-## ความถูกต้อง
+## Sales logic
 
-1. Complete Snapshot ทุก shop ก่อนเปลี่ยนยอด
-2. ร้านไม่มีขาย (`success:true`, `data:[]`, `summary:{}`) = ฿0
-3. timeout/permission ไม่ถูกนับเป็น ฿0
-4. Shop ID ซ้ำข้าม Account นับครั้งเดียว
-5. Per-order animation เป็นชั้นแสดงผลเท่านั้น ไม่สามารถเปลี่ยนยอดจริงได้
-
-## API ที่ใช้
-
-- `/analytics/sale` — authoritative total
-- `/orders` — animation evidence only, filter ด้วย `inserted_at` ระหว่าง Snapshot
+เหมือน v1.5.2 ทุกอย่าง: Employee Statistic summary.price / 100, complete snapshot only, verified per-order popup, scoreboard counter, unlimited accounts, zero-sales shop = ฿0.
 
 ## Deploy
 
-แตก ZIP แล้วอัปไฟล์ด้านในทั้งหมดไปที่ root ของ GitHub repo จากนั้นรอ Vercel Ready และ hard refresh (`Ctrl+Shift+R`).
+แตก ZIP → เข้าโฟลเดอร์จนเห็น `api`, `lib`, `public`, `package.json`, `vercel.json` → Ctrl+A → GitHub Upload files → Commit → รอ Vercel Ready → Ctrl+Shift+R

@@ -1,18 +1,26 @@
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
-const themes = [
-  {key:'spring',name:'SPRING',video:'https://www.pexels.com/download/video/16422889/',page:'https://www.pexels.com/video/16422889/'},
-  {key:'summer',name:'SUMMER',video:'https://www.pexels.com/download/video/2181400/',page:'https://www.pexels.com/video/2181400/'},
-  {key:'rain',name:'RAIN',video:'https://www.pexels.com/download/video/33938712/',page:'https://www.pexels.com/video/33938712/'},
-  {key:'autumn',name:'AUTUMN',video:'https://www.pexels.com/download/video/10320339/',page:'https://www.pexels.com/video/10320339/'},
-  {key:'winter',name:'WINTER',video:'https://www.pexels.com/download/video/11269162/',page:'https://www.pexels.com/video/11269162/'},
-  {key:'sakura',name:'SAKURA',video:'https://www.pexels.com/download/video/25811364/',page:'https://www.pexels.com/video/25811364/'},
-  {key:'aurora',name:'AURORA',video:'https://www.pexels.com/download/video/30767659/',page:'https://www.pexels.com/video/30767659/'},
-  {key:'night',name:'NIGHT',video:'https://www.pexels.com/download/video/30560746/',page:'https://www.pexels.com/video/30560746/'}
+const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const SCENIC_ROTATE_MS = 60 * 1000;
+const scenicViews = [
+  {id:'river-sunrise',tone:'spring',name:'RIVER SUNRISE',video:'https://www.pexels.com/download/video/2248630/',page:'https://www.pexels.com/video/beautiful-landscape-with-view-of-sunrise-2248630/'},
+  {id:'ocean-dawn',tone:'summer',name:'OCEAN DAWN',video:'https://www.pexels.com/download/video/10343783/',page:'https://www.pexels.com/video/sunrise-over-ocean-10343783/'},
+  {id:'alpine-morning',tone:'winter',name:'ALPINE MORNING',video:'https://www.pexels.com/download/video/35190889/',page:'https://www.pexels.com/video/breathtaking-mountain-landscape-at-sunrise-35190889/'},
+  {id:'sea-of-clouds',tone:'winter',name:'SEA OF CLOUDS',video:'https://www.pexels.com/download/video/4287971/',page:'https://www.pexels.com/video/sea-of-clouds-covering-the-mountain-valley-4287971/'},
+  {id:'river-morning',tone:'spring',name:'RIVER MORNING',video:'https://www.pexels.com/download/video/33657476/',page:'https://www.pexels.com/video/serene-river-landscape-at-sunrise-33657476/'},
+  {id:'golden-lake',tone:'autumn',name:'GOLDEN LAKE',video:'https://www.pexels.com/download/video/20605896/',page:'https://www.pexels.com/video/the-sun-sets-over-a-lake-and-mountains-20605896/'},
+  {id:'sunset-lake',tone:'autumn',name:'SUNSET LAKE',video:'https://www.pexels.com/download/video/37405901/',page:'https://www.pexels.com/video/serene-sunset-over-mountainous-lake-landscape-37405901/'},
+  {id:'beach-golden-hour',tone:'summer',name:'BEACH GOLDEN HOUR',video:'https://www.pexels.com/download/video/9717009/',page:'https://www.pexels.com/video/sunset-at-the-beach-9717009/'},
+  {id:'city-twilight',tone:'night',name:'CITY TWILIGHT',video:'https://www.pexels.com/download/video/34985943/',page:'https://www.pexels.com/video/urban-street-at-sunset-with-city-lights-34985943/'},
+  {id:'city-night',tone:'night',name:'CITY NIGHT',video:'https://www.pexels.com/download/video/30118694/',page:'https://www.pexels.com/video/city-skyline-at-night-with-streetlights-30118694/'},
+  {id:'coast-night',tone:'night',name:'COAST NIGHT',video:'https://www.pexels.com/download/video/35991484/',page:'https://www.pexels.com/video/city-skyline-at-night-with-illuminated-coastline-35991484/'},
+  {id:'misty-valley',tone:'rain',name:'MISTY VALLEY',video:'https://www.pexels.com/download/video/36239867/',page:'https://www.pexels.com/video/misty-mountain-landscape-in-cloudy-weather-36239867/'}
 ];
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v151';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v152';
 
-let theme = 0;
+let scenicIndex = 0;
+let activeScenicVideo = -1;
+let scenicTimer = null;
 let stop = false;
 let polling = false;
 let historyPolling = false;
@@ -35,42 +43,83 @@ function particles(){
 }
 particles();
 const reduceMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
-function applyTheme(index,{reloadVideo=true}={}){
-  const item=themes[index]||themes[0];
+const scenicVideos=[$('#seasonVideoA'),$('#seasonVideoB')].filter(Boolean);
+
+function applyScenicMeta(item){
   const season=$('#season');
-  if(season)season.className=`season season-${item.key}`;
+  if(season)season.className=`season season-${item.tone||'spring'}${activeScenicVideo>=0?' video-ready':''}`;
   if($('#seasonName'))$('#seasonName').textContent=item.name;
   const source=$('#seasonSource');
   if(source)source.href=item.page;
-  const video=$('#seasonVideo');
-  if(video){
-    video.classList.remove('failed','ready');
-    if(reduceMotion){
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
-      video.classList.add('failed');
-    }else if(reloadVideo && video.dataset.theme!==item.key){
-      video.dataset.theme=item.key;
-      video.src=item.video;
-      video.load();
-      const play=video.play();
-      if(play?.catch)play.catch(()=>video.classList.add('failed'));
-    }
-  }
   particles();
 }
-function rotateTheme(){
-  theme=(theme+1)%themes.length;
-  applyTheme(theme);
+
+function activateScenicView(index,{initial=false}={}){
+  scenicIndex=((Number(index)||0)%scenicViews.length+scenicViews.length)%scenicViews.length;
+  const item=scenicViews[scenicIndex];
+  applyScenicMeta(item);
+  if(reduceMotion||!scenicVideos.length)return;
+
+  const targetIndex=activeScenicVideo<0?0:1-activeScenicVideo;
+  const target=scenicVideos[targetIndex];
+  const current=activeScenicVideo>=0?scenicVideos[activeScenicVideo]:null;
+
+  // Keep the current 4K view visible until the replacement has real video data.
+  target.onloadeddata=null;
+  target.onerror=null;
+  target.classList.remove('active','ready','failed');
+  target.dataset.view=item.id;
+  target.preload='auto';
+  target.src=item.video;
+
+  const reveal=()=>{
+    if(target.dataset.view!==item.id)return;
+    target.classList.add('ready');
+    const play=target.play();
+    if(play?.catch)play.catch(()=>{});
+    requestAnimationFrame(()=>target.classList.add('active'));
+    if(current){
+      current.classList.remove('active');
+      setTimeout(()=>{
+        if(activeScenicVideo!==targetIndex){return}
+        current.pause();
+        current.removeAttribute('src');
+        current.load();
+        current.classList.remove('ready','failed');
+        current.dataset.view='';
+      },1900);
+    }
+    activeScenicVideo=targetIndex;
+    applyScenicMeta(item);
+  };
+
+  target.onloadeddata=reveal;
+  target.onerror=()=>{
+    target.classList.add('failed');
+    // Never blank a good current view because one remote source failed.
+    if(activeScenicVideo<0)$('#season')?.classList.remove('video-ready');
+  };
+  target.load();
+
+  // Some browsers already have enough data immediately from cache.
+  if(target.readyState>=2)reveal();
 }
-const seasonVideo=$('#seasonVideo');
-if(seasonVideo){
-  seasonVideo.addEventListener('loadeddata',()=>seasonVideo.classList.add('ready'));
-  seasonVideo.addEventListener('error',()=>seasonVideo.classList.add('failed'));
+
+function scenicIndexForNow(now=Date.now()){
+  return Math.floor(now/SCENIC_ROTATE_MS)%scenicViews.length;
 }
-applyTheme(theme);
-setInterval(rotateTheme,10*60*1000);
+function scheduleScenicRotation(){
+  clearTimeout(scenicTimer);
+  const now=Date.now();
+  const nextBoundary=(Math.floor(now/SCENIC_ROTATE_MS)+1)*SCENIC_ROTATE_MS;
+  scenicTimer=setTimeout(()=>{
+    activateScenicView(scenicIndexForNow());
+    scheduleScenicRotation();
+  },Math.max(1000,nextBoundary-now+80));
+}
+
+activateScenicView(scenicIndexForNow(),{initial:true});
+scheduleScenicRotation();
 
 function clock(){
   const d=new Date(),tz={timeZone:'Asia/Bangkok'};
@@ -92,18 +141,59 @@ function animateNumber(from,to,duration,render){
     requestAnimationFrame(tick);
   });
 }
-function deltaFx(delta,{rapid=false}={}){
+
+// Sports-score style counter. Whole baht ticks for normal totals; if Pancake
+// returns satang, preserve that exact precision instead of rounding the verified total.
+function animateScoreCounter(from,to,{duration,render,element,money=false}={}){
+  const a=Number(from)||0,b=Number(to)||0;
+  const scale=money&&(!Number.isInteger(a)||!Number.isInteger(b))?100:1;
+  const start=Math.round(a*scale);
+  const target=Math.round(b*scale);
+  const diff=target-start;
+  if(!diff){render?.(target/scale);return Promise.resolve()}
+  const distance=Math.abs(diff);
+  const ms=Number(duration)||Math.max(560,Math.min(1800,520+Math.min(distance,500)*2.6));
+  const dir=diff>0?'up':'down';
+  element?.classList.remove('score-up','score-down');
+  element?.classList.add('score-counting',`score-${dir}`);
+  return new Promise(resolve=>{
+    const st=performance.now();
+    let last=null;
+    function tick(now){
+      const p=Math.min(1,(now-st)/ms);
+      const units=start+Math.sign(diff)*Math.min(distance,Math.floor(distance*p));
+      if(units!==last){last=units;render?.(units/scale)}
+      if(p<1){requestAnimationFrame(tick);return}
+      render?.(target/scale);
+      element?.classList.remove('score-counting','score-up','score-down');
+      resolve();
+    }
+    requestAnimationFrame(tick);
+  });
+}
+function renderMainScore(v){
+  const value=Math.max(0,Number(v)||0);
+  const e=$('#mega span');
+  if(e)e.textContent=(Number.isInteger(value)?scoreFmt:nf).format(value);
+  totalShown=value;
+}
+function renderOrderScore(v){
+  const value=Math.max(0,Math.round(Number(v)||0));
+  const e=$('#orders');if(e)e.textContent=scoreFmt.format(value);
+  ordersShown=value;
+}
+function deltaFx(delta,{rapid=false,score=false}={}){
   if(delta===undefined||delta===null)return;
   const layer=$('#deltaFx'); if(!layer)return;
   const pos=Number(delta)>=0;
   if(deltaFxTimer){clearTimeout(deltaFxTimer);deltaFxTimer=null}
-  layer.className=`delta-layer show ${pos?'gain':'loss'}${rapid?' rapid':''}`;
+  layer.className=`delta-layer show ${pos?'gain':'loss'}${rapid?' rapid':''}${score?' score-pop':''}`;
   const bits=Array.from({length:34},(_,i)=>`<i style="--a:${i*(360/34)}deg;--d:${130+(i%8)*22}px;--s:${4+(i%5)}px"></i>`).join('');
   layer.innerHTML=`<div class="ring r1"></div><div class="ring r2"></div><div class="delta-num">${pos?'+':'−'}฿${nf.format(Math.abs(Number(delta)||0))}</div><div class="burst">${bits}</div>`;
   const stage=$('#stage');
   stage?.classList.remove('gain-hit','loss-hit');
   if(stage){void stage.offsetWidth;stage.classList.add(pos?'gain-hit':'loss-hit')}
-  deltaFxTimer=setTimeout(()=>{layer.className='delta-layer';layer.innerHTML='';deltaFxTimer=null},rapid?900:3500);
+  deltaFxTimer=setTimeout(()=>{layer.className='delta-layer';layer.innerHTML='';deltaFxTimer=null},score?1450:(rapid?900:3500));
 }
 function status(s){
   const el=$('#status'); if(!el)return;
@@ -158,18 +248,17 @@ function mergeHistory(snapshot){
 }
 function drawNumbers(snapshot,{animate=true,showDelta=false,delta=0}={}){
   const safe=mergeHistory(snapshot);
-  if(showDelta&&Math.abs(delta)>.001)deltaFx(delta);
+  if(showDelta&&Math.abs(delta)>.001)deltaFx(delta,{score:true});
   if(animate){
-    animateNumber(totalShown,safe.total,safe.total<totalShown?1200:780,v=>{const e=$('#mega span');if(e)e.textContent=nf.format(Math.max(0,v));totalShown=v});
-    animateNumber(ordersShown,safe.orders,520,v=>{const e=$('#orders');if(e)e.textContent=nf.format(Math.max(0,v));ordersShown=v});
+    animateScoreCounter(totalShown,safe.total,{render:renderMainScore,element:$('#mega'),money:true});
+    animateScoreCounter(ordersShown,safe.orders,{duration:520,render:renderOrderScore,element:$('#orders')});
   }else{
-    if($('#mega span'))$('#mega span').textContent=nf.format(Math.max(0,safe.total));
-    if($('#orders'))$('#orders').textContent=nf.format(Math.max(0,Math.round(safe.orders)));
-    totalShown=safe.total;ordersShown=safe.orders;
+    renderMainScore(safe.total);
+    renderOrderScore(safe.orders);
   }
   const h=$('#history'); if(!h)return;
   const max=Math.max(1,...safe.days.map(x=>x.revenue));
-  h.innerHTML=safe.days.map((x,i)=>`<div class="day ${i===safe.days.length-1?'today':''}"><div class="bar"><i style="height:${Math.max(6,x.revenue/max*100)}%"></i></div><span>${new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Bangkok',day:'numeric',month:'short'}).format(new Date(x.date+'T12:00:00+07:00'))}</span><b>฿${nf.format(x.revenue)}</b><small>${nf.format(x.orders)} orders</small></div>`).join('');
+  h.innerHTML=safe.days.map((x,i)=>`<div class="day ${i===safe.days.length-1?'today':''}"><div class="bar"><i style="height:${Math.max(6,x.revenue/max*100)}%"></i></div><span>${new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Bangkok',day:'numeric',month:'short'}).format(new Date(x.date+'T12:00:00+07:00'))}</span><b>฿${nf.format(x.revenue)}</b><small>${scoreFmt.format(Math.round(x.orders))} orders</small></div>`).join('');
 }
 function timeText(iso){
   if(!iso)return '--:--:--';
@@ -184,23 +273,38 @@ function comparableSnapshots(previous,current){
 
 async function playVerifiedOrderEvents(previous,current,events){
   let runningTotal=Number(previous.total)||0;
-  let runningOrders=Number(previous.orders)||0;
-  const stepMs=events.length>12?520:events.length>6?650:820;
+  let runningOrders=Math.round(Number(previous.orders)||0);
   for(const event of events){
     const amount=Number(event.amount)||0;
-    const nextTotal=runningTotal+amount;
+    const nextTotal=Math.round((runningTotal+amount)*100)/100;
     const nextOrders=runningOrders+1;
-    if(Math.abs(amount)>.001)deltaFx(amount,{rapid:true});
+
+    // Keep the old rhythm: verified price pops first, then the main score counts.
+    if(Math.abs(amount)>.001){
+      deltaFx(amount,{score:true});
+      await sleep(260);
+    }
     await Promise.all([
-      animateNumber(totalShown,nextTotal,Math.min(560,stepMs-80),v=>{const e=$('#mega span');if(e)e.textContent=nf.format(Math.max(0,v));totalShown=v}),
-      animateNumber(ordersShown,nextOrders,Math.min(360,stepMs-160),v=>{const e=$('#orders');if(e)e.textContent=nf.format(Math.max(0,Math.round(v)));ordersShown=v})
+      animateScoreCounter(totalShown,nextTotal,{render:renderMainScore,element:$('#mega'),money:true}),
+      animateScoreCounter(ordersShown,nextOrders,{duration:420,render:renderOrderScore,element:$('#orders')})
     ]);
     runningTotal=nextTotal;
     runningOrders=nextOrders;
-    if(stepMs>580)await sleep(Math.max(70,stepMs-560));
+    await sleep(150);
   }
-  // Employee Statistic is still the source of truth. Snap exactly to the verified
-  // complete snapshot after the event queue, never to a sum invented by the UI.
+  // Employee Statistic remains the source of truth; snap to the verified snapshot.
+  drawNumbers(current,{animate:false,showDelta:false});
+}
+
+async function playVerifiedAggregateDelta(previous,current,delta){
+  if(Math.abs(delta)>.001){
+    deltaFx(delta,{score:true});
+    await sleep(260);
+  }
+  await Promise.all([
+    animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
+    animateScoreCounter(ordersShown,current.orders,{duration:520,render:renderOrderScore,element:$('#orders')})
+  ]);
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
@@ -216,11 +320,14 @@ async function renderComplete(d){
   if(isNew){
     if(comparable&&delta>0&&verifiedEvents.length){
       await playVerifiedOrderEvents(previous,d,verifiedEvents);
+    }else if(comparable&&delta<0){
+      // A negative complete-snapshot movement is real, but may be cancellation/edit;
+      // show one verified popup first, then count the scoreboard down.
+      await playVerifiedAggregateDelta(previous,d,delta);
     }else{
-      // Positive multi-order movement without reconciled order evidence is never split
-      // or shown as a guessed per-order popup. Negative movement can still show as one
-      // verified Employee Statistic delta because it may be a cancellation/edit.
-      drawNumbers(d,{animate:!!previous,showDelta:comparable&&delta<0,delta});
+      // Positive movement without reconciled individual orders is never split or
+      // labelled as fake per-order prices. The verified total still counts to target.
+      drawNumbers(d,{animate:!!previous,showDelta:false,delta});
     }
     saveComplete(mergeHistory(d));
   }else if(!previous){

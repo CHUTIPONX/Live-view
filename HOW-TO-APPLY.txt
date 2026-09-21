@@ -1,6 +1,6 @@
-Pancake Live Sales v1.5.1 — วิธีอัป
+Pancake Live Sales v1.5.4 — วิธีอัป
 
-1. แตก pancake-live-sales-monitor-v1.5.1.zip
+1. แตก pancake-live-sales-monitor-v1.5.4.zip
 2. เข้าโฟลเดอร์จนเห็น api / lib / public / package.json / vercel.json
 3. Ctrl+A เลือกไฟล์และโฟลเดอร์ทั้งหมดด้านใน
 4. GitHub repo Live-view > Add file > Upload files
@@ -9,4 +9,4 @@ Pancake Live Sales v1.5.1 — วิธีอัป
 7. กด Ctrl+Shift+R
 
 สำคัญ: ต้องมี api/order-events.js ด้วย
-อย่าอัป ZIP ตรง ๆ และอย่าสร้างโฟลเดอร์ v1.5.1 ครอบโปรเจกต์อีกชั้น
+อย่าอัป ZIP ตรง ๆ และอย่าสร้างโฟลเดอร์ v1.5.4 ครอบโปรเจกต์อีกชั้น
