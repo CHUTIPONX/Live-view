@@ -1,7 +1,7 @@
 วิธีอัปเดตแบบลากทั้งก้อน (ง่ายสุด)
 
 1) แตก ZIP นี้ก่อน
-2) เปิดโฟลเดอร์ pancake-live-sales-monitor-v1.2.8
+2) เปิดโฟลเดอร์ pancake-live-sales-monitor-v1.2.9
 3) ต้องมองเห็น api / lib / public / package.json / vercel.json อยู่ตรงหน้า
 4) Ctrl+A เลือกของข้างในทั้งหมด
 5) GitHub > CHUTIPONX/Live-view > main > Add file > Upload files
@@ -9,7 +9,10 @@
 7) รอ Vercel ขึ้น Ready
 8) กลับหน้าเว็บ กด Ctrl+Shift+R
 
-อย่าลากไฟล์ ZIP เข้า repo และอย่าสร้างโฟลเดอร์ pancake-live-sales-monitor-v1.2.8 ครอบอีกชั้น
+อย่าลากไฟล์ ZIP เข้า repo และอย่าสร้างโฟลเดอร์ pancake-live-sales-monitor-v1.2.9 ครอบอีกชั้น
 
-v1.2.8 แก้ endpoint เป็น /shops/{SHOP_ID}/analytics/sale แล้ว
-ถ้ายังมีปัญหา หลังล็อกอินเปิด /api/diagnostics เพื่อดูผลตรวจแบบไม่เปิดเผย API key
+v1.2.9 ใช้ Pancake Employee Statistic โดยตรง:
+/shops/{SHOP_ID}/analytics/sale?split_by[]=User.id
+ยอดสด = response.summary.price / 100
+
+ถ้ายังมีปัญหา หลังล็อกอินเปิด /api/diagnostics เพื่อดู raw summary.price ที่ระบบอ่าน โดยไม่เปิดเผย API key

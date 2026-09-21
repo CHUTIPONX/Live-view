@@ -1,39 +1,52 @@
-# Pancake Live Sales Monitor v1.2.8
+# Pancake Live Sales Monitor v1.2.9
 
-Database-free Pancake POS live sales monitor for Vercel.
+This build uses the same Pancake sales analytics family as **ยอดขาย → Employee Statistic**.
 
-## v1.2.8: verified complete snapshot only
+## Authoritative live metric
 
-This release prioritizes correctness over showing a partial number.
-
-- A total is published only when every selected Shop ID returns a valid Pancake analytics result.
-- If any shop fails, times out, or lacks permission, the API returns `complete:false` and the dashboard keeps the last verified total.
-- Positive/negative animations happen only between two complete snapshots for the same shop set and Bangkok date.
-- The money parser is fail-closed: it accepts Pancake `price` / `price_data` only. It no longer guesses among `revenue`, `total_price`, `amount`, or other fields.
-- Historical values follow the same all-shops-complete rule.
-- Live checks happen every second in the browser, while verified source snapshots are aligned to a 5-second server window to reduce request pressure and make devices compare the same time window more closely.
-
-## Pancake source
+The live total is intentionally fail-closed:
 
 ```text
-GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/analytics/sale
+GET /shops/{SHOP_ID}/analytics/sale
+split_by[]=User.id
+since=<Bangkok day 00:00:00>
+until=<Bangkok day 23:59:59>
+
+TOTAL SALES = response.summary.price / 100
+ORDERS      = response.summary.order_count
+PRODUCTS    = response.summary.product_count
 ```
 
-Today uses Bangkok 00:00 as `since` and the current fixed snapshot cutoff as `until`.
-Historical data uses `split_by[]=Time.day`.
+The app does **not** add `data[].result.price` to produce the live total. The grouped rows are only detail rows; Pancake's top-level `summary` is the source of truth.
 
-The legacy `/orders/statistics` route is not used for sales totals.
+## No fake +/-
 
-## Status meanings
+A new total is published only when every selected Shop ID returned a valid Employee Statistic summary. If 50/51 shops succeed, the response is `HOLD`; the dashboard keeps the previous verified 51/51 total and does not animate a decrease.
 
-- `LIVE`: every selected store is present in the current verified snapshot.
-- `HOLD`: one or more stores are incomplete. The displayed total stays at the last verified value and no +/- animation occurs.
-- `UNCONFIGURED`: no Pancake connection is configured.
+The +/- animation is allowed only between near-consecutive complete snapshots for the same shop set and Bangkok date.
 
-## Tests
+## Money units
+
+The captured Pancake response uses 1/100-baht raw units. For example:
+
+```text
+summary.price        75300 -> 753.00 THB
+summary.shipping_fee 18200 -> 182.00 THB
+summary.cod          93500 -> 935.00 THB
+```
+
+The divisor is fixed at `100` in code; an environment variable cannot silently change it.
+
+## Historical cards
+
+Previous days use `/analytics/sale` grouped by both `Time.day` and `User.id`, and a historical result is only published when all selected shops succeed.
+
+## Verify
+
+Run:
 
 ```bash
 npm test
 ```
 
-The self-test verifies that partial shop data can never become the displayed total and that generic money fields are rejected.
+`/api/diagnostics` reports the endpoint, metric policy, raw `summary.price`, converted revenue, order count, and product count for sample shops without returning the API key.

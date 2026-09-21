@@ -1,4 +1,4 @@
-Pancake Live Sales Monitor v1.2.8 — Vercel Setup
+Pancake Live Sales Monitor v1.2.9 — Vercel Setup
 
 Vercel > Project > Settings > Environment Variables
 
@@ -19,11 +19,14 @@ PANCAKE_LABEL_3=Third Account
 PANCAKE_SHOP_IDS_3=ALL
 
 Use ALL for automatic shop discovery, or comma-separated Shop IDs.
-Normally do not set PANCAKE_MONEY_DIVISOR; its default is 100.
+
+Do NOT set PANCAKE_MONEY_DIVISOR. v1.2.9 fixes the Employee Statistic raw money divisor at 100 in code.
 After changing Environment Variables, redeploy.
 
-v1.2.8 live endpoint:
+v1.2.9 live source:
 /shops/{SHOP_ID}/analytics/sale
+split_by[]=User.id
+summary.price / 100
 
 Authenticated diagnostics:
 /api/diagnostics

@@ -20,13 +20,40 @@ try{
   process.env.APP_PASSWORD='selftest-password';
   process.env.APP_SECRET='selftest-secret-that-is-long-enough-for-tests';
 
-  // Exact-source policy: price/price_data is accepted. Generic revenue guesses are rejected.
-  assert.deepEqual(parsePancakeSalesSummary({success:true,summary:{price:22729100,order_count:1421}}),{
-    revenue:227291,orders:1421,metricKey:'price',orderKey:'order_count'
+  // Real Employee Statistic response contract supplied from Pancake UI.
+  const captured={
+    data:[{
+      'User.id':'c0d86151-b116-454a-8f61-18df92093ff6',
+      result:{price:75300,price_data:75300,order_count:5,total_order_count:5,product_count:7,shipping_fee:18200,cod:93500},
+      success:{price:75300,price_data:75300,order_count:5,total_order_count:5,product_count:7,shipping_fee:18200,cod:93500}
+    }],
+    success:true,
+    summary:{price:75300,price_data:75300,order_count:5,total_order_count:5,product_count:7,shipping_fee:18200,cod:93500}
+  };
+  assert.deepEqual(parsePancakeSalesSummary(captured),{
+    revenue:753,rawPrice:75300,orders:5,products:7,shippingFee:182,cod:935,
+    metricKey:'summary.price',orderKey:'summary.order_count'
   });
-  assert.equal(parsePancakeSalesSummary({success:true,summary:{revenue:22729100,total_orders:1421}}),null);
-  const arr=parsePancakeSalesSummary({success:true,data:[{result:{price:100000,order_count:2}},{result:{price:250000,order_count:5}}]});
-  assert.equal(arr.revenue,3500);assert.equal(arr.orders,7);assert.equal(arr.metricKey,'price');
+
+  // The LIVE total must come from summary, never by adding employee rows.
+  const summaryWins=parsePancakeSalesSummary({
+    success:true,
+    summary:{price:14173700,price_data:14173700,order_count:761,product_count:1215},
+    data:[{result:{price:999999999,order_count:9999}}]
+  });
+  assert.equal(summaryWins.revenue,141737);
+  assert.equal(summaryWins.orders,761);
+  assert.equal(summaryWins.products,1215);
+
+  // Fail closed if Pancake does not return the authoritative report summary.
+  assert.equal(parsePancakeSalesSummary({success:true,data:[{result:{price:14173700,order_count:761}}]}),null);
+  assert.equal(parsePancakeSalesSummary({success:true,summary:{revenue:14173700,total_orders:761}}),null);
+  assert.throws(()=>parsePancakeSalesSummary({success:true,summary:{price:10000,price_data:9999,order_count:1}}),/disagree/);
+
+  // PANCAKE_MONEY_DIVISOR env can no longer alter totals between deployments/devices.
+  process.env.PANCAKE_MONEY_DIVISOR='1';
+  assert.equal(parsePancakeSalesSummary(captured).revenue,753);
+  delete process.env.PANCAKE_MONEY_DIVISOR;
 
   const good=await login({body:{username:'Owner',password:'selftest-password'}});
   assert.equal(good.status,200);
@@ -37,9 +64,9 @@ try{
   const got=await getSettings({headers:{cookie:`${sessionCookie}; ${settingsCookie}`}});
   assert.equal(got.status,200);assert.ok(!got.body.includes('secret-test-key'));
 
-  // Complete live snapshot: all shops must succeed before a total is publishable.
+  // Complete live snapshot: exact Employee Statistic query, all shops required.
   clearPancakeEnv();
-  process.env.PANCAKE_POS_API_KEY_1='v128-complete-key';
+  process.env.PANCAKE_POS_API_KEY_1='v129-complete-key';
   process.env.PANCAKE_SHOP_IDS_1='99101,99102';
   process.env.PANCAKE_LABEL_1='Shared Main';
   const urls=[];
@@ -47,28 +74,33 @@ try{
     const u=new URL(String(raw));urls.push(u);
     assert.equal(u.pathname.includes('/orders/statistics'),false);
     assert.equal(u.pathname.endsWith('/analytics/sale'),true);
-    assert.ok(u.searchParams.get('since'));assert.ok(u.searchParams.get('until'));
+    assert.equal(u.searchParams.getAll('split_by[]').join(','),'User.id');
+    assert.match(u.searchParams.get('since')||'',/T00:00:00\+07:00$/);
+    assert.match(u.searchParams.get('until')||'',/T23:59:59\+07:00$/);
     const shopId=u.pathname.split('/')[4];
-    return response({success:true,data:[{result:{price:shopId==='99101'?100000:250000,order_count:shopId==='99101'?2:5}}]});
+    const rawPrice=shopId==='99101'?100000:250000;
+    const orders=shopId==='99101'?2:5;
+    return response({success:true,summary:{price:rawPrice,price_data:rawPrice,order_count:orders,product_count:orders},data:[{result:{price:999999999,order_count:999}}]});
   };
   const complete=await aggregateSales({});
   assert.equal(complete.complete,true);
   assert.equal(complete.status,'LIVE');
   assert.equal(complete.total,3500);assert.equal(complete.orders,7);
   assert.equal(complete.okShops,2);assert.equal(complete.failedShops,0);
+  assert.equal(complete.moneyDivisor,100);
+  assert.match(complete.source,/Employee Statistic/);
   assert.ok(complete.snapshotId);assert.ok(complete.shopSetHash);
-  assert.ok(urls.every(u=>u.pathname.endsWith('/analytics/sale')));
 
-  // A partial cycle must NEVER publish the subtotal as the new total.
+  // A partial cycle must NEVER publish its subtotal as a new total.
   clearPancakeEnv();
-  process.env.PANCAKE_POS_API_KEY_1='v128-partial-key';
+  process.env.PANCAKE_POS_API_KEY_1='v129-partial-key';
   process.env.PANCAKE_SHOP_IDS_1='88101,88102';
   process.env.PANCAKE_LABEL_1='Partial Test';
   global.fetch=async raw=>{
     const u=new URL(String(raw));
     const shopId=u.pathname.split('/')[4];
     if(shopId==='88102')return response({success:false,error:{message:'permission denied'}},200);
-    return response({success:true,data:[{result:{price:500000,order_count:10}}]});
+    return response({success:true,summary:{price:500000,price_data:500000,order_count:10}});
   };
   const partial=await aggregateSales({});
   assert.equal(partial.complete,false);
@@ -78,29 +110,36 @@ try{
   assert.equal(partial.okShops,1);assert.equal(partial.failedShops,1);
   assert.equal(partial.deltaTrusted,false);
 
-  // Historical totals must also be all-shops complete; no partial day is publishable.
+  // Historical totals use Pancake grouped Employee Statistic rows (day + employee).
   clearPancakeEnv();
-  process.env.PANCAKE_POS_API_KEY_1='v128-history-key';
+  process.env.PANCAKE_POS_API_KEY_1='v129-history-key';
   process.env.PANCAKE_SHOP_IDS_1='77101,77102';
   const histDays=fiveDays().slice(0,-1);
   global.fetch=async raw=>{
     const u=new URL(String(raw));
-    assert.equal(u.searchParams.get('split_by[]'),'Time.day');
+    assert.deepEqual(u.searchParams.getAll('split_by[]'),['Time.day','User.id']);
     const shopId=u.pathname.split('/')[4];
-    return response({success:true,data:histDays.map((date,i)=>({'Time.day':date,result:{price:(i+1)*(shopId==='77101'?10000:20000),order_count:i+1}}))});
+    const factor=shopId==='77101'?1:2;
+    const data=[];
+    histDays.forEach((date,i)=>{
+      // Two employees in each day; row values are Pancake result.price raw units.
+      data.push({'Time.day':date,'User.id':'u1',result:{price:(i+1)*10000*factor,price_data:(i+1)*10000*factor,order_count:i+1}});
+      data.push({'Time.day':date,'User.id':'u2',result:{price:(i+1)*5000*factor,price_data:(i+1)*5000*factor,order_count:1}});
+    });
+    return response({success:true,data,summary:{price:1,price_data:1,order_count:1}});
   };
   const hist=await aggregateHistory({});
   assert.equal(hist.complete,true);assert.equal(hist.okShops,2);
-  assert.deepEqual(hist.days.map(x=>x.revenue),[300,600,900,1200]);
+  assert.deepEqual(hist.days.map(x=>x.revenue),[450,900,1350,1800]);
 
-  // Reject history if even one shop fails.
+  // Reject history if even one shop fails: no partial historical day is publishable.
   clearPancakeEnv();
-  process.env.PANCAKE_POS_API_KEY_1='v128-history-fail-key';
+  process.env.PANCAKE_POS_API_KEY_1='v129-history-fail-key';
   process.env.PANCAKE_SHOP_IDS_1='66101,66102';
   global.fetch=async raw=>{
     const u=new URL(String(raw));const shopId=u.pathname.split('/')[4];
     if(shopId==='66102')throw new Error('simulated timeout');
-    return response({success:true,data:histDays.map((date,i)=>({'Time.day':date,result:{price:(i+1)*10000,order_count:i+1}}))});
+    return response({success:true,data:histDays.map((date,i)=>({'Time.day':date,'User.id':'u1',result:{price:(i+1)*10000,price_data:(i+1)*10000,order_count:i+1}}))});
   };
   const histPartial=await aggregateHistory({});
   assert.equal(histPartial.complete,false);assert.equal(histPartial.days,null);assert.equal(histPartial.okShops,1);

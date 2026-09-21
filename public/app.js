@@ -1,7 +1,7 @@
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const themes = [['spring','SPRING'],['summer','SUMMER'],['rain','RAIN'],['autumn','AUTUMN'],['winter','WINTER'],['sakura','SAKURA'],['aurora','AURORA'],['night','NIGHT']];
-const CACHE_KEY = 'plsm_verified_complete_snapshot_v128';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v129';
 
 let theme = 0;
 let stop = false;
@@ -136,7 +136,12 @@ function timeText(iso){
 function renderComplete(d){
   showSales();
   const isNew=!lastComplete||lastComplete.snapshotId!==d.snapshotId;
-  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date;
+  const previousMs=lastComplete?.observedThrough?Date.parse(lastComplete.observedThrough):NaN;
+  const currentMs=d?.observedThrough?Date.parse(d.observedThrough):NaN;
+  const gapMs=Number.isFinite(previousMs)&&Number.isFinite(currentMs)?currentMs-previousMs:Infinity;
+  // +/- is only shown for near-consecutive COMPLETE Employee Statistic snapshots.
+  // Reloading after a long gap never invents a giant sale/cancellation animation.
+  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date&&gapMs>0&&gapMs<=15000;
   const delta=comparable?Number(d.total)-Number(lastComplete.total):0;
 
   status('LIVE');

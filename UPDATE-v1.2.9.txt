@@ -1,0 +1,26 @@
+Pancake Live Sales Monitor v1.2.9 — Employee Statistic Exact Source
+
+SOURCE OF TRUTH
+- GET /shops/{SHOP_ID}/analytics/sale
+- split_by[]=User.id (same Employee Statistic report dimension)
+- Live total = top-level summary.price / 100 ONLY
+- Orders = top-level summary.order_count
+- Products = top-level summary.product_count
+
+SAFETY
+- Never sum data[].result for the live total.
+- Never guess revenue/total_price/amount fields.
+- Never publish a new total unless every selected shop succeeds.
+- Partial snapshots return HOLD and keep the last verified total.
+- +/- is shown only between near-consecutive complete snapshots for the same shop set and same Bangkok date.
+- Money divisor is fixed at 100 and cannot be overridden per deployment.
+
+HISTORY
+- Uses the same analytics/sale report grouped by Time.day + User.id.
+- Every selected shop must succeed before a historical day is replaced.
+
+Captured contract check
+- summary.price = 75300 -> 753.00 THB
+- summary.shipping_fee = 18200 -> 182.00 THB
+- summary.cod = 93500 -> 935.00 THB
+- 753 + 182 = 935
