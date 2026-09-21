@@ -1,26 +1,16 @@
+import { scenicViews, SCENIC_VIEW_COUNT } from './scenic-videos.js';
+
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const SCENIC_ROTATE_MS = 60 * 1000;
-const scenicViews = [
-  {id:'river-sunrise',tone:'spring',name:'RIVER SUNRISE',video:'https://www.pexels.com/download/video/2248630/',page:'https://www.pexels.com/video/beautiful-landscape-with-view-of-sunrise-2248630/'},
-  {id:'ocean-dawn',tone:'summer',name:'OCEAN DAWN',video:'https://www.pexels.com/download/video/10343783/',page:'https://www.pexels.com/video/sunrise-over-ocean-10343783/'},
-  {id:'alpine-morning',tone:'winter',name:'ALPINE MORNING',video:'https://www.pexels.com/download/video/35190889/',page:'https://www.pexels.com/video/breathtaking-mountain-landscape-at-sunrise-35190889/'},
-  {id:'sea-of-clouds',tone:'winter',name:'SEA OF CLOUDS',video:'https://www.pexels.com/download/video/4287971/',page:'https://www.pexels.com/video/sea-of-clouds-covering-the-mountain-valley-4287971/'},
-  {id:'river-morning',tone:'spring',name:'RIVER MORNING',video:'https://www.pexels.com/download/video/33657476/',page:'https://www.pexels.com/video/serene-river-landscape-at-sunrise-33657476/'},
-  {id:'golden-lake',tone:'autumn',name:'GOLDEN LAKE',video:'https://www.pexels.com/download/video/20605896/',page:'https://www.pexels.com/video/the-sun-sets-over-a-lake-and-mountains-20605896/'},
-  {id:'sunset-lake',tone:'autumn',name:'SUNSET LAKE',video:'https://www.pexels.com/download/video/37405901/',page:'https://www.pexels.com/video/serene-sunset-over-mountainous-lake-landscape-37405901/'},
-  {id:'beach-golden-hour',tone:'summer',name:'BEACH GOLDEN HOUR',video:'https://www.pexels.com/download/video/9717009/',page:'https://www.pexels.com/video/sunset-at-the-beach-9717009/'},
-  {id:'city-twilight',tone:'night',name:'CITY TWILIGHT',video:'https://www.pexels.com/download/video/34985943/',page:'https://www.pexels.com/video/urban-street-at-sunset-with-city-lights-34985943/'},
-  {id:'city-night',tone:'night',name:'CITY NIGHT',video:'https://www.pexels.com/download/video/30118694/',page:'https://www.pexels.com/video/city-skyline-at-night-with-streetlights-30118694/'},
-  {id:'coast-night',tone:'night',name:'COAST NIGHT',video:'https://www.pexels.com/download/video/35991484/',page:'https://www.pexels.com/video/city-skyline-at-night-with-illuminated-coastline-35991484/'},
-  {id:'misty-valley',tone:'rain',name:'MISTY VALLEY',video:'https://www.pexels.com/download/video/36239867/',page:'https://www.pexels.com/video/misty-mountain-landscape-in-cloudy-weather-36239867/'}
-];
 const CACHE_KEY = 'plsm_verified_employee_snapshot_v152';
 
-let scenicIndex = 0;
 let activeScenicVideo = -1;
-let scenicTimer = null;
+let scenicCurrentIndex = -1;
+let scenicQueue = [];
+let scenicPrepared = null;
+let scenicPreparingPromise = null;
+let scenicSwitching = false;
 let stop = false;
 let polling = false;
 let historyPolling = false;
@@ -42,84 +32,205 @@ function particles(){
   }
 }
 particles();
+
 const reduceMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
 const scenicVideos=[$('#seasonVideoA'),$('#seasonVideoB')].filter(Boolean);
 
+function shuffleIndexes(){
+  const out=Array.from({length:SCENIC_VIEW_COUNT},(_,i)=>i);
+  for(let i=out.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [out[i],out[j]]=[out[j],out[i]];
+  }
+  // Do not let a new 100-video cycle immediately repeat the clip that just ended.
+  if(out.length>1&&out[0]===scenicCurrentIndex)[out[0],out[1]]=[out[1],out[0]];
+  return out;
+}
+
+function ensureScenicQueue(){
+  if(!scenicQueue.length)scenicQueue=shuffleIndexes();
+}
+
+function takeNextScenicIndex(){
+  ensureScenicQueue();
+  return scenicQueue.shift();
+}
+
+function peekNextScenicIndex(){
+  ensureScenicQueue();
+  return scenicQueue[0];
+}
+
 function applyScenicMeta(item){
+  if(!item)return;
   const season=$('#season');
   if(season)season.className=`season season-${item.tone||'spring'}${activeScenicVideo>=0?' video-ready':''}`;
   if($('#seasonName'))$('#seasonName').textContent=item.name;
   const source=$('#seasonSource');
-  if(source)source.href=item.page;
+  if(source){
+    source.href=item.page||'https://www.pexels.com/';
+    source.title=`Pexels video ${item.pexelsId||''}`.trim();
+  }
   particles();
 }
 
-function activateScenicView(index,{initial=false}={}){
-  scenicIndex=((Number(index)||0)%scenicViews.length+scenicViews.length)%scenicViews.length;
-  const item=scenicViews[scenicIndex];
-  applyScenicMeta(item);
-  if(reduceMotion||!scenicVideos.length)return;
+function resetVideoElement(video){
+  if(!video)return;
+  video.onloadeddata=null;
+  video.oncanplay=null;
+  video.onended=null;
+  video.onerror=null;
+  video.pause();
+  video.removeAttribute('src');
+  video.load();
+  video.classList.remove('active','ready','failed');
+  video.dataset.view='';
+}
 
-  const targetIndex=activeScenicVideo<0?0:1-activeScenicVideo;
-  const target=scenicVideos[targetIndex];
-  const current=activeScenicVideo>=0?scenicVideos[activeScenicVideo]:null;
+function loadScenicInto(videoIndex,itemIndex,{autoplay=false}={}){
+  const video=scenicVideos[videoIndex];
+  const item=scenicViews[itemIndex];
+  if(!video||!item)return Promise.reject(new Error('Scenic video slot is unavailable'));
 
-  // Keep the current 4K view visible until the replacement has real video data.
-  target.onloadeddata=null;
-  target.onerror=null;
-  target.classList.remove('active','ready','failed');
-  target.dataset.view=item.id;
-  target.preload='auto';
-  target.src=item.video;
+  return new Promise((resolve,reject)=>{
+    video.onloadeddata=null;
+    video.oncanplay=null;
+    video.onended=null;
+    video.onerror=null;
+    video.classList.remove('active','ready','failed');
+    video.dataset.view=item.id;
+    video.preload='auto';
+    video.loop=false;
+    video.muted=true;
+    video.playsInline=true;
+    video.src=item.video;
 
-  const reveal=()=>{
-    if(target.dataset.view!==item.id)return;
-    target.classList.add('ready');
-    const play=target.play();
-    if(play?.catch)play.catch(()=>{});
-    requestAnimationFrame(()=>target.classList.add('active'));
-    if(current){
-      current.classList.remove('active');
-      setTimeout(()=>{
-        if(activeScenicVideo!==targetIndex){return}
-        current.pause();
-        current.removeAttribute('src');
-        current.load();
-        current.classList.remove('ready','failed');
-        current.dataset.view='';
-      },1900);
+    let settled=false;
+    const ready=()=>{
+      if(settled||video.dataset.view!==item.id)return;
+      settled=true;
+      video.classList.add('ready');
+      if(autoplay){
+        video.currentTime=0;
+        const play=video.play();
+        if(play?.catch)play.catch(()=>{});
+      }else{
+        video.pause();
+        try{video.currentTime=0}catch{}
+      }
+      resolve({videoIndex,itemIndex,item,video});
+    };
+    const fail=()=>{
+      if(settled)return;
+      settled=true;
+      video.classList.add('failed');
+      reject(new Error(`Unable to load scenic video ${item.pexelsId||item.id}`));
+    };
+    video.onloadeddata=ready;
+    video.oncanplay=ready;
+    video.onerror=fail;
+    video.load();
+    if(video.readyState>=2)ready();
+  });
+}
+
+async function prepareNextScenic(){
+  if(reduceMotion||scenicVideos.length<2)return null;
+  if(scenicPrepared)return scenicPrepared;
+  if(scenicPreparingPromise)return scenicPreparingPromise;
+
+  scenicPreparingPromise=(async()=>{
+    const targetIndex=activeScenicVideo<0?0:1-activeScenicVideo;
+
+    // A failed remote video is skipped, never shown as a black frame, and never
+    // counts as a played item in the current 100-video cycle.
+    for(let attempts=0;attempts<SCENIC_VIEW_COUNT;attempts++){
+      const itemIndex=peekNextScenicIndex();
+      try{
+        const prepared=await loadScenicInto(targetIndex,itemIndex,{autoplay:false});
+        // Remove only after the clip really preloaded successfully.
+        scenicQueue.shift();
+        scenicPrepared={...prepared};
+        return scenicPrepared;
+      }catch{
+        scenicQueue.shift();
+        resetVideoElement(scenicVideos[targetIndex]);
+      }
     }
+    return null;
+  })();
+
+  try{return await scenicPreparingPromise}
+  finally{scenicPreparingPromise=null}
+}
+
+async function advanceScenicView(){
+  if(reduceMotion||scenicSwitching)return;
+  scenicSwitching=true;
+  try{
+    if(!scenicPrepared)await prepareNextScenic();
+    const prepared=scenicPrepared;
+    if(!prepared)return;
+    scenicPrepared=null;
+
+    const target=prepared.video;
+    const targetIndex=prepared.videoIndex;
+    const current=activeScenicVideo>=0?scenicVideos[activeScenicVideo]:null;
+    const item=prepared.item;
+
+    target.onended=()=>void advanceScenicView();
+    target.onerror=()=>void advanceScenicView();
+    target.currentTime=0;
+    const play=target.play();
+    if(play?.catch)await play.catch(()=>{});
+
+    requestAnimationFrame(()=>target.classList.add('active'));
+    if(current)current.classList.remove('active');
     activeScenicVideo=targetIndex;
+    scenicCurrentIndex=prepared.itemIndex;
     applyScenicMeta(item);
-  };
 
-  target.onloadeddata=reveal;
-  target.onerror=()=>{
-    target.classList.add('failed');
-    // Never blank a good current view because one remote source failed.
-    if(activeScenicVideo<0)$('#season')?.classList.remove('video-ready');
-  };
-  target.load();
-
-  // Some browsers already have enough data immediately from cache.
-  if(target.readyState>=2)reveal();
+    // Let the 1.8s CSS crossfade finish before reusing the old element to
+    // preload exactly one following clip. We never preload all 100 videos.
+    setTimeout(()=>{
+      if(current&&current!==target)resetVideoElement(current);
+      void prepareNextScenic();
+    },1900);
+  }finally{
+    scenicSwitching=false;
+  }
 }
 
-function scenicIndexForNow(now=Date.now()){
-  return Math.floor(now/SCENIC_ROTATE_MS)%scenicViews.length;
-}
-function scheduleScenicRotation(){
-  clearTimeout(scenicTimer);
-  const now=Date.now();
-  const nextBoundary=(Math.floor(now/SCENIC_ROTATE_MS)+1)*SCENIC_ROTATE_MS;
-  scenicTimer=setTimeout(()=>{
-    activateScenicView(scenicIndexForNow());
-    scheduleScenicRotation();
-  },Math.max(1000,nextBoundary-now+80));
+async function startScenicPlaylist(){
+  if(!SCENIC_VIEW_COUNT)return;
+  scenicQueue=shuffleIndexes();
+  if(reduceMotion||!scenicVideos.length){
+    scenicCurrentIndex=takeNextScenicIndex();
+    applyScenicMeta(scenicViews[scenicCurrentIndex]);
+    return;
+  }
+
+  // Start one video, then preload one next video only.
+  for(let attempts=0;attempts<SCENIC_VIEW_COUNT;attempts++){
+    const itemIndex=takeNextScenicIndex();
+    try{
+      const first=await loadScenicInto(0,itemIndex,{autoplay:true});
+      activeScenicVideo=0;
+      scenicCurrentIndex=itemIndex;
+      first.video.classList.add('active');
+      first.video.onended=()=>void advanceScenicView();
+      first.video.onerror=()=>void advanceScenicView();
+      applyScenicMeta(first.item);
+      void prepareNextScenic();
+      return;
+    }catch{
+      resetVideoElement(scenicVideos[0]);
+    }
+  }
+  $('#season')?.classList.remove('video-ready');
 }
 
-activateScenicView(scenicIndexForNow(),{initial:true});
-scheduleScenicRotation();
+void startScenicPlaylist();
 
 function clock(){
   const d=new Date(),tz={timeZone:'Asia/Bangkok'};

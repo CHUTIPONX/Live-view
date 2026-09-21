@@ -1,0 +1,35 @@
+Pancake Live Sales Monitor v1.6.0 — Test Report
+Date: 2026-09-21
+
+CORE / SALES REGRESSION
+PASS  npm test
+PASS  Existing Pancake Employee Statistic parser/self-tests
+PASS  Complete-snapshot / HOLD rules
+PASS  Verified per-order animation logic
+PASS  Unlimited-account / Vercel config tests
+
+100-VIDEO SCENIC PLAYLIST
+PASS  public/scenic-videos.js syntax
+PASS  Exactly 100 Pexels video IDs
+PASS  100/100 IDs are unique
+PASS  100 direct Pexels download endpoints are present in the manifest
+PASS  Timer-based SCENIC_ROTATE_MS removed
+PASS  scheduleScenicRotation removed
+PASS  HTML video loop attribute removed
+PASS  Playback switches from HTML5 ended event
+PASS  Fisher-Yates shuffle implemented
+PASS  New cycle avoids immediate repeat of previous clip
+PASS  Only current clip + one next clip are loaded
+PASS  Failed remote clip is skipped without blanking a good current view
+PASS  Dual-layer 1.8s crossfade retained
+PASS  No artificial CSS zoom / transform:none retained
+PASS  Crisp low-blur visual treatment retained
+
+LOCAL HTTP SMOKE TEST
+PASS  / HTTP 200
+PASS  /scenic-videos.js HTTP 200
+PASS  Served scenic manifest contains 100 videos
+PASS  Served dashboard contains full-clip playlist label (1 match)
+
+NOTE
+The container used for packaging has no public DNS access, so it cannot live-probe all 100 Pexels CDN streams from here. The playlist uses the same Pexels /download/video/{id}/ pattern already used by previous working versions, and all selected IDs came from Pexels video pages/search results. Runtime code skips a remote clip cleanly if a source is unavailable.

@@ -1,12 +1,14 @@
-Pancake Live Sales v1.5.4 — วิธีอัป
+Pancake Live Sales v1.6.0 — วิธีอัป
 
-1. แตก pancake-live-sales-monitor-v1.5.4.zip
+1. แตก pancake-live-sales-monitor-v1.6.0.zip
 2. เข้าโฟลเดอร์จนเห็น api / lib / public / package.json / vercel.json
 3. Ctrl+A เลือกไฟล์และโฟลเดอร์ทั้งหมดด้านใน
-4. GitHub repo Live-view > Add file > Upload files
-5. Commit changes
+4. GitHub repo Live-view → Add file → Upload files
+5. ลากทั้งหมดเข้าไปแล้ว Commit changes
 6. รอ Vercel ขึ้น Ready
-7. กด Ctrl+Shift+R
+7. เปิดเว็บแล้วกด Ctrl+Shift+R
 
-สำคัญ: ต้องมี api/order-events.js ด้วย
-อย่าอัป ZIP ตรง ๆ และอย่าสร้างโฟลเดอร์ v1.5.4 ครอบโปรเจกต์อีกชั้น
+ไฟล์ใหม่สำคัญ: public/scenic-videos.js
+ต้องอัปไฟล์นี้ด้วย ไม่งั้น app.js จะ import playlist 100 วิดีโอไม่ได้
+
+อย่าอัป ZIP ตรง ๆ และอย่าสร้างโฟลเดอร์ v1.6.0 ครอบโปรเจกต์อีกชั้น

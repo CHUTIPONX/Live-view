@@ -1,22 +1,33 @@
-# Pancake Live Sales Monitor v1.5.4
+# Pancake Live Sales Monitor v1.6.0
 
-## v1.5.4 — 1-minute 4K Scenic View Rotation
+## 100 Scenic Views · Full Clip Playback
 
-รุ่นนี้ต่อยอดจาก v1.5.2 โดย **ไม่เปลี่ยน logic ยอดขาย** และปรับเฉพาะระบบพื้นหลัง:
+รุ่นนี้เปลี่ยนระบบพื้นหลังจากการตัดคลิปตามเวลา เป็น playlist วิว 100 คลิปที่เล่นจนจบจริงก่อนเปลี่ยนคลิปถัดไป
 
-- เปลี่ยนวิวอัตโนมัติทุก **5 นาที**
-- 12 วิว: พระอาทิตย์ขึ้น, แสงเช้า, ภูเขา, ทะเลหมอก, แม่น้ำ, golden hour, sunset, beach, twilight city และ night city
-- ใช้ Pexels video sources ที่หน้าแหล่งต้นทางระบุว่าเป็น Free Stock Video Footage / 4K & HD
-- ใช้ video 2 layer เพื่อ crossfade: วิวเดิมไม่หายจนกว่าวิวใหม่โหลดข้อมูลได้จริง
-- ตัด overscan เดิม (`inset:-5%`) และตัด artificial video zoom ออก (`transform:none`)
-- ลดม่านมืดและ blur ของ main panel เหลือ 1.5px เพื่อเห็นรายละเอียดวิวชัดขึ้น
-- ถ้าวิดีโอใหม่โหลดพลาด จะค้างวิวเดิมไว้ ไม่ทำพื้นหลังดำ
-- ทุกเครื่องเลือกวิวตามช่วงเวลา 5 นาทีเดียวกันโดยอัตโนมัติ
+### Scenic behavior
+- 100 unique Pexels scenic videos
+- Full-clip playback: เปลี่ยนเมื่อ `ended` เท่านั้น
+- Shuffle แบบไม่ซ้ำภายในรอบ 100 คลิป
+- ครบ 100 คลิปแล้วค่อย shuffle รอบใหม่
+- ไม่ให้คลิปแรกของรอบใหม่ซ้ำคลิปสุดท้ายของรอบก่อนทันที
+- Preload แค่คลิปถัดไป 1 คลิป ไม่โหลด 100 คลิปพร้อมกัน
+- 2-layer crossfade ประมาณ 1.8 วินาที
+- ถ้าคลิป remote โหลดไม่ได้ จะข้ามคลิปนั้นโดยไม่ทำพื้นหลังดำ
+- ไม่มี CSS zoom เพิ่ม (`transform:none`) และไม่ blur ตัววิดีโอ
 
-## Sales logic
+### View mix
+Morning / Sunrise / Forest light / River / Lake / Mountain / Tropical beach / Island / Waterfall / Golden hour / Sunset / Twilight / Night city / Winter / Clouds
 
-เหมือน v1.5.2 ทุกอย่าง: Employee Statistic summary.price / 100, complete snapshot only, verified per-order popup, scoreboard counter, unlimited accounts, zero-sales shop = ฿0.
+### Sales system
+ระบบยอดขายยังเหมือนเดิม: Employee Statistic `summary.price / 100`, complete snapshot only, HOLD เมื่อข้อมูลไม่ครบ, verified per-order popup, scoreboard counter, unlimited account config via supported Vercel setup.
 
-## Deploy
+### Files
+- `public/scenic-videos.js` — manifest 100 videos
+- `public/app.js` — full-clip playlist controller
+- `public/index.html` — video elements without `loop`
+- `VIDEO-SOURCES.txt` — list of all 100 Pexels video IDs/streams
 
-แตก ZIP → เข้าโฟลเดอร์จนเห็น `api`, `lib`, `public`, `package.json`, `vercel.json` → Ctrl+A → GitHub Upload files → Commit → รอ Vercel Ready → Ctrl+Shift+R
+Run tests:
+```bash
+npm test
+```

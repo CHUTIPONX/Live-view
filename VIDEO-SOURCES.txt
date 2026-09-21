@@ -1,16 +1,113 @@
-Season Video Sources — Pexels
-=============================
-The dashboard streams these videos remotely; the ZIP does not redistribute the source files.
-Pexels License: https://www.pexels.com/license/
+Pancake Live Sales Monitor v1.6.0 — Scenic Video Sources
 
-SPRING  — https://www.pexels.com/video/16422889/  (3840x2160)
-SUMMER  — https://www.pexels.com/video/2181400/   (3840x2160)
-RAIN    — https://www.pexels.com/video/33938712/ (3840x2160)
-AUTUMN  — https://www.pexels.com/video/10320339/ (3840x2160)
-WINTER  — https://www.pexels.com/video/11269162/ (3840x2160)
-SAKURA  — https://www.pexels.com/video/25811364/ (3840x2160)
-AURORA  — https://www.pexels.com/video/30767659/ (4K timelapse)
-NIGHT   — https://www.pexels.com/video/30560746/ (3840x2160)
+Playlist behavior:
+- 100 unique Pexels videos
+- Each clip plays to its natural end before switching
+- Fisher-Yates shuffle; no repeat until the current 100-video cycle is exhausted
+- Two video layers: current clip + one preloaded next clip only
+- Crossfade between clips; no artificial CSS zoom
+- Pexels source is streamed remotely; files are not redistributed inside this ZIP
 
-Pexels currently states its photos/videos are free for personal and commercial use and attribution
-is not required, subject to the Pexels License / Terms. Keep this source list for provenance.
+License reference: https://www.pexels.com/license/
+
+ID | CATEGORY | NAME | STREAM
+2248630 | MORNING | RIVER SUNRISE | https://www.pexels.com/download/video/2248630/
+10343783 | MORNING | OCEAN DAWN | https://www.pexels.com/download/video/10343783/
+35190889 | MORNING | ALPINE MORNING | https://www.pexels.com/download/video/35190889/
+4287971 | MORNING | SEA OF CLOUDS | https://www.pexels.com/download/video/4287971/
+33657476 | MORNING | RIVER MORNING | https://www.pexels.com/download/video/33657476/
+19219428 | MORNING | FOGGY RIVER SUNRISE | https://www.pexels.com/download/video/19219428/
+11349556 | MORNING | MISTY FOREST DAWN | https://www.pexels.com/download/video/11349556/
+31996806 | MORNING | MOUNTAIN SUNRISE | https://www.pexels.com/download/video/31996806/
+5456664 | MORNING | MISTY MORNING FOREST | https://www.pexels.com/download/video/5456664/
+5587008 | MORNING | MORNING WOODS | https://www.pexels.com/download/video/5587008/
+27100099 | MORNING | SUN THROUGH TREES | https://www.pexels.com/download/video/27100099/
+27797068 | MORNING | FOREST SUN RAYS | https://www.pexels.com/download/video/27797068/
+6056826 | MORNING | GOLDEN FOREST | https://www.pexels.com/download/video/6056826/
+35451208 | MORNING | MORNING PARK | https://www.pexels.com/download/video/35451208/
+19190654 | MORNING | FOREST SUNLIGHT | https://www.pexels.com/download/video/19190654/
+5692317 | MORNING | DAYBREAK FOREST | https://www.pexels.com/download/video/5692317/
+2882624 | MORNING | PINE SUN RAYS | https://www.pexels.com/download/video/2882624/
+10663886 | MORNING | DEEP FOREST SUNRISE | https://www.pexels.com/download/video/10663886/
+5847998 | MORNING | DAWN IN THE PINES | https://www.pexels.com/download/video/5847998/
+34461969 | MORNING | EARLY FOREST LIGHT | https://www.pexels.com/download/video/34461969/
+28551448 | MORNING | SUNRISE ABOVE FOG | https://www.pexels.com/download/video/28551448/
+5361429 | MORNING | MOUNTAIN DAWN | https://www.pexels.com/download/video/5361429/
+34418479 | MORNING | RICE FIELD SUNRISE | https://www.pexels.com/download/video/34418479/
+12742745 | MORNING | MISTY MOUNTAIN SUNRISE | https://www.pexels.com/download/video/12742745/
+6989287 | MORNING | SUNRISE SEA OF CLOUDS | https://www.pexels.com/download/video/6989287/
+29138481 | NATURE | SERENE RIVER DRONE | https://www.pexels.com/download/video/29138481/
+31149903 | NATURE | GREEN RIVER LANDSCAPE | https://www.pexels.com/download/video/31149903/
+30272404 | NATURE | SCENIC RIVER | https://www.pexels.com/download/video/30272404/
+35217740 | NATURE | WIDE RIVER VIEW | https://www.pexels.com/download/video/35217740/
+33026654 | NATURE | RIVER & MOUNTAINS | https://www.pexels.com/download/video/33026654/
+13978913 | NATURE | MOUNTAIN RIVER | https://www.pexels.com/download/video/13978913/
+29067768 | NATURE | FOREST RIVER | https://www.pexels.com/download/video/29067768/
+4318717 | NATURE | CASCADING RIVER | https://www.pexels.com/download/video/4318717/
+3859467 | NATURE | LUSH RIVER | https://www.pexels.com/download/video/3859467/
+35483911 | NATURE | VERDANT RIVER | https://www.pexels.com/download/video/35483911/
+35701154 | SEA | TROPICAL BEACH | https://www.pexels.com/download/video/35701154/
+20600550 | NATURE | MORAINE LAKE | https://www.pexels.com/download/video/20600550/
+30965147 | NATURE | ALPINE LAKE | https://www.pexels.com/download/video/30965147/
+31546637 | SEA | TROPICAL COAST | https://www.pexels.com/download/video/31546637/
+7206186 | NATURE | FOREST WATERFALL | https://www.pexels.com/download/video/7206186/
+4803828 | NATURE | MOUNTAIN LAKE | https://www.pexels.com/download/video/4803828/
+14920039 | SEA | EMPTY TROPICAL BEACH | https://www.pexels.com/download/video/14920039/
+32509235 | NATURE | MOUNTAIN REFLECTION | https://www.pexels.com/download/video/32509235/
+34329125 | SEA | TURQUOISE BEACH | https://www.pexels.com/download/video/34329125/
+17488328 | SEA | TROPICAL ISLAND | https://www.pexels.com/download/video/17488328/
+11964899 | SEA | OCEAN BEACH | https://www.pexels.com/download/video/11964899/
+30089500 | SEA | COASTAL CLIFFS | https://www.pexels.com/download/video/30089500/
+34971572 | SEA | OCEAN SUNRISE | https://www.pexels.com/download/video/34971572/
+35466365 | SEA | BEACH SUNRISE | https://www.pexels.com/download/video/35466365/
+7555070 | SEA | ISLAND DRONE | https://www.pexels.com/download/video/7555070/
+20605896 | EVENING | GOLDEN LAKE | https://www.pexels.com/download/video/20605896/
+37405901 | EVENING | SUNSET LAKE | https://www.pexels.com/download/video/37405901/
+9717009 | EVENING | BEACH GOLDEN HOUR | https://www.pexels.com/download/video/9717009/
+34359054 | EVENING | OCEAN SUNSET | https://www.pexels.com/download/video/34359054/
+13140746 | EVENING | CITY RIVER SUNSET | https://www.pexels.com/download/video/13140746/
+13141718 | EVENING | BRIDGE SUNSET | https://www.pexels.com/download/video/13141718/
+13304161 | EVENING | RED SKY SUNSET | https://www.pexels.com/download/video/13304161/
+37838971 | EVENING | BALI SUNSET | https://www.pexels.com/download/video/37838971/
+4612084 | EVENING | WAIKIKI SUNSET | https://www.pexels.com/download/video/4612084/
+13694500 | EVENING | RIVER SUNSET | https://www.pexels.com/download/video/13694500/
+3671403 | EVENING | SUNSET TIMELAPSE | https://www.pexels.com/download/video/3671403/
+38670907 | EVENING | VOLCANO LAKE SUNSET | https://www.pexels.com/download/video/38670907/
+38778493 | EVENING | FOREST SUNSET GLOW | https://www.pexels.com/download/video/38778493/
+38643270 | EVENING | ALPINE SUNSET | https://www.pexels.com/download/video/38643270/
+12449540 | EVENING | BEACH PIER SUNSET | https://www.pexels.com/download/video/12449540/
+13680845 | EVENING | SUNSET CLOUDS | https://www.pexels.com/download/video/13680845/
+6664950 | EVENING | CITY SUNSET | https://www.pexels.com/download/video/6664950/
+29809309 | EVENING | COASTAL CLIFFS GOLDEN | https://www.pexels.com/download/video/29809309/
+30167139 | EVENING | OCEAN CLIFFS | https://www.pexels.com/download/video/30167139/
+29991411 | EVENING | CLIFFSIDE SEA | https://www.pexels.com/download/video/29991411/
+34317804 | EVENING | SUNLIGHT ON LAKE | https://www.pexels.com/download/video/34317804/
+27089237 | EVENING | ROAD TO EVENING | https://www.pexels.com/download/video/27089237/
+37177259 | EVENING | KINGSTON COAST | https://www.pexels.com/download/video/37177259/
+9985870 | EVENING | BEACH FIRST LIGHT | https://www.pexels.com/download/video/9985870/
+10894460 | EVENING | HIMALAYAN SKY | https://www.pexels.com/download/video/10894460/
+34985943 | NIGHT | CITY TWILIGHT | https://www.pexels.com/download/video/34985943/
+30118694 | NIGHT | CITY NIGHT | https://www.pexels.com/download/video/30118694/
+35991484 | NIGHT | COAST NIGHT | https://www.pexels.com/download/video/35991484/
+36239867 | CLOUDS | MISTY VALLEY | https://www.pexels.com/download/video/36239867/
+29493733 | WINTER | WINTER RIVER | https://www.pexels.com/download/video/29493733/
+36529092 | NIGHT | NIGHT SKYLINE | https://www.pexels.com/download/video/36529092/
+25397823 | NIGHT | CITY LIGHTS | https://www.pexels.com/download/video/25397823/
+9544125 | NIGHT | AERIAL NIGHT CITY | https://www.pexels.com/download/video/9544125/
+35259457 | NIGHT | NIGHT SKYSCRAPERS | https://www.pexels.com/download/video/35259457/
+15559634 | NIGHT | KUALA LUMPUR NIGHT | https://www.pexels.com/download/video/15559634/
+30997922 | NIGHT | VIBRANT NIGHT SKYLINE | https://www.pexels.com/download/video/30997922/
+11336050 | NIGHT | METRO NIGHT | https://www.pexels.com/download/video/11336050/
+35151423 | NIGHT | CITY GLOW | https://www.pexels.com/download/video/35151423/
+4158760 | NIGHT | NIGHT PANORAMA | https://www.pexels.com/download/video/4158760/
+34224135 | NIGHT | NIGHT TIMELAPSE | https://www.pexels.com/download/video/34224135/
+10677852 | NIGHT | CITY TRAFFIC NIGHT | https://www.pexels.com/download/video/10677852/
+13176773 | NIGHT | URBAN NIGHT TRAFFIC | https://www.pexels.com/download/video/13176773/
+13567267 | NIGHT | NIGHT TRAFFIC TIMELAPSE | https://www.pexels.com/download/video/13567267/
+10822505 | NIGHT | AERIAL NIGHT TRAFFIC | https://www.pexels.com/download/video/10822505/
+36765364 | WINTER | WINTER FOREST 4K | https://www.pexels.com/download/video/36765364/
+10512313 | WINTER | SNOW FOREST | https://www.pexels.com/download/video/10512313/
+11269162 | WINTER | AERIAL SNOW FOREST | https://www.pexels.com/download/video/11269162/
+6904288 | WINTER | SNOW COVERED WOODS | https://www.pexels.com/download/video/6904288/
+10427238 | WINTER | WINTER PINES | https://www.pexels.com/download/video/10427238/
+5721851 | CLOUDS | CLOUDY MOUNTAIN PEAKS | https://www.pexels.com/download/video/5721851/
