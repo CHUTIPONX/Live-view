@@ -1,125 +1,39 @@
-# Pancake Live Sales Monitor v1.2.7
+# Pancake Live Sales Monitor v1.2.8
 
-Database-free live Pancake POS sales monitor for Vercel and multiple devices.
+Database-free Pancake POS live sales monitor for Vercel.
 
-## v1.2.7 — Employee Statistic / analytics endpoint fix
+## v1.2.8: verified complete snapshot only
 
-The live report now reads Pancake's sales analytics endpoint:
+This release prioritizes correctness over showing a partial number.
 
-```text
-GET /shops/{SHOP_ID}/analytics/sale
-```
+- A total is published only when every selected Shop ID returns a valid Pancake analytics result.
+- If any shop fails, times out, or lacks permission, the API returns `complete:false` and the dashboard keeps the last verified total.
+- Positive/negative animations happen only between two complete snapshots for the same shop set and Bangkok date.
+- The money parser is fail-closed: it accepts Pancake `price` / `price_data` only. It no longer guesses among `revenue`, `total_price`, `amount`, or other fields.
+- Historical values follow the same all-shops-complete rule.
+- Live checks happen every second in the browser, while verified source snapshots are aligned to a 5-second server window to reduce request pressure and make devices compare the same time window more closely.
 
-The request uses Bangkok-day `since` / `until` values. Historical cards use:
-
-```text
-split_by[]=Time.day
-```
-
-The old `/orders/statistics` route is no longer used. On affected Pancake accounts that route was interpreted like an order-detail path and could return an Order permission message even with HTTP 200.
-
-For installations with many shops, the dashboard uses rolling batches instead of trying to query every shop inside one serverless invocation. The default live batch is 8 shops; the screen commits a new total only after a full shop cycle completes. This avoids Vercel timeouts and prevents partial batches from creating fake increase/decrease animations.
-
-## Login
-
-For production on Vercel set:
+## Pancake source
 
 ```text
-APP_USER=Owner
-APP_PASSWORD=<your password>
-APP_SECRET=<long random secret>
+GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/analytics/sale
 ```
 
-## Shared Pancake configuration
+Today uses Bangkok 00:00 as `since` and the current fixed snapshot cutoff as `until`.
+Historical data uses `split_by[]=Time.day`.
 
-In **Vercel → Project → Settings → Environment Variables**:
+The legacy `/orders/statistics` route is not used for sales totals.
 
-```text
-PANCAKE_POS_API_KEY_1=<your Pancake POS API key>
-PANCAKE_LABEL_1=Main Account
-PANCAKE_SHOP_IDS_1=ALL
-```
+## Status meanings
 
-`ALL` automatically discovers every shop visible to that key. Or specify IDs:
+- `LIVE`: every selected store is present in the current verified snapshot.
+- `HOLD`: one or more stores are incomplete. The displayed total stays at the last verified value and no +/- animation occurs.
+- `UNCONFIGURED`: no Pancake connection is configured.
 
-```text
-PANCAKE_SHOP_IDS_1=12345,67890,99887
-```
-
-Up to three API keys are supported:
-
-```text
-PANCAKE_POS_API_KEY_2=...
-PANCAKE_LABEL_2=Second Account
-PANCAKE_SHOP_IDS_2=ALL
-
-PANCAKE_POS_API_KEY_3=...
-PANCAKE_LABEL_3=Third Account
-PANCAKE_SHOP_IDS_3=ALL
-```
-
-A Shop ID present under more than one API key is counted once.
-
-### Money unit
-
-The captured Pancake sales metric used by this project is converted with a divisor of `100` by default. If your account returns whole currency units instead, set:
-
-```text
-PANCAKE_MONEY_DIVISOR=1
-```
-
-Normally leave it unset.
-
-## Dashboard behavior
-
-- Browser requests one live batch every second.
-- Default live batch: 8 shops (server clamps requests to 12 max).
-- A total is displayed as a completed snapshot only after all selected shops have been visited in the cycle.
-- Historical 4-day data is loaded separately in batches and merged with today's live total.
-- Last complete good total remains on screen during temporary API errors.
-- Failed shops are shown as `DEGRADED` instead of silently replacing the total with zero.
-- No database / Supabase / Firebase is required.
-
-## Safe diagnostics
-
-While logged in, open:
-
-```text
-/api/diagnostics
-```
-
-It probes a small sample of configured shops and reports the analytics response shape and parsed revenue/order values. API keys are not returned.
-
-## Run locally
-
-Requires Node.js 20+.
-
-```bash
-npm i
-npm test
-npm run dev
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-## Pancake endpoints used
-
-```text
-GET https://pos.pages.fm/api/v1/shops?api_key=...
-GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/analytics/sale?api_key=...&since=...&until=...
-GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/analytics/sale?api_key=...&since=...&until=...&split_by[]=Time.day
-```
-
-## Verification
-
-Run:
+## Tests
 
 ```bash
 npm test
 ```
 
-The test suite checks syntax, authentication/config masking, captured sales parsing, analytics response parsing, rolling multi-shop batches, correct `/analytics/sale` URLs, `since`/`until`, daily `split_by[]`, and verifies that `/orders/statistics` is never called.
+The self-test verifies that partial shop data can never become the displayed total and that generic money fields are rejected.

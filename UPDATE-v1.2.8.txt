@@ -1,0 +1,46 @@
+Pancake Live Sales Monitor v1.2.8 — VERIFIED COMPLETE SNAPSHOT
+
+IMPORTANT RULES IN THIS VERSION
+
+1) NEVER publish a partial total.
+   - If 50 shops are selected, a new total is accepted only when all 50/50 shops return valid sales data.
+   - 49/50 = HOLD. The previous verified total stays on screen.
+
+2) + / - animation is allowed ONLY between two complete snapshots.
+   - Same selected shop set.
+   - Same Bangkok business date.
+   - Both snapshots are 100% complete.
+   - API/network/permission failure never creates a fake sale or cancellation animation.
+
+3) Fail-closed money parser.
+   - Reads exact Pancake analytics `price` / `price_data` only.
+   - Does NOT guess from `revenue`, `total_price`, `amount`, etc.
+   - If Pancake returns an unknown structure, the dashboard HOLDs the last verified total instead of showing a guessed number.
+
+4) Cross-device timing is aligned to a 5-second verified snapshot window.
+   - Browser checks every second.
+   - Pancake source snapshot is refreshed on a fixed 5-second boundary.
+   - Each server refresh fetches every selected shop, with credential fallback for duplicated shop IDs.
+
+5) History is strict too.
+   - A historical day is updated only after every selected shop is successfully included.
+   - Partial historical sums are never published.
+
+6) Source endpoint:
+   GET /shops/{SHOP_ID}/analytics/sale
+   - Today: since Bangkok 00:00:00 -> fixed current snapshot cutoff
+   - History: split_by[]=Time.day
+   - Legacy /orders/statistics is disabled.
+
+UPLOAD
+- Extract this ZIP.
+- Open the extracted folder until you can see api / lib / public / package.json / vercel.json.
+- Upload all of those items to the ROOT of CHUTIPONX/Live-view.
+- Commit to main.
+- Wait for Vercel Ready.
+- Ctrl+Shift+R.
+
+EXPECTED UI
+LIVE     = verified complete snapshot, e.g. 51/51 shops.
+HOLD     = at least one shop is missing/failed. Total does NOT change.
+NO TOTAL CHANGE = API problem is being ignored for + / - purposes.

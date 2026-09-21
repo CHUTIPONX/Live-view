@@ -1,0 +1,28 @@
+Pancake Live Sales Monitor v1.2.7 — ANALYTICS ENDPOINT FIX
+
+ROOT CAUSE FOUND
+- /shops/{SHOP_ID}/orders/statistics is not the Employee Statistic endpoint used by the current Pancake POS API.
+- On the affected account, Pancake interpreted "statistics" like an Order ID and replied HTTP 200 with a permission error for that Order.
+- Shop listing still worked, which is why Settings looked healthy while Live Sales stayed at 0.
+
+FIXED
+- Replaced live statistics calls with:
+  GET /shops/{SHOP_ID}/analytics/sale
+- Uses since/until for the Bangkok day.
+- History uses split_by[]=Time.day.
+- Robust parsing for summary/result/data analytics response shapes.
+- Money conversion remains configurable with PANCAKE_MONEY_DIVISOR (default 100).
+- Rolling live polling: 8 shops per request instead of all 40-50 shops in one Vercel function.
+- Full total is committed only when a complete shop cycle finishes, preventing fake gain/loss animations from partial batches.
+- History uses rolling batches and one grouped request per shop.
+- Added /api/diagnostics (authenticated) for safe endpoint/shape testing without exposing API keys.
+- Dashboard never disappears on API failure; it retains the last complete total and shows the real failing shop/error.
+
+VERIFIED LOCALLY
+- Node syntax check for server/client/API files.
+- Parser tests for captured summary.price response.
+- Parser tests for analytics/sale array/result response.
+- URL test confirms /analytics/sale + since/until are used.
+- Test explicitly rejects any /orders/statistics call.
+- History test confirms split_by[]=Time.day.
+- Rolling batch test across multiple shops.

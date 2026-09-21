@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0c13">
+  <title>Settings · Pancake Live</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="settings-page">
+  <div class="settings-orb so1"></div><div class="settings-orb so2"></div><div class="settings-orb so3"></div>
+
+  <header class="settings-header liquid-pill">
+    <a class="icon-text-btn" href="/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Sales</span>
+    </a>
+    <div class="settings-heading"><div class="eyebrow">PANCAKE LIVE</div><h1>Settings</h1></div>
+    <button id="logoutBtn" class="icon-text-btn"><span>Logout</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4M14 8l4 4-4 4M18 12H9"/></svg></button>
+  </header>
+
+  <main class="settings-wrap">
+    <section class="settings-card liquid-glass">
+      <div class="settings-title">
+        <div>
+          <div class="micro-label">CONNECTION</div>
+          <h2>Pancake POS API</h2>
+          <p>Connect API keys, then choose which stores are included in the live total. <small>ไม่ใช้ Database</small></p>
+        </div>
+        <button id="addBtn" class="soft liquid-control"><span class="plus">+</span> Add API</button>
+      </div>
+
+      <div id="sharedBanner" class="shared-banner liquid-glass hidden"><b>Shared Vercel Configuration</b><span>API settings come from Vercel Environment Variables and are shared by every device.</span><small>แก้ API ที่ Vercel → Settings → Environment Variables</small></div>
+
+      <div id="connections" class="connections"></div>
+      <button id="emptyAdd" class="empty-add hidden"><span class="plus-large">+</span><span>Add POS API Key</span></button>
+
+      <footer class="savebar">
+        <div id="notice"></div>
+        <button id="saveBtn" class="primary liquid-control">Save Settings</button>
+      </footer>
+    </section>
+
+    <section class="info-card">
+      <div class="liquid-glass"><span class="info-dot"></span><b>Realtime</b><span>Single-flight refresh every 1 second</span></div>
+      <div class="liquid-glass"><span class="info-dot"></span><b>No Database</b><span>Shared API settings can come directly from Vercel Environment Variables</span></div>
+      <div class="liquid-glass"><span class="info-dot"></span><b>Vercel Ready</b><span>Static UI with serverless API routes</span></div>
+    </section>
+  </main>
+  <script src="/settings.js" type="module"></script>
+</body>
+</html>
