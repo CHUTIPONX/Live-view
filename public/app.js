@@ -1,16 +1,10 @@
-import { scenicViews, SCENIC_VIEW_COUNT } from './scenic-videos.js';
+import { startWorldSceneEngine } from './world-scene-engine.js';
 
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v164';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v170';
 
-let activeScenicVideo = -1;
-let scenicCurrentIndex = -1;
-let scenicQueue = [];
-let scenicPrepared = null;
-let scenicPreparingPromise = null;
-let scenicSwitching = false;
 let stop = false;
 let polling = false;
 let historyPolling = false;
@@ -18,218 +12,7 @@ let totalShown = 0;
 let ordersShown = 0;
 let lastComplete = null;
 let historyDays = null;
-
-function particles(){
-  const box=$('#seasonParticles'); if(!box)return; box.innerHTML='';
-  for(let i=0;i<38;i++){
-    const e=document.createElement('i');
-    e.style.setProperty('--x',`${(i*37)%101}%`);
-    e.style.setProperty('--delay',`${-(i%15)*.67}s`);
-    e.style.setProperty('--dur',`${7+(i%9)}s`);
-    e.style.setProperty('--i',i);
-    box.appendChild(e);
-  }
-}
-particles();
-
-const reduceMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
-const scenicVideos=[$('#seasonVideoA'),$('#seasonVideoB')].filter(Boolean);
-
-function shuffleIndexes(){
-  const out=Array.from({length:SCENIC_VIEW_COUNT},(_,i)=>i);
-  for(let i=out.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [out[i],out[j]]=[out[j],out[i]];
-  }
-  // Do not let a new 100-video Japan cycle immediately repeat the clip that just ended.
-  if(out.length>1&&out[0]===scenicCurrentIndex)[out[0],out[1]]=[out[1],out[0]];
-  return out;
-}
-
-function ensureScenicQueue(){
-  if(!scenicQueue.length)scenicQueue=shuffleIndexes();
-}
-
-function takeNextScenicIndex(){
-  ensureScenicQueue();
-  return scenicQueue.shift();
-}
-
-function peekNextScenicIndex(){
-  ensureScenicQueue();
-  return scenicQueue[0];
-}
-
-function applyScenicMeta(item){
-  if(!item)return;
-  const season=$('#season');
-  if(season)season.className=`season season-${item.tone||'spring'}${activeScenicVideo>=0?' video-ready':''}`;
-  if($('#seasonName'))$('#seasonName').textContent=item.name;
-  const source=$('#seasonSource');
-  if(source){
-    source.href=item.page||'https://www.pexels.com/';
-    source.title=`Pexels video ${item.pexelsId||''}`.trim();
-  }
-  particles();
-}
-
-function resetVideoElement(video){
-  if(!video)return;
-  video.onloadeddata=null;
-  video.oncanplay=null;
-  video.onended=null;
-  video.onerror=null;
-  video.pause();
-  video.removeAttribute('src');
-  video.load();
-  video.classList.remove('active','ready','failed');
-  video.dataset.view='';
-}
-
-function loadScenicInto(videoIndex,itemIndex,{autoplay=false}={}){
-  const video=scenicVideos[videoIndex];
-  const item=scenicViews[itemIndex];
-  if(!video||!item)return Promise.reject(new Error('Scenic video slot is unavailable'));
-
-  return new Promise((resolve,reject)=>{
-    video.onloadeddata=null;
-    video.oncanplay=null;
-    video.onended=null;
-    video.onerror=null;
-    video.classList.remove('active','ready','failed');
-    video.dataset.view=item.id;
-    video.preload='auto';
-    video.loop=false;
-    video.muted=true;
-    video.playsInline=true;
-    video.src=item.video;
-
-    let settled=false;
-    const ready=()=>{
-      if(settled||video.dataset.view!==item.id)return;
-      settled=true;
-      video.classList.add('ready');
-      if(autoplay){
-        video.currentTime=0;
-        const play=video.play();
-        if(play?.catch)play.catch(()=>{});
-      }else{
-        video.pause();
-        try{video.currentTime=0}catch{}
-      }
-      resolve({videoIndex,itemIndex,item,video});
-    };
-    const fail=()=>{
-      if(settled)return;
-      settled=true;
-      video.classList.add('failed');
-      reject(new Error(`Unable to load scenic video ${item.pexelsId||item.id}`));
-    };
-    video.onloadeddata=ready;
-    video.oncanplay=ready;
-    video.onerror=fail;
-    video.load();
-    if(video.readyState>=2)ready();
-  });
-}
-
-async function prepareNextScenic(){
-  if(reduceMotion||scenicVideos.length<2)return null;
-  if(scenicPrepared)return scenicPrepared;
-  if(scenicPreparingPromise)return scenicPreparingPromise;
-
-  scenicPreparingPromise=(async()=>{
-    const targetIndex=activeScenicVideo<0?0:1-activeScenicVideo;
-
-    // A failed remote video is skipped, never shown as a black frame, and never
-    // counts as a played item in the current 100-video Japan cycle.
-    for(let attempts=0;attempts<SCENIC_VIEW_COUNT;attempts++){
-      const itemIndex=peekNextScenicIndex();
-      try{
-        const prepared=await loadScenicInto(targetIndex,itemIndex,{autoplay:false});
-        // Remove only after the clip really preloaded successfully.
-        scenicQueue.shift();
-        scenicPrepared={...prepared};
-        return scenicPrepared;
-      }catch{
-        scenicQueue.shift();
-        resetVideoElement(scenicVideos[targetIndex]);
-      }
-    }
-    return null;
-  })();
-
-  try{return await scenicPreparingPromise}
-  finally{scenicPreparingPromise=null}
-}
-
-async function advanceScenicView(){
-  if(reduceMotion||scenicSwitching)return;
-  scenicSwitching=true;
-  try{
-    if(!scenicPrepared)await prepareNextScenic();
-    const prepared=scenicPrepared;
-    if(!prepared)return;
-    scenicPrepared=null;
-
-    const target=prepared.video;
-    const targetIndex=prepared.videoIndex;
-    const current=activeScenicVideo>=0?scenicVideos[activeScenicVideo]:null;
-    const item=prepared.item;
-
-    target.onended=()=>void advanceScenicView();
-    target.onerror=()=>void advanceScenicView();
-    target.currentTime=0;
-    const play=target.play();
-    if(play?.catch)await play.catch(()=>{});
-
-    requestAnimationFrame(()=>target.classList.add('active'));
-    if(current)current.classList.remove('active');
-    activeScenicVideo=targetIndex;
-    scenicCurrentIndex=prepared.itemIndex;
-    applyScenicMeta(item);
-
-    // Let the 1.8s CSS crossfade finish before reusing the old element to
-    // preload exactly one following clip. We never preload all 100 Japan videos.
-    setTimeout(()=>{
-      if(current&&current!==target)resetVideoElement(current);
-      void prepareNextScenic();
-    },1900);
-  }finally{
-    scenicSwitching=false;
-  }
-}
-
-async function startScenicPlaylist(){
-  if(!SCENIC_VIEW_COUNT)return;
-  scenicQueue=shuffleIndexes();
-  if(reduceMotion||!scenicVideos.length){
-    scenicCurrentIndex=takeNextScenicIndex();
-    applyScenicMeta(scenicViews[scenicCurrentIndex]);
-    return;
-  }
-
-  // Start one video, then preload one next video only.
-  for(let attempts=0;attempts<SCENIC_VIEW_COUNT;attempts++){
-    const itemIndex=takeNextScenicIndex();
-    try{
-      const first=await loadScenicInto(0,itemIndex,{autoplay:true});
-      activeScenicVideo=0;
-      scenicCurrentIndex=itemIndex;
-      first.video.classList.add('active');
-      first.video.onended=()=>void advanceScenicView();
-      first.video.onerror=()=>void advanceScenicView();
-      applyScenicMeta(first.item);
-      void prepareNextScenic();
-      return;
-    }catch{
-      resetVideoElement(scenicVideos[0]);
-    }
-  }
-  $('#season')?.classList.remove('video-ready');
-}
-
-void startScenicPlaylist();
+const stopWorldScenes = startWorldSceneEngine();
 
 function clock(){
   const d=new Date(),tz={timeZone:'Asia/Bangkok'};
@@ -359,9 +142,9 @@ async function stagePriceEvents(amounts){
     const node=createPriceEvent(clean[i],i,clean.length);
     if(node)nodes.push(node);
     // A whole detected batch can be visible together instead of replacing the last popup.
-    if(i<clean.length-1)await sleep(Math.min(95,55+(i%3)*14));
+    if(i<clean.length-1)await sleep(Math.min(150,90+(i%3)*18));
   }
-  if(nodes.length)await sleep(210);
+  if(nodes.length)await sleep(760);
   return nodes;
 }
 async function flyPriceEvent(node,amount){
@@ -377,8 +160,8 @@ async function flyPriceEvent(node,amount){
     {transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0px)'},
     {offset:.58,transform:`translate(calc(-50% + ${dx*.68}px),calc(-50% + ${dy*.68}px)) scale(.72)`,opacity:1,filter:'blur(0px)'},
     {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.16)`,opacity:0,filter:'blur(3px)'}
-  ],{duration:620,easing:'cubic-bezier(.18,.84,.22,1)',fill:'forwards'});
-  await sleep(390);
+  ],{duration:900,easing:'cubic-bezier(.18,.84,.22,1)',fill:'forwards'});
+  await sleep(560);
   mega.classList.remove('score-catch');void mega.offsetWidth;mega.classList.add('score-catch');
   const stage=$('#stage');
   stage?.classList.remove('gain-hit','loss-hit');
@@ -484,7 +267,7 @@ async function playVerifiedOrderEvents(previous,current,events){
     // The popup whooshes into the main score. Counting starts during the impact,
     // then deliberately slows for the final numbers before landing exactly on truth.
     const fly=flyPriceEvent(node,amount);
-    await sleep(250);
+    await sleep(380);
     const count=Promise.all([
       animateScoreCounter(totalShown,nextTotal,{render:renderMainScore,element:$('#mega'),money:true}),
       animateScoreCounter(ordersShown,nextOrders,{duration:360,render:renderOrderScore,element:$('#orders')})
@@ -492,7 +275,7 @@ async function playVerifiedOrderEvents(previous,current,events){
     await Promise.all([fly,count]);
     runningTotal=nextTotal;
     runningOrders=nextOrders;
-    if(i<verified.length-1)await sleep(75);
+    if(i<verified.length-1)await sleep(140);
   }
 
   // Employee Statistic remains the source of truth. The animation may only end here.
@@ -503,7 +286,7 @@ async function playVerifiedAggregateDelta(previous,current,delta){
   if(Math.abs(delta)>.001){
     const nodes=await stagePriceEvents([delta]);
     const fly=flyPriceEvent(nodes[0],delta);
-    await sleep(250);
+    await sleep(380);
     await Promise.all([
       fly,
       animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
@@ -817,6 +600,6 @@ async function runHistoryCycle(){
 
 runLiveCycle();
 historyTimer=setTimeout(runHistoryCycle,30000);
-window.addEventListener('beforeunload',()=>{stop=true;clearTimeout(liveTimer);clearTimeout(historyTimer)});
+window.addEventListener('beforeunload',()=>{stop=true;stopWorldScenes?.();clearTimeout(liveTimer);clearTimeout(historyTimer)});
 if($('#fullBtn'))$('#fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()};
 if($('#logoutBtn'))$('#logoutBtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.href='/login'};

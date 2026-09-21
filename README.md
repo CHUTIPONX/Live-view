@@ -1,25 +1,26 @@
-# Pancake Live Sales Monitor v1.6.4
+# Pancake Live Sales Monitor v1.7.0
 
-## JAPAN ONLY · Smooth Score Edition
+Live Pancake POS sales dashboard with verified complete snapshots, per-order price animation, shared multi-account configuration, hardened server-side security, and a lightweight animated world-scene background.
 
-v1.6.4 keeps the verified Pancake sales logic, multi-account support, Japan-only video playlist and server-side security unchanged. This release focuses on presentation.
+## v1.7.0 visual system
 
-### Sale animation
-- Multiple verified order prices from the same refresh can appear on screen together.
-- Each verified price flies into the main total instead of replacing the previous popup.
-- The main sales score begins counting during the impact.
-- Counting moves quickly while far from the target, then finishes the final numbers one-by-one with progressively slower timing.
-- If per-order reconciliation is unavailable, the UI shows only the exact verified aggregate delta; it never invents an order split.
-- Final displayed value always snaps to the complete Employee Statistic snapshot.
+The dashboard no longer uses background videos. It renders 24 vector/CSS living scenes and changes scene every 60 seconds. Locations and climates include Japan, Thailand, Indonesia, Switzerland, Italy, France, Norway, Iceland, USA, Canada, Caribbean, Patagonia, Amazon, Sahara, Serengeti, Cape Town, Dubai, Sydney, New Zealand and Lapland.
 
-### Typography / security screen
-- Dashboard font: Manrope + IBM Plex Sans Thai + Noto Sans JP.
-- Inspect warning redesigned with lighter Thai typography, cleaner spacing and a compact Japanese security motif.
-- Google Fonts are explicitly allowed by CSP; all existing CSRF, same-origin and server secret protections remain active.
+People, animals, weather and objects react to the scene: hot scenes can show a resting person, panting dog and drinking cow; rainy scenes use umbrellas and sheltering animals; winter scenes add coats, curled animals, snow and chimney smoke; coast scenes use boats and gulls; savanna/desert scenes animate wildlife and dust.
 
-### Background
-- 100 Japan-only scenic videos.
-- Full-clip playback, crossfade, no forced timer rotation and no artificial zoom.
+See `SCENE-PLAN-v1.7.0.txt` for the full scene list.
 
-### Install
-Upload the contents of this folder to the repository root and redeploy on Vercel.
+## Sales truth rules
+
+- Live total comes from Pancake Employee Statistic `/analytics/sale`.
+- The dashboard commits a total only after a complete shop snapshot.
+- Incomplete/timeout results never become a fake decrease.
+- Individual price popups are shown only when real orders reconcile exactly to the Employee Statistic delta.
+- Multiple verified prices can appear together, then fly into the main score one by one.
+- The main score counts quickly while far from the target and slows down for the final digits.
+
+## Deploy
+
+Extract the ZIP and upload the contents of the project folder to the GitHub repository root. Wait for Vercel to become Ready, then hard-refresh the dashboard.
+
+Keep `APP_SECRET` and Pancake credentials private. If shared runtime account editing is enabled, follow `VERCEL-SETUP.txt` for the Vercel Blob configuration.

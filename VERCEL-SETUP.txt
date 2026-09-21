@@ -1,4 +1,4 @@
-Pancake Live Sales Monitor v1.6.4 — Vercel Setup
+Pancake Live Sales Monitor v1.7.0 — Vercel Setup
 ================================================
 
 RECOMMENDED: ADD / DELETE PANCAKE ACCOUNTS FROM THE WEB APP

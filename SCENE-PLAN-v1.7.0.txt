@@ -1,0 +1,99 @@
+Pancake Live Sales Monitor v1.7.0 — LIVING WORLD SCENE PLAN
+============================================================
+
+RULES
+- 24 graphic scenes, no background video.
+- One scene lasts exactly 60 seconds.
+- Scene index is synchronized from the current minute, so different screens normally see the same scene.
+- Crossfade between scenes; no black frame.
+- People, animals, vehicles, weather and small objects animate according to the environment.
+- The world scene is presentation only. It never changes Pancake sales data.
+
+24 SCENES
+01 Kyoto, Japan — Spring Morning
+   Sakura village, petals, walkers, photographer, cat, birds.
+
+02 Tokyo, Japan — Summer Night
+   Neon city, pedestrians, car, train, small lights.
+
+03 Hokkaido, Japan — Deep Winter
+   Snow village, falling snow, chimney smoke, coat wearer, curled dog, perched bird.
+
+04 Bangkok, Thailand — Monsoon Evening
+   Rainy city, wet-road reflections, umbrellas, car, cat sheltering from rain.
+
+05 Northern Thailand — Hot Season
+   Bright rural heat, heat haze, shirtless person resting, panting dog, cow drinking water, bird.
+
+06 Bali, Indonesia — Tropical Morning
+   Rice terraces, mist, butterflies, hiker and birds.
+
+07 Swiss Alps — Spring
+   Snow peaks, meadow flowers, cows grazing, photographer, birds.
+
+08 Amalfi Coast, Italy — Summer
+   Cliff town, blue sea, boats, seagull, walker.
+
+09 Paris, France — Autumn Rain
+   Autumn city, rain, wet road, umbrella pedestrian, bicycle and perched bird.
+
+10 Norway — Fjord Summer
+   Long evening light, fjord water, hiker, boat, seagull and mist.
+
+11 Iceland — Aurora Winter
+   Aurora, stars, snow mountain, coat wearer and deer.
+
+12 New York, USA — Autumn Sunset
+   Skyline sunset, leaves, jogger, pedestrian, taxi and birds.
+
+13 Banff, Canada — Winter Lake
+   Frozen lake, snow peaks, deer, coat wearer and perched bird.
+
+14 California, USA — Desert Heat
+   Dry-road heat haze, person resting by parked car and bird.
+
+15 Caribbean — Tropical Beach
+   Clear water, sun sparkle, sunbather, panting dog, seagull and boat.
+
+16 Patagonia, Argentina — Windy Spring
+   Mountain plain, wind, hiker, guanaco and bird.
+
+17 Amazon, Brazil — Rainy Season
+   Rainforest, river, rain, mist, frog, butterfly and bird.
+
+18 Sahara — Dry Season Sunset
+   Warm dunes, dust, camel caravan, traveler and bird.
+
+19 Serengeti, Tanzania — Golden Dry Season
+   Savanna, elephant, giraffe, safari vehicle, birds and dust.
+
+20 Cape Town, South Africa — Spring Coast
+   Coastal mountain, jogger, seagull, boat and moving clouds.
+
+21 Dubai, UAE — Hot Evening
+   Modern city, warm heat shimmer, car, pedestrian and plane.
+
+22 Sydney, Australia — Summer Harbour
+   Harbour, bridge, jogger, boat and seagull.
+
+23 New Zealand — Spring Meadow
+   Meadow flowers, sheep grazing, hiker and birds.
+
+24 Finnish Lapland — Polar Winter Night
+   Aurora cabin, snow, chimney smoke, reindeer, coat wearer and perched bird.
+
+
+ACTIVE BEHAVIOUR EXAMPLES
+- Hot scenes: person rests, dog pants, cow lowers its head to drink, heat haze moves.
+- Rain scenes: umbrella walkers move, cat stays under shelter, rain and wet-road reflection animate.
+- Winter scenes: people wear coats, dogs curl up, snow falls, smoke rises from houses.
+- Spring scenes: petals/flowers/butterflies move and people walk or take photos.
+- Beach/coast scenes: boats drift, gulls fly, water sparkles.
+- Savanna/desert scenes: animals walk slowly, dust crosses the ground, heat shimmer appears.
+- City scenes: cars, trains, pedestrians, lights and reflections animate without covering the sales total.
+
+SALES ANIMATION
+- Verified per-order prices may show together in a batch.
+- Price chips are larger and remain visible longer before flying into the main score.
+- Main total counts quickly while far away and then slows down to one-by-one final digits.
+- The final number is always the verified Pancake Employee Statistic snapshot.

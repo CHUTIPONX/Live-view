@@ -1,0 +1,19 @@
+Pancake Live Sales Monitor v1.7.0
+
+WHAT CHANGED
+- Removed all dashboard background video playback.
+- Added 24 living world graphic scenes.
+- Scene changes every 60 seconds and loops continuously.
+- Scene rotation is minute-synchronized across browsers.
+- Added active people, animals, vehicles and weather behaviours per scene.
+- Added spring, summer, monsoon/rain, autumn, winter, dry, tropical and polar environments around the world.
+- Enlarged verified green price popups and kept them visible longer.
+- Multiple verified order-price popups can remain on screen together before flying into the main total.
+- Main scoreboard still slows down near the verified target.
+
+UNCHANGED
+- Pancake Employee Statistic remains the sales source of truth.
+- Complete-snapshot-only total rule remains.
+- Per-order animation remains verified from real orders only.
+- Multi-account/Vercel shared configuration remains.
+- Security/CSRF/session protections remain.

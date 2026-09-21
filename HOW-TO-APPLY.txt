@@ -1,7 +1,7 @@
-HOW TO APPLY v1.6.3 JAPAN ONLY
+HOW TO APPLY v1.7.0
 
 FULL ZIP
-1. Extract pancake-live-sales-monitor-v1.6.3.zip.
+1. Extract pancake-live-sales-monitor-v1.7.0.zip.
 2. Open the extracted folder until api/, lib/, public/, package.json and vercel.json are directly visible.
 3. Select everything INSIDE that folder.
 4. GitHub Live-view -> Add file -> Upload files.
@@ -9,7 +9,10 @@ FULL ZIP
 6. Wait for Vercel Ready.
 7. Hard refresh with Ctrl+Shift+R.
 
-HOTFIX FROM v1.6.2
-Extract Live-view-v1.6.3-hotfix.zip and upload every included file into matching repository paths.
+HOTFIX FROM v1.6.4
+Extract Live-view-v1.7.0-hotfix.zip and upload every included file into matching repository paths.
 
-This update changes only the visual playlist, dashboard labels, font stack and security warning presentation. Sales/API/account logic stays unchanged.
+IMPORTANT
+- public/world-scenes.js and public/world-scene-engine.js are NEW and must be uploaded.
+- public/scenic-videos.js is no longer used. Leaving the old file in GitHub is harmless, but the full ZIP no longer contains it.
+- This release does not change Pancake sales calculation or account aggregation.
