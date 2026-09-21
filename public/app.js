@@ -42,7 +42,7 @@ function shuffleIndexes(){
     const j=Math.floor(Math.random()*(i+1));
     [out[i],out[j]]=[out[j],out[i]];
   }
-  // Do not let a new 200-video cycle immediately repeat the clip that just ended.
+  // Do not let a new 100-video Japan cycle immediately repeat the clip that just ended.
   if(out.length>1&&out[0]===scenicCurrentIndex)[out[0],out[1]]=[out[1],out[0]];
   return out;
 }
@@ -143,7 +143,7 @@ async function prepareNextScenic(){
     const targetIndex=activeScenicVideo<0?0:1-activeScenicVideo;
 
     // A failed remote video is skipped, never shown as a black frame, and never
-    // counts as a played item in the current 200-video cycle.
+    // counts as a played item in the current 100-video Japan cycle.
     for(let attempts=0;attempts<SCENIC_VIEW_COUNT;attempts++){
       const itemIndex=peekNextScenicIndex();
       try{
@@ -191,7 +191,7 @@ async function advanceScenicView(){
     applyScenicMeta(item);
 
     // Let the 1.8s CSS crossfade finish before reusing the old element to
-    // preload exactly one following clip. We never preload all 200 videos.
+    // preload exactly one following clip. We never preload all 100 Japan videos.
     setTimeout(()=>{
       if(current&&current!==target)resetVideoElement(current);
       void prepareNextScenic();

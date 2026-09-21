@@ -1,67 +1,19 @@
-# Pancake Live Sales Monitor v1.6.2
+# Pancake Live Sales Monitor v1.6.3
 
-## WORLD TRAVEL Scenic Expansion
+## JAPAN ONLY · 四季
 
-v1.6.2 keeps the verified Pancake sales logic, sequential per-order animation, multi-account setup and v1.6.1 security hardening unchanged.
+v1.6.3 keeps the verified sales, multi-account, per-order animation and server security from v1.6.2 unchanged.
 
-The visual background playlist is expanded from 100 to **200 unique Pexels videos**.
+### Visual changes
+- 100 unique Japan-focused Pexels video IDs
+- Japan scenery only: city, countryside, shrines, temples, Mt Fuji, trains, coast, sakura, autumn and snow
+- Full-clip playback: a background changes only when the current video ends
+- Two-video crossfade and only one-next preload
+- No artificial CSS zoom
+- Dashboard label: `100 JAPAN VIEWS · 四季 · FULL CLIP`
 
-### New WORLD TRAVEL collection
-100 additional destination/travel clips were added, including:
-- Switzerland / Swiss Alps
-- Amalfi Coast
-- Venice
-- Iceland
-- Cappadocia
-- Paris
-- Shanghai
-- Singapore
-- Dubai
-- New York
-- Patagonia
-- Kyoto
-- Rome
-- Sydney
-- Hong Kong
-- Bali
-- Phuket
-- Bangkok
-- Maldives
-- Barcelona
-- Santorini
-- London
-- Tokyo
-- New Zealand
-- Banff
-- Norway
+### Security screen
+The inspect/security warning was redesigned to match the dashboard: dark glass, vermilion accents and a Japanese-inspired crest motif. Server-side CSRF, session, origin and secret protections remain unchanged.
 
-The collection mixes bright daytime travel, blue-water destinations, mountain scenery, iconic landmarks, sunrise, golden hour, sunset and city-night views.
-
-### Playback behavior
-- 200 unique videos total
-- Full clip playback — the clip changes only when the current video ends
-- Fisher-Yates shuffle
-- No repeat until the current 200-video cycle is exhausted
-- Two video elements only: current + one preloaded next clip
-- 1.8 second crossfade
-- Failed remote clips are skipped instead of producing a black screen
-- No artificial CSS zoom (`transform:none`)
-- Video background remains nearly unblurred
-
-### Security preserved
-v1.6.1 server-side CSRF / same-origin / CSP / secure-cookie protections and the visible Inspect warning remain unchanged.
-
-### Sales logic preserved
-No change to:
-- Employee Statistic `summary.price / 100`
-- complete-snapshot-only totals
-- zero-sale shop handling
-- account add/remove
-- shop deduplication
-- verified individual-order popup animation
-- scoreboard count-up / count-down display
-
-### Run tests
-```bash
-npm test
-```
+### Install
+Upload the contents of this folder to the repository root and redeploy on Vercel.

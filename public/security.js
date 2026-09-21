@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const WARNING_TEXT = 'โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ';
-  const SUB_TEXT = 'SECURITY ALERT · Developer tools / source inspection detected';
+  const WARNING_TEXT = 'ไม่อนุญาตให้ตรวจสอบหรือแก้ไขระบบ';
+  const SUB_TEXT = '警告 · ACCESS RESTRICTED';
   const originalFetch = window.fetch.bind(window);
   let lastWarningAt = 0;
   let devtoolsFlag = false;
@@ -63,11 +63,14 @@
     overlay.setAttribute('role', 'alert');
     overlay.setAttribute('aria-live', 'assertive');
     overlay.innerHTML = `
+      <div class="security-warning-frame" aria-hidden="true"></div>
       <div class="security-warning-inner">
-        <div class="security-warning-icon">!</div>
-        <div class="security-warning-title">${WARNING_TEXT}</div>
+        <div class="security-warning-kamon" aria-hidden="true"><span></span><i></i></div>
         <div class="security-warning-sub">${SUB_TEXT}</div>
-        <div class="security-warning-note">ข้อมูลสำคัญอยู่ฝั่ง Server · การแก้ DOM ใน Inspect เปลี่ยนได้แค่หน้าจอเครื่องนี้ ไม่เปลี่ยนยอดจริง</div>
+        <div class="security-warning-title">${WARNING_TEXT}</div>
+        <div class="security-warning-rule"><i></i><b></b><i></i></div>
+        <div class="security-warning-note">กรุณาปิดเครื่องมือนักพัฒนาและกลับเข้าสู่หน้าหลัก</div>
+        <div class="security-warning-foot">โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ</div>
       </div>`;
     document.body.appendChild(overlay);
     return overlay;
@@ -133,7 +136,7 @@
   // This is deterrence only. Actual protection lives server-side: authenticated
   // API routes, CSRF validation, no raw secrets in public settings, CSP and no-store.
   Object.defineProperty(window, '__PLSM_SECURITY__', {
-    value: Object.freeze({ enabled:true, version:'1.6.1' }),
+    value: Object.freeze({ enabled:true, version:'1.6.3' }),
     writable:false,
     configurable:false,
     enumerable:false

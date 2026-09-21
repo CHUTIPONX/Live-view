@@ -11,7 +11,7 @@
   --loss:#ff758e;
   --accent:#b8adff;
   --shadow:0 38px 110px rgba(0,0,0,.34);
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Noto Sans Thai","Segoe UI",Arial,sans-serif;
+  --font:"SF Pro Display","SF Pro Text","Hiragino Sans","Yu Gothic UI","Noto Sans Thai","Noto Sans JP",Meiryo,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;font-family:var(--font);background:#070910;color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -133,66 +133,58 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 .connection input:disabled,.shop:disabled{cursor:default;opacity:.82}.shop:disabled.on{opacity:1}
 
 
-/* v1.6.1 security deterrence overlay — warning only; real protection is server-side. */
+/* v1.6.3 Japanese security overlay — visual deterrence; real protection remains server-side. */
 .security-warning{
-  position:fixed;
-  inset:0;
-  z-index:2147483647;
-  display:grid;
-  place-items:center;
-  padding:clamp(18px,4vw,48px);
-  background:rgba(0,0,0,.90);
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:opacity .16s ease,visibility 0s linear .18s;
+  position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;
+  padding:clamp(18px,4vw,54px);overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 18%,rgba(190,20,32,.20),transparent 34%),
+    linear-gradient(155deg,#09090b 0%,#12090b 48%,#070708 100%);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .22s ease,visibility 0s linear .24s;
 }
-.security-warning.show{
-  opacity:1;
-  visibility:visible;
-  transition:opacity .12s ease;
+.security-warning:before,.security-warning:after{
+  content:"";position:absolute;pointer-events:none;opacity:.5
 }
+.security-warning:before{
+  width:min(86vw,1000px);height:min(70vh,650px);border:1px solid rgba(229,52,62,.22);
+  border-radius:36px;box-shadow:0 0 120px rgba(172,17,29,.12),inset 0 0 70px rgba(255,255,255,.018)
+}
+.security-warning:after{
+  width:120%;height:1px;top:50%;left:-10%;
+  background:linear-gradient(90deg,transparent,rgba(255,74,82,.22),transparent)
+}
+.security-warning.show{opacity:1;visibility:visible;transition:opacity .16s ease}
+.security-warning-frame{position:absolute;inset:clamp(12px,2.2vw,28px);border:1px solid rgba(255,255,255,.055);border-radius:30px;pointer-events:none}
+.security-warning-frame:before,.security-warning-frame:after{
+  content:"";position:absolute;left:50%;transform:translateX(-50%);width:92px;height:8px;
+  border-left:2px solid rgba(239,53,65,.55);border-right:2px solid rgba(239,53,65,.55)
+}
+.security-warning-frame:before{top:-1px;border-top:2px solid rgba(239,53,65,.55)}
+.security-warning-frame:after{bottom:-1px;border-bottom:2px solid rgba(239,53,65,.55)}
 .security-warning-inner{
-  width:min(1100px,96vw);
-  text-align:center;
-  padding:clamp(26px,5vw,70px);
-  border:2px solid rgba(255,32,32,.75);
-  border-radius:28px;
-  background:rgba(18,0,0,.88);
-  box-shadow:0 0 0 1px rgba(255,0,0,.2) inset,0 0 80px rgba(255,0,0,.26);
-  backdrop-filter:blur(4px);
+  position:relative;width:min(760px,92vw);text-align:center;padding:clamp(30px,5vw,58px) clamp(22px,5vw,56px);
+  border:1px solid rgba(255,75,84,.28);border-radius:30px;
+  background:linear-gradient(150deg,rgba(28,15,18,.82),rgba(12,12,15,.88));
+  box-shadow:0 34px 120px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.055);
+  backdrop-filter:blur(14px) saturate(115%);
 }
-.security-warning-icon{
-  width:72px;
-  height:72px;
-  margin:0 auto 18px;
-  display:grid;
-  place-items:center;
-  border:3px solid #ff2525;
-  border-radius:999px;
-  color:#ff2525;
-  font:900 48px/1 system-ui,sans-serif;
-  box-shadow:0 0 38px rgba(255,0,0,.45);
-}
+.security-warning-kamon{width:78px;height:78px;margin:0 auto 22px;position:relative;display:grid;place-items:center}
+.security-warning-kamon:before,.security-warning-kamon:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,70,80,.58)}
+.security-warning-kamon:before{inset:2px}.security-warning-kamon:after{inset:12px;border-color:rgba(255,70,80,.26)}
+.security-warning-kamon span{width:34px;height:34px;border:2px solid #ff4a54;border-radius:50%;box-shadow:0 0 28px rgba(255,38,52,.24)}
+.security-warning-kamon i{position:absolute;width:2px;height:34px;background:#ff4a54;box-shadow:10px 0 #ff4a54,-10px 0 #ff4a54;transform:rotate(90deg);opacity:.72}
+.security-warning-sub{color:#ff6a72;font-size:clamp(10px,1.2vw,12px);font-weight:780;letter-spacing:.22em;text-transform:uppercase}
 .security-warning-title{
-  color:#ff2020;
-  font:1000 clamp(34px,7vw,92px)/1.02 system-ui,-apple-system,"Segoe UI",sans-serif;
-  letter-spacing:-.045em;
-  text-shadow:0 0 22px rgba(255,0,0,.46),0 3px 0 #520000;
-  overflow-wrap:anywhere;
+  margin:16px auto 0;max-width:680px;color:#fff3f3;
+  font-size:clamp(29px,5.4vw,58px);font-weight:820;line-height:1.1;letter-spacing:-.045em;
+  text-shadow:0 12px 44px rgba(0,0,0,.48);overflow-wrap:anywhere
 }
-.security-warning-sub{
-  margin-top:18px;
-  color:#ff8c8c;
-  font:900 clamp(13px,2vw,22px)/1.25 system-ui,sans-serif;
-  letter-spacing:.12em;
-}
-.security-warning-note{
-  margin:18px auto 0;
-  max-width:900px;
-  color:rgba(255,225,225,.82);
-  font:700 clamp(12px,1.45vw,17px)/1.5 system-ui,sans-serif;
-}
-@media (prefers-reduced-motion:reduce){
-  .security-warning{transition:none}
-}
+.security-warning-rule{display:flex;align-items:center;justify-content:center;gap:11px;margin:25px auto 20px;width:min(310px,72%)}
+.security-warning-rule i{height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(255,83,92,.58))}
+.security-warning-rule i:last-child{background:linear-gradient(90deg,rgba(255,83,92,.58),transparent)}
+.security-warning-rule b{width:6px;height:6px;border:1px solid #ff5761;transform:rotate(45deg)}
+.security-warning-note{color:rgba(255,242,242,.68);font-size:clamp(12px,1.5vw,15px);font-weight:560;line-height:1.7}
+.security-warning-foot{margin-top:20px;color:#ff505b;font-size:clamp(12px,1.55vw,15px);font-weight:780;letter-spacing:.02em}
+@media(max-width:600px){.security-warning-inner{border-radius:24px}.security-warning-kamon{width:64px;height:64px;margin-bottom:18px}}
+@media(prefers-reduced-motion:reduce){.security-warning{transition:none}}

@@ -1,0 +1,39 @@
+Pancake Live Sales Monitor v1.6.3 — TEST REPORT
+================================================
+
+RESULT: PASS
+
+AUTOMATED
+- npm test: PASS
+- Node syntax check: PASS
+- Project self-test: PASS
+- Security integration checks: PASS
+- CSRF / same-origin / CSP checks retained: PASS
+
+JAPAN PLAYLIST
+- Pexels video entries: 100
+- Unique Pexels IDs: 100/100
+- Direct download URL and ID mapping: PASS
+- Dashboard label: 100 JAPAN VIEWS · 四季 · FULL CLIP
+- Timer-based switching absent: PASS
+- Switch on video ended event: PASS
+- Dual-video crossfade: PASS
+- Preload only the next video: PASS
+- No artificial video CSS zoom: PASS
+
+SECURITY PRESENTATION
+- Thai warning title present: PASS
+- Japanese-inspired crest / red-black glass styling: PASS
+- Inspect shortcut deterrence retained: PASS
+- Existing server-side security files unchanged: PASS
+
+SALES SAFETY
+- No sales aggregation file changed in v1.6.3.
+- No Pancake endpoint logic changed in v1.6.3.
+- No account/storage logic changed in v1.6.3.
+
+LOCAL HTTP SMOKE
+- GET /: 200
+- GET /style.css: 200
+- GET /scenic-videos.js: 200
+- Served playlist count: 100

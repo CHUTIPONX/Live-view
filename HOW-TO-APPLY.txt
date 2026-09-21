@@ -1,15 +1,15 @@
-HOW TO APPLY v1.6.2
+HOW TO APPLY v1.6.3 JAPAN ONLY
 
 FULL ZIP
-1. Extract pancake-live-sales-monitor-v1.6.2.zip.
+1. Extract pancake-live-sales-monitor-v1.6.3.zip.
 2. Open the extracted folder until api/, lib/, public/, package.json and vercel.json are directly visible.
-3. Select everything inside that folder.
+3. Select everything INSIDE that folder.
 4. GitHub Live-view -> Add file -> Upload files.
 5. Upload all selected files and commit to main.
 6. Wait for Vercel Ready.
 7. Hard refresh with Ctrl+Shift+R.
 
-HOTFIX FROM v1.6.1
-Extract Live-view-v1.6.2-hotfix.zip and upload every included file into the matching repository paths.
+HOTFIX FROM v1.6.2
+Extract Live-view-v1.6.3-hotfix.zip and upload every included file into matching repository paths.
 
-The sales/security logic is unchanged. This update expands the scenic playlist and visual label.
+This update changes only the visual playlist, dashboard labels, font stack and security warning presentation. Sales/API/account logic stays unchanged.

@@ -13,16 +13,16 @@ const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
 const lock=JSON.parse(fs.readFileSync('package-lock.json','utf8'));
 const videoIds=[...scenic.matchAll(/pexelsId:(\d+)/g)].map(x=>x[1]);
 const downloadUrls=[...scenic.matchAll(/https:\/\/www\.pexels\.com\/download\/video\/(\d+)\//g)].map(x=>x[1]);
-if(videoIds.length!==200)throw new Error(`Expected 200 scenic Pexels videos, found ${videoIds.length}`);
-if(new Set(videoIds).size!==200)throw new Error('Scenic Pexels playlist contains duplicate video ids');
-if(downloadUrls.length!==200||downloadUrls.some((id,i)=>id!==videoIds[i]))throw new Error('Scenic download URLs do not match Pexels ids');
+if(videoIds.length!==100)throw new Error(`Expected 100 Japan Pexels videos, found ${videoIds.length}`);
+if(new Set(videoIds).size!==100)throw new Error('Scenic Pexels playlist contains duplicate video ids');
+if(downloadUrls.length!==100||downloadUrls.some((id,i)=>id!==videoIds[i]))throw new Error('Scenic download URLs do not match Pexels ids');
 if(!index.includes('id="seasonVideoA"')||!index.includes('id="seasonVideoB"'))throw new Error('Dual scenic video elements are missing');
 if(/<video[^>]+\sloop(?:\s|>)/i.test(index))throw new Error('Scenic videos must not loop; each clip must finish before switching');
-if(!index.includes('200 VIEWS · WORLD TRAVEL · FULL CLIP'))throw new Error('200-video world-travel label is missing');
+if(!index.includes('100 JAPAN VIEWS · 四季 · FULL CLIP'))throw new Error('100-video Japan label is missing');
 if(app.includes('SCENIC_ROTATE_MS')||app.includes('scheduleScenicRotation'))throw new Error('Timer-based scenic rotation must be removed');
 if((app.match(/onended=\(\)=>void advanceScenicView\(\)/g)||[]).length<2)throw new Error('Ended-event scenic switching is missing');
 if(!app.includes('preload exactly one following clip')||!app.includes('prepareNextScenic'))throw new Error('One-next-video preload logic is missing');
-if(!app.includes('shuffleIndexes')||!app.includes('if(!scenicQueue.length)scenicQueue=shuffleIndexes()'))throw new Error('No-repeat 200-video shuffle cycle is missing');
+if(!app.includes('shuffleIndexes')||!app.includes('if(!scenicQueue.length)scenicQueue=shuffleIndexes()'))throw new Error('No-repeat 100-video Japan shuffle cycle is missing');
 if(!core.includes('PLSM_CONFIG_STORE')||!core.includes("import('@vercel/blob')"))throw new Error('Vercel Blob runtime config support is missing');
 if(pkg.dependencies?.['@vercel/blob']!=='2.6.1')throw new Error('@vercel/blob must be pinned to 2.6.1');
 if(lock.packages?.['']?.dependencies?.['@vercel/blob']!=='2.6.1')throw new Error('package-lock root dependency does not match package.json');
@@ -54,6 +54,11 @@ if(!securityServer.includes("frame-ancestors 'none'")||!securityServer.includes(
 if(!vercel.includes('Content-Security-Policy')||!vercel.includes('Permissions-Policy')||!vercel.includes('Strict-Transport-Security'))throw new Error('Vercel security headers are missing');
 
 console.log('Security checks: CSRF · same-origin · CSP · login throttle · inspect warning: PASS');
-console.log('Scenic playlist checks: 200 unique videos · WORLD TRAVEL · FULL CLIP · ended-event · one-next preload');
+
+if(!index.includes('100 JAPAN VIEWS · 四季 · FULL CLIP'))throw new Error('Japan-only scenic label is missing');
+if(!security.includes('ไม่อนุญาตให้ตรวจสอบหรือแก้ไขระบบ')||!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Japanese-styled security warning copy is missing');
+if(!css.includes('.security-warning-kamon')||!css.includes('Hiragino Sans'))throw new Error('Japan security styling/font stack is missing');
+
+console.log('Scenic playlist checks: 100 unique Japan videos · FOUR SEASONS · FULL CLIP · ended-event · one-next preload');
 console.log('Static integration checks: PASS');
 console.log('Syntax check: PASS');
