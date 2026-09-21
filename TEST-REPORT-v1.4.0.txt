@@ -1,0 +1,24 @@
+Pancake Live Sales Monitor v1.4.0 - Test Report
+
+PASS: Node syntax validation for server, core, handlers, Vercel adapter, browser JS and all API routes.
+PASS: Captured Employee Statistic response: summary.price=75300 -> 753 THB.
+PASS: summary.price is authoritative over data[].result.price.
+PASS: success:true + data:[] + summary:{} -> legitimate 0 THB shop.
+PASS: Empty/malformed response without summary property is rejected, not converted to zero.
+PASS: Non-zero counters without price are rejected, not converted to zero.
+PASS: price != price_data is rejected.
+PASS: 13-shop / 3-batch flow with one timeout then retry.
+PASS: 52 unique shops / 3 accounts / 9 batches with one legitimate zero-sales shop.
+PASS: Duplicate shop across API accounts is counted once.
+PASS: Permission-denied first credential falls back to second credential for the same shop.
+PASS: Stable 10-second live cutoff and deterministic planId across devices in the same snapshot bucket.
+PASS: Historical 4-day batched Employee Statistic flow.
+PASS: Partial snapshot never publishes a subtotal.
+PASS: Timeout/error never becomes fake zero and never creates a fake decrease.
+
+Command executed:
+  npm test
+
+Result:
+  Syntax check: PASS
+  Self-test: PASS

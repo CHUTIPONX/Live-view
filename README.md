@@ -1,73 +1,78 @@
-# Pancake Live Sales Monitor v1.3.1
+# Pancake Live Sales Monitor v1.4.0
 
-This build uses the same Pancake sales analytics family as **ยอดขาย → Employee Statistic** and fixes Vercel `FUNCTION_INVOCATION_TIMEOUT` by removing the all-shops-in-one-function design.
+รุ่นนี้ปรับ flow ยอดขายให้ยึด Pancake POS > ยอดขาย > Employee Statistic เป็น source of truth และแก้ปัญหาที่เจอจากการใช้งานจริงกับหลาย Account / 50+ ร้าน
 
-## v1.3.1 — timeout-safe complete snapshots
+## กฎยอดขาย
 
-The dashboard now works in two stages:
+- Endpoint: `/shops/{SHOP_ID}/analytics/sale`
+- Group: `split_by[]=User.id`
+- ยอดขายของร้าน: `summary.price / 100`
+- จำนวนออเดอร์: `summary.order_count`
+- จำนวนสินค้า: `summary.product_count`
+- ห้ามรวม `data[].result.price` เพื่อสร้างยอด Live เอง
+- `success:true + data:[] + summary:{}` = ร้านไม่มีขายในช่วงนั้น = `0 บาท` อย่างถูกต้อง
+- ถ้า response คลุมเครือ/permission error/network error จะไม่เดาเป็น 0
 
-1. `GET /api/report-plan?kind=live` creates a signed snapshot plan and freezes one Bangkok-time cutoff.
-2. `POST /api/report-batch` fetches only 6 shops per Vercel invocation.
+## Complete snapshot only
 
-The browser runs up to 3 small batches in parallel, accumulates them locally, and publishes a new total only after every configured shop in the signed plan has succeeded.
+หน้า Live จะเปลี่ยนยอดก็ต่อเมื่อได้ผลครบทุก Store ที่ตั้งไว้เท่านั้น
 
-This means a deployment with dozens of shops no longer requires one `/api/sales` invocation to remain alive until all shops finish.
+- 52/52 = LIVE และเผยแพร่ยอดใหม่
+- 51/52 = HOLD และค้างยอดที่ยืนยันแล้วรอบก่อน
+- ร้าน timeout/permission error จะไม่ถูกแทนด้วย 0
+- `+ / -` คำนวณเฉพาะ Complete Snapshot → Complete Snapshot เท่านั้น
 
-## Authoritative live metric
+## Vercel timeout protection
 
-Each shop uses:
+ระบบไม่ให้ Serverless Function ตัวเดียวรอครบทุก Store อีกแล้ว
 
-```text
-GET /shops/{SHOP_ID}/analytics/sale
-split_by[]=User.id
-since=<Bangkok day 00:00:00>
-until=<one fixed snapshot cutoff>
+- แบ่งครั้งละ 6 Store
+- Browser เรียกพร้อมกันสูงสุด 3 batch
+- แต่ละ Store มี timeout + retry ของตัวเอง
+- Batch request มี client retry เพิ่มอีก 1 รอบ
+- ต่อให้ batch หนึ่งพัง batch อื่นยังตรวจต่อ เพื่อรายงานจำนวน Store ที่ขาดจริง
 
-TOTAL SALES = response.summary.price / 100
-ORDERS      = response.summary.order_count
-PRODUCTS    = response.summary.product_count
-```
+## หลายเครื่องให้ยอดตรงกันมากขึ้น
 
-The live total never sums `data[].result.price`. Pancake's top-level `summary.price` is the source of truth.
+Live snapshot ใช้ cutoff 10 วินาทีร่วมกัน (มี safety lag 2 วินาที) เช่นทุกเครื่องในรอบเดียวกันจะถาม Pancake ด้วย `until` เดียวกัน ไม่ใช่เครื่อง A เวลา 16:30:04 และเครื่อง B เวลา 16:30:08
 
-## Fixed cutoff
+Plan ID ถูกสร้างจาก shop set + time window จริง จึงเหมือนกันข้ามเครื่องเมื่ออยู่ snapshot เดียวกัน
 
-Every batch in one snapshot uses the same `since` and `until`. If a 51-shop cycle takes several seconds, shop 1 and shop 51 are still queried for the same reporting window rather than different moments in time.
+## Regression tests ที่มีใน v1.4.0
 
-## No fake +/-
+- Response จริง `summary.price=75300` → `฿753`
+- Summary ชนะ employee rows
+- Empty sales `data:[] + summary:{}` → ฿0
+- Response คลุมเครือ → fail closed ไม่เดายอด
+- 52 unique shops / 3 accounts / 9 batches
+- ร้านหนึ่งยอด 0 แต่ snapshot ยัง complete
+- Shop ซ้ำข้าม Account ไม่ถูกบวกซ้ำ
+- Credential แรกไม่มีสิทธิ์ → fallback credential ถัดไป
+- Timeout ครั้งแรก → retry แล้วผ่าน
+- History batching
+- Partial snapshot ไม่ publish subtotal
+- Stable cutoff / deterministic planId ข้ามเครื่อง
 
-- 51/51 valid shops: publish the new total.
-- 50/51 valid shops: `HOLD`; keep the last verified total.
-- Timeout / HTTP failure / permission error: never replace a shop with zero.
-- +/- is calculated only between complete snapshots for the same shop set and Bangkok date.
-
-## Historical cards
-
-History uses the same batch architecture with:
-
-```text
-split_by[]=Time.day
-split_by[]=User.id
-```
-
-Historical totals are also published only after every selected shop succeeds.
-
-## Money units
-
-Captured Employee Statistic responses use 1/100-baht raw units:
-
-```text
-summary.price        75300 -> 753.00 THB
-summary.shipping_fee 18200 -> 182.00 THB
-summary.cod          93500 -> 935.00 THB
-```
-
-The divisor is fixed at `100` in code.
-
-## Verify
+รันตรวจได้ด้วย:
 
 ```bash
 npm test
 ```
 
-The self-test includes a 13-shop batched live snapshot, timeout-and-retry recovery, fixed-cutoff verification, and batched history.
+ต้องได้:
+
+```text
+Syntax check: PASS
+Self-test: PASS
+```
+
+## Deploy
+
+1. แตก ZIP
+2. เข้าโฟลเดอร์จนเห็น `api`, `lib`, `public`, `package.json`, `vercel.json`
+3. เลือกของข้างในทั้งหมดแล้ว Upload ทับใน GitHub repo เดิม
+4. Commit
+5. รอ Vercel เป็น Ready
+6. หน้า Live กด `Ctrl + Shift + R`
+
+Environment Variables เดิมใช้ต่อได้ ไม่ต้องสร้าง Database

@@ -1,7 +1,7 @@
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const themes = [['spring','SPRING'],['summer','SUMMER'],['rain','RAIN'],['autumn','AUTUMN'],['winter','WINTER'],['sakura','SAKURA'],['aurora','AURORA'],['night','NIGHT']];
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v130';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v140';
 
 let theme = 0;
 let stop = false;
@@ -141,7 +141,7 @@ function renderComplete(d){
   const gapMs=Number.isFinite(previousMs)&&Number.isFinite(currentMs)?currentMs-previousMs:Infinity;
   // +/- is only shown for near-consecutive COMPLETE Employee Statistic snapshots.
   // Reloading after a long gap never invents a giant sale/cancellation animation.
-  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date&&gapMs>0&&gapMs<=180000;
+  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date&&gapMs>0&&gapMs<=60000;
   const delta=comparable?Number(d.total)-Number(lastComplete.total):0;
 
   status('LIVE');
@@ -217,39 +217,61 @@ async function getReportBatch(plan,batch){
 async function runBatches(plan,onProgress=()=>{}){
   const all=new Array(Number(plan.shops)||0);
   let nextBatch=0;
-  let done=0;
-  let stopped=false;
   const errors=[];
 
+  async function requestBatchWithRetry(batch){
+    let last=null;
+    for(let attempt=1;attempt<=2;attempt++){
+      try{return await getReportBatch(plan,batch)}
+      catch(e){
+        last=e;
+        if(attempt<2)await sleep(450);
+      }
+    }
+    throw last||new Error(`Batch ${batch+1}/${plan.totalBatches} failed`);
+  }
+
   async function worker(){
-    while(!stopped){
+    for(;;){
       const batch=nextBatch++;
       if(batch>=Number(plan.totalBatches||0))return;
       let json;
-      try{json=await getReportBatch(plan,batch)}
-      catch(e){errors.push(e?.message||String(e));stopped=true;return}
+      try{json=await requestBatchWithRetry(batch)}
+      catch(e){
+        errors.push(`Batch ${batch+1}/${plan.totalBatches} request failed · ${e?.message||String(e)}`);
+        // Do not abort the other batches. Finish the cycle so the UI can report the
+        // actual number of missing shops instead of claiming every shop is incomplete.
+        continue;
+      }
 
-      if(json.planId!==plan.planId){errors.push(`Batch ${batch+1} belongs to a different snapshot`);stopped=true;return}
-      if(json.completeBatch!==true){
-        const detail=Array.isArray(json.errors)&&json.errors.length?json.errors[0]:'Pancake batch incomplete';
-        errors.push(`Batch ${batch+1}/${plan.totalBatches} incomplete · ${detail}`);
-        stopped=true;return;
+      if(json.planId!==plan.planId){
+        errors.push(`Batch ${batch+1}/${plan.totalBatches} belongs to a different snapshot`);
+        continue;
       }
+
       for(const item of json.results||[]){
-        if(!item?.ok){errors.push(item?.error||`Shop ${item?.shopId||'?'} incomplete`);stopped=true;return}
-        const index=Number(item.index);
-        if(Number.isInteger(index)&&index>=0&&index<all.length)all[index]=item;
+        const index=Number(item?.index);
+        if(!Number.isInteger(index)||index<0||index>=all.length)continue;
+        if(item?.ok){all[index]=item}
+        else errors.push(`${item?.label||'Pancake'}/${item?.shopId||'?'} · ${item?.error||'shop incomplete'}`);
       }
-      done+=(json.results||[]).length;
-      onProgress(Math.min(done,all.length),all.length,json);
+      if(json.completeBatch!==true&&Array.isArray(json.errors)){
+        for(const err of json.errors) if(err&&!errors.includes(err)) errors.push(err);
+      }
+      onProgress(all.filter(Boolean).length,all.length,json);
     }
   }
 
   const workers=Array.from({length:Math.max(1,Math.min(BATCH_REQUEST_CONCURRENCY,Number(plan.totalBatches)||1))},()=>worker());
   await Promise.all(workers);
-  if(errors.length){const e=new Error(errors[0]);e.progress={done,total:all.length};throw e}
   const missing=all.reduce((n,x)=>n+(x?0:1),0);
-  if(missing){const e=new Error(`${missing} shop result(s) missing from complete snapshot`);e.progress={done:all.length-missing,total:all.length};throw e}
+  if(missing){
+    const first=errors[0]||`${missing} shop result(s) missing from complete snapshot`;
+    const e=new Error(first);
+    e.progress={done:all.length-missing,total:all.length,failed:missing};
+    e.errors=errors;
+    throw e;
+  }
   return all;
 }
 
@@ -304,16 +326,16 @@ async function runLiveCycle(){
     });
     const snapshot=snapshotFromLiveResults(plan,results);
     renderComplete(snapshot);
-    retryDelay=1500;
+    retryDelay=7000;
   }catch(e){
     const p=e?.progress||progress;
     const shops=Number(p?.total||currentLivePlan?.shops||lastComplete?.shops||0);
     const done=Number(p?.done||0);
     renderHold({
-      complete:false,status:'HOLD',shops,okShops:done,failedShops:Math.max(0,shops-done),
-      errors:[e?.message||'Live sync failed'],staleSnapshot:lastComplete
+      complete:false,status:'HOLD',shops,okShops:done,failedShops:Number(p?.failed??Math.max(0,shops-done)),
+      errors:Array.isArray(e?.errors)&&e.errors.length?e.errors:[e?.message||'Live sync failed'],staleSnapshot:lastComplete
     });
-    retryDelay=3000;
+    retryDelay=5000;
   }finally{
     liveCycleRunning=false;
     if(!stop){clearTimeout(liveTimer);liveTimer=setTimeout(runLiveCycle,retryDelay)}

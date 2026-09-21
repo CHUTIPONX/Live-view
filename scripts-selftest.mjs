@@ -32,7 +32,7 @@ try{
   };
   assert.deepEqual(parsePancakeSalesSummary(captured),{
     revenue:753,rawPrice:75300,orders:5,products:7,shippingFee:182,cod:935,
-    metricKey:'summary.price',orderKey:'summary.order_count'
+    metricKey:'summary.price',orderKey:'summary.order_count',zeroSales:false
   });
 
   // The LIVE total must come from summary, never by adding employee rows.
@@ -45,8 +45,19 @@ try{
   assert.equal(summaryWins.orders,761);
   assert.equal(summaryWins.products,1215);
 
-  // Fail closed if Pancake does not return the authoritative report summary.
+  // A successful Employee Statistic response with data:[] and an empty/zero summary
+  // means the shop genuinely has no matching sales. It is authoritative ฿0, not an error.
+  assert.deepEqual(parsePancakeSalesSummary({success:true,data:[],summary:{},pagination:null}),{
+    revenue:0,rawPrice:0,orders:0,products:0,shippingFee:0,cod:0,
+    metricKey:'summary.empty-zero',orderKey:null,zeroSales:true
+  });
+  assert.equal(parsePancakeSalesSummary({success:true,data:[],summary:{order_count:0,product_count:0},pagination:null}).revenue,0);
+
+  // Still fail closed for malformed/ambiguous responses. We never manufacture a zero
+  // unless Pancake explicitly returned the Employee Statistic summary property + empty data.
+  assert.equal(parsePancakeSalesSummary({success:true,data:[]}),null);
   assert.equal(parsePancakeSalesSummary({success:true,data:[{result:{price:14173700,order_count:761}}]}),null);
+  assert.equal(parsePancakeSalesSummary({success:true,data:[],summary:{order_count:3}}),null);
   assert.equal(parsePancakeSalesSummary({success:true,summary:{revenue:14173700,total_orders:761}}),null);
   assert.throws(()=>parsePancakeSalesSummary({success:true,summary:{price:10000,price_data:9999,order_count:1}}),/disagree/);
 
@@ -64,10 +75,10 @@ try{
   const got=await getSettings({headers:{cookie:`${sessionCookie}; ${settingsCookie}`}});
   assert.equal(got.status,200);assert.ok(!got.body.includes('secret-test-key'));
 
-  // v1.3.1 report batching: one Vercel invocation handles at most 6 shops,
+  // v1.4.0 report batching: one Vercel invocation handles at most 6 shops,
   // while every batch in the plan uses the exact same frozen cutoff.
   clearPancakeEnv();
-  process.env.PANCAKE_POS_API_KEY_1='v131-batch-key';
+  process.env.PANCAKE_POS_API_KEY_1='v140-batch-key';
   process.env.PANCAKE_SHOP_IDS_1=Array.from({length:13},(_,i)=>String(93001+i)).join(',');
   process.env.PANCAKE_LABEL_1='Batch Account';
   const batchUrls=[];
@@ -99,9 +110,100 @@ try{
   assert.ok(batchUrls.every(u=>u.searchParams.get('since')===plan131.since));
   assert.ok(batchUrls.every(u=>u.searchParams.get('until')===plan131.until));
 
+  // Regression for the real error seen in production: one selected shop returns
+  // success:true + data:[] + summary:{} because it has no sales. The entire snapshot
+  // must still complete, with that shop contributing exactly ฿0.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v140-zero-shop-key';
+  process.env.PANCAKE_SHOP_IDS_1='714344333,714344334,714344335';
+  process.env.PANCAKE_LABEL_1='Zero Shop Regression';
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    const shopId=u.pathname.split('/')[4];
+    if(shopId==='714344333')return response({data:[],success:true,summary:{},pagination:null});
+    const rawPrice=shopId==='714344334'?125000:275000;
+    return response({data:[{'User.id':'u1',result:{price:rawPrice,price_data:rawPrice,order_count:1}}],success:true,summary:{price:rawPrice,price_data:rawPrice,order_count:1,product_count:1},pagination:null});
+  };
+  const zeroPlan=await createReportPlan({},'live');
+  const zeroBatch=await fetchReportBatch({}, {token:zeroPlan.token,batch:0});
+  assert.equal(zeroBatch.completeBatch,true);
+  assert.equal(zeroBatch.results.length,3);
+  const zeroShop=zeroBatch.results.find(x=>x.shopId==='714344333');
+  assert.equal(zeroShop.ok,true);assert.equal(zeroShop.revenue,0);assert.equal(zeroShop.zeroSales,true);
+  assert.equal(zeroBatch.results.reduce((n,x)=>n+x.revenue,0),4000);
+
+  // Full production-size regression: 3 API accounts, 52 unique shops, 9 batches,
+  // one genuine zero-sales shop, and one overlapping shop between credentials.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v140-big-a1';
+  process.env.PANCAKE_POS_API_KEY_2='v140-big-a2';
+  process.env.PANCAKE_POS_API_KEY_3='v140-big-a3';
+  const a1=Array.from({length:18},(_,i)=>String(81001+i));
+  const a2=Array.from({length:18},(_,i)=>String(82001+i));
+  const a3=Array.from({length:16},(_,i)=>String(83001+i));
+  // Duplicate 81001 on account 2 must be used only as a credential fallback, not double counted.
+  process.env.PANCAKE_SHOP_IDS_1=a1.join(',');
+  process.env.PANCAKE_SHOP_IDS_2=['81001',...a2].join(',');
+  process.env.PANCAKE_SHOP_IDS_3=a3.join(',');
+  process.env.PANCAKE_LABEL_1='Big A1';process.env.PANCAKE_LABEL_2='Big A2';process.env.PANCAKE_LABEL_3='Big A3';
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));const shopId=u.pathname.split('/')[4];
+    if(shopId==='82009')return response({success:true,data:[],summary:{},pagination:null});
+    return response({success:true,data:[{'User.id':'u',result:{price:10000,price_data:10000,order_count:1}}],summary:{price:10000,price_data:10000,order_count:1,product_count:1},pagination:null});
+  };
+  const bigPlan=await createReportPlan({},'live');
+  assert.equal(bigPlan.shops,52);assert.equal(bigPlan.totalBatches,9);
+  const bigResults=[];
+  for(let b=0;b<bigPlan.totalBatches;b++){
+    const br=await fetchReportBatch({}, {token:bigPlan.token,batch:b});
+    assert.equal(br.completeBatch,true);
+    bigResults.push(...br.results);
+  }
+  assert.equal(bigResults.length,52);
+  assert.equal(bigResults.filter(x=>x.zeroSales).length,1);
+  assert.equal(bigResults.reduce((n,x)=>n+x.revenue,0),5100);
+
+  // Same shop under two credentials: if the first credential is denied, use the second
+  // credential without duplicating the shop in the total.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v140-fallback-denied';
+  process.env.PANCAKE_POS_API_KEY_2='v140-fallback-good';
+  process.env.PANCAKE_SHOP_IDS_1='99001';
+  process.env.PANCAKE_SHOP_IDS_2='99001';
+  let fallbackCalls=0;
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));fallbackCalls++;
+    const key=u.searchParams.get('api_key');
+    if(key==='v140-fallback-denied')return response({success:false,error:{message:'permission denied'}},200);
+    return response({success:true,summary:{price:15900,price_data:15900,order_count:1,product_count:1},data:[{'User.id':'u',result:{price:15900,price_data:15900,order_count:1}}]});
+  };
+  const fallbackPlan=await createReportPlan({},'live');
+  assert.equal(fallbackPlan.shops,1);
+  const fallbackBatch=await fetchReportBatch({}, {token:fallbackPlan.token,batch:0});
+  assert.equal(fallbackBatch.completeBatch,true);
+  assert.equal(fallbackBatch.results[0].revenue,159);
+  assert.equal(fallbackCalls,2);
+
+  // Cross-device stability: live report cutoffs are aligned to exact 10-second buckets
+  // (with a small lag), and the same bucket gets the same deterministic planId.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v140-stable-cutoff-key';
+  process.env.PANCAKE_SHOP_IDS_1='70001';
+  const realDateNow=Date.now;
+  try{
+    Date.now=()=>Date.parse('2026-09-21T09:30:07.500Z'); // 16:30:07.5 Bangkok
+    const p1=await createReportPlan({},'live');
+    Date.now=()=>Date.parse('2026-09-21T09:30:09.200Z'); // same safe cutoff bucket after 2s lag
+    const p2=await createReportPlan({},'live');
+    assert.equal(p1.until,'2026-09-21T16:30:00+07:00');
+    assert.equal(p2.until,p1.until);
+    assert.equal(p2.planId,p1.planId);
+    assert.equal(Number(p1.cutoffBucketId)%10000,0);
+  }finally{Date.now=realDateNow}
+
   // History is batched through the same architecture instead of one all-shop function.
   clearPancakeEnv();
-  process.env.PANCAKE_POS_API_KEY_1='v131-history-batch-key';
+  process.env.PANCAKE_POS_API_KEY_1='v140-history-batch-key';
   process.env.PANCAKE_SHOP_IDS_1='94001,94002,94003,94004,94005,94006,94007';
   const planHist131=await createReportPlan({},'history');
   assert.equal(planHist131.ready,true);

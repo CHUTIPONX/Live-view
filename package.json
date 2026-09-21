@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
-  "description": "Pancake POS live sales monitor with fixed-cutoff client-orchestrated report batching and complete-snapshot-only totals",
+  "description": "Pancake POS Employee Statistic monitor with authoritative zero-sales handling, stable cross-device cutoffs, timeout-safe batching, and complete-snapshot-only totals",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
