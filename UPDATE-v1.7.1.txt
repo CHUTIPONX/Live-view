@@ -1,0 +1,10 @@
+v1.7.1
+======
+
+1. Removed the v1.7.0 people/animal/object living-world graphics.
+2. Added simple world-season atmospheres that rotate every 60 seconds.
+3. Real order prices now hit directly over the main score's right-most digits.
+4. Multiple verified real orders can hit rapidly in the same snapshot.
+5. Added a soft synthesized sale chime with a sound toggle/unlock button.
+6. Main total still slows down for the final digits and stops exactly on the verified Pancake total.
+7. No sales truth/API logic was loosened: incomplete snapshots still HOLD and no fake per-order values are generated.

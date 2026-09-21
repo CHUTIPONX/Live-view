@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "private": true,
   "type": "module",
-  "description": "Pancake POS live sales monitor with verified sales animation, hardened security, and 24 living world graphic scenes rotating every minute",
+  "description": "Pancake POS live sales monitor with verified real-order score hits, satisfying sale chimes, hardened security, and minute-synced seasonal atmospheres",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",

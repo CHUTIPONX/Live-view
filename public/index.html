@@ -11,8 +11,8 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="dash-page">
-  <div id="season" class="season season-world" aria-hidden="true">
-    <div id="worldSceneRoot" class="world-scene-root"></div>
+  <div id="season" class="season season-atmosphere-shell" aria-hidden="true">
+    <div id="seasonAtmosphereRoot" class="season-atmosphere-root"></div>
   </div>
   <div class="noise" aria-hidden="true"></div>
   <div class="shade" aria-hidden="true"></div>
@@ -21,6 +21,9 @@
   <nav class="topnav liquid-pill">
     <div class="brand"><i></i><span>PANCAKE LIVE</span></div>
     <div class="navbtns">
+      <button id="soundBtn" class="icon-btn sound-btn" title="เสียงยอดขาย" aria-label="เสียงยอดขาย" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7l-4 3H5Z"/><path class="sound-wave" d="M15 9.2c1.5 1.5 1.5 4.1 0 5.6M17.8 6.8c2.9 2.9 2.9 7.5 0 10.4"/></svg>
+      </button>
       <button id="fullBtn" class="icon-btn" title="Fullscreen" aria-label="Fullscreen">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
       </button>
@@ -49,7 +52,7 @@
       </div>
 
       <div class="sales-caption">TODAY'S SALES <small>ยอดขายวันนี้</small></div>
-      <div id="mega" class="mega"><small>฿</small><span>0</span></div>
+      <div id="mega" class="mega"><small>฿</small><span>0</span><div id="scoreHits" class="score-hits" aria-hidden="true"></div></div>
       <div class="orders"><span id="orders">0</span> <small>ORDERS</small></div>
 
       <div class="history-label"><span>LAST 5 DAYS</span><small>5 วันล่าสุด</small></div>
@@ -63,7 +66,7 @@
     </section>
   </main>
 
-  <div class="season-name liquid-mini"><span id="seasonName">WORLD · LIVING SCENE</span><i></i><span id="seasonMeta">24 SCENES · 1 MINUTE EACH · LIVE GRAPHICS</span></div>
+  <div class="season-name liquid-mini"><span id="seasonName">SEASONS</span><i></i><span id="seasonMeta">1 MIN · ATMOSPHERE</span></div>
   <script src="/security.js"></script>
   <script src="/app.js" type="module"></script>
 </body>

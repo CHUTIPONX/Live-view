@@ -1,9 +1,9 @@
-import { startWorldSceneEngine } from './world-scene-engine.js';
+import { startSeasonAtmosphereEngine } from './season-atmosphere-engine.js';
 
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v170';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v171';
 
 let stop = false;
 let polling = false;
@@ -12,7 +12,12 @@ let totalShown = 0;
 let ordersShown = 0;
 let lastComplete = null;
 let historyDays = null;
-const stopWorldScenes = startWorldSceneEngine();
+const stopSeasonAtmospheres = startSeasonAtmosphereEngine();
+
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('plsm_sales_sound_v171') !== 'off';
+let soundUnlocked = false;
+let lastSoundAt = 0;
 
 function clock(){
   const d=new Date(),tz={timeZone:'Asia/Bangkok'};
@@ -105,75 +110,128 @@ function renderOrderScore(v){
   const e=$('#orders');if(e)e.textContent=scoreFmt.format(value);
   ordersShown=value;
 }
-function priceSlot(index,total){
-  const cx=window.innerWidth/2;
-  const cy=window.innerHeight/2;
-  const ring=Math.floor(index/8);
-  const angle=((index%8)/8)*Math.PI*2-Math.PI/2+(ring*.31);
-  const rx=Math.min(window.innerWidth*.31,390)+(ring*34);
-  const ry=Math.min(window.innerHeight*.24,230)+(ring*18);
-  const x=Math.max(84,Math.min(window.innerWidth-84,cx+Math.cos(angle)*rx));
-  const y=Math.max(100,Math.min(window.innerHeight-92,cy+Math.sin(angle)*ry));
-  return {x,y};
+function scoreDigits(value){
+  const text=nf.format(Math.abs(Number(value)||0));
+  return Math.max(1,text.replace(/[^0-9]/g,'').length);
 }
-function cleanupPriceLayer(){
-  const layer=$('#deltaFx');if(!layer)return;
-  if(!layer.querySelector('.price-event'))layer.classList.remove('show','queue-mode');
+function scoreHitLayer(){
+  return $('#scoreHits');
 }
-function createPriceEvent(amount,index=0,total=1){
-  const layer=$('#deltaFx');if(!layer)return null;
+function createScoreHit(amount,index=0,total=1){
+  const layer=scoreHitLayer();
+  if(!layer)return null;
   const value=Number(amount)||0;
   const pos=value>=0;
-  const slot=priceSlot(index,total);
   const node=document.createElement('div');
-  node.className=`price-event ${pos?'gain':'loss'}`;
-  node.style.left=`${slot.x}px`;
-  node.style.top=`${slot.y}px`;
-  node.innerHTML=`<span>${pos?'+':'−'}฿${nf.format(Math.abs(value))}</span><i></i>`;
-  layer.classList.add('show','queue-mode');
+  const abs=nf.format(Math.abs(value));
+  const lane=index%5;
+  node.className=`score-hit ${pos?'gain':'loss'} lane-${lane}`;
+  node.style.setProperty('--digits',String(scoreDigits(value)));
+  node.style.setProperty('--stack',String(Math.min(index,7)));
+  node.innerHTML=`<b>${pos?'+':'−'}</b><span>${abs}</span>`;
   layer.appendChild(node);
-  requestAnimationFrame(()=>node.classList.add('is-visible'));
+  requestAnimationFrame(()=>node.classList.add('is-live'));
   return node;
 }
-async function stagePriceEvents(amounts){
+function removeScoreHit(node,delay=0){
+  if(!node)return;
+  setTimeout(()=>{
+    node.classList.add('is-out');
+    setTimeout(()=>node.remove(),420);
+  },delay);
+}
+function getAudioContext(){
+  if(audioCtx)return audioCtx;
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx)return null;
+  try{audioCtx=new Ctx()}catch{return null}
+  return audioCtx;
+}
+async function unlockSalesAudio(){
+  if(!soundEnabled)return false;
+  const ctx=getAudioContext();
+  if(!ctx)return false;
+  try{
+    if(ctx.state==='suspended')await ctx.resume();
+    soundUnlocked=ctx.state==='running';
+  }catch{soundUnlocked=false}
+  updateSoundButton();
+  return soundUnlocked;
+}
+function tone(ctx,frequency,start,duration,gainValue,type='sine',pan=0){
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  const panner=typeof ctx.createStereoPanner==='function'?ctx.createStereoPanner():null;
+  osc.type=type;
+  osc.frequency.setValueAtTime(frequency,start);
+  gain.gain.setValueAtTime(.0001,start);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.0002,gainValue),start+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+  if(panner){panner.pan.setValueAtTime(pan,start);osc.connect(gain).connect(panner).connect(ctx.destination)}
+  else{osc.connect(gain).connect(ctx.destination)}
+  osc.start(start);osc.stop(start+duration+.02);
+}
+function playSaleSound(amount,index=0){
+  if(!soundEnabled||!soundUnlocked)return;
+  const ctx=getAudioContext();
+  if(!ctx||ctx.state!=='running')return;
+  const now=Math.max(ctx.currentTime+.005,lastSoundAt+.055);
+  lastSoundAt=now;
+  const positive=Number(amount)>=0;
+  if(positive){
+    const step=[0,2,4,7,9][index%5];
+    const base=659.25*Math.pow(2,step/12);
+    tone(ctx,base,now,.34,.034,'sine',-.08);
+    tone(ctx,base*1.5,now+.055,.42,.022,'triangle',.10);
+    tone(ctx,base*2,now+.105,.31,.012,'sine',.18);
+  }else{
+    tone(ctx,392,now,.36,.025,'sine',-.08);
+    tone(ctx,293.66,now+.07,.42,.018,'triangle',.08);
+  }
+}
+function updateSoundButton(){
+  const btn=$('#soundBtn');if(!btn)return;
+  btn.classList.toggle('muted',!soundEnabled);
+  btn.classList.toggle('ready',soundEnabled&&soundUnlocked);
+  btn.setAttribute('aria-pressed',soundEnabled?'true':'false');
+  btn.title=!soundEnabled?'เปิดเสียงยอดขาย':soundUnlocked?'เสียงยอดขายเปิดอยู่':'คลิกเพื่อเปิดเสียงยอดขาย';
+}
+async function toggleSound(){
+  if(soundEnabled&&!soundUnlocked){
+    await unlockSalesAudio();
+    updateSoundButton();
+    return;
+  }
+  soundEnabled=!soundEnabled;
+  localStorage.setItem('plsm_sales_sound_v171',soundEnabled?'on':'off');
+  if(soundEnabled)await unlockSalesAudio();
+  updateSoundButton();
+}
+function primeSoundFromGesture(e){
+  if(e?.target?.closest?.('#soundBtn'))return;
+  if(soundEnabled&&!soundUnlocked)void unlockSalesAudio();
+}
+window.addEventListener('pointerdown',primeSoundFromGesture,{passive:true});
+window.addEventListener('keydown',primeSoundFromGesture,{passive:true});
+setTimeout(updateSoundButton,0);
+
+async function burstVerifiedPrices(amounts){
   const clean=(amounts||[]).map(Number).filter(v=>Number.isFinite(v)&&Math.abs(v)>.001);
   const nodes=[];
   for(let i=0;i<clean.length;i++){
-    const node=createPriceEvent(clean[i],i,clean.length);
+    const node=createScoreHit(clean[i],i,clean.length);
     if(node)nodes.push(node);
-    // A whole detected batch can be visible together instead of replacing the last popup.
-    if(i<clean.length-1)await sleep(Math.min(150,90+(i%3)*18));
+    playSaleSound(clean[i],i);
+    // Rapid verified order hits. Every shown number came from reconciled real orders.
+    if(i<clean.length-1)await sleep(105);
   }
-  if(nodes.length)await sleep(760);
   return nodes;
 }
-async function flyPriceEvent(node,amount){
-  if(!node)return;
-  const mega=$('#mega');
-  if(!mega){node.remove();cleanupPriceLayer();return}
-  const from=node.getBoundingClientRect();
-  const to=mega.getBoundingClientRect();
-  const dx=(to.left+to.width/2)-(from.left+from.width/2);
-  const dy=(to.top+to.height*.46)-(from.top+from.height/2);
-  node.classList.add('is-flying');
-  const anim=node.animate([
-    {transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0px)'},
-    {offset:.58,transform:`translate(calc(-50% + ${dx*.68}px),calc(-50% + ${dy*.68}px)) scale(.72)`,opacity:1,filter:'blur(0px)'},
-    {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.16)`,opacity:0,filter:'blur(3px)'}
-  ],{duration:900,easing:'cubic-bezier(.18,.84,.22,1)',fill:'forwards'});
-  await sleep(560);
-  mega.classList.remove('score-catch');void mega.offsetWidth;mega.classList.add('score-catch');
-  const stage=$('#stage');
-  stage?.classList.remove('gain-hit','loss-hit');
-  if(stage){void stage.offsetWidth;stage.classList.add(Number(amount)>=0?'gain-hit':'loss-hit')}
-  await anim.finished.catch(()=>{});
-  node.remove();
-  cleanupPriceLayer();
-}
 function deltaFx(delta,{rapid=false,score=false}={}){
-  const node=createPriceEvent(delta,0,1);
+  const node=createScoreHit(delta,0,1);
   if(!node)return;
-  setTimeout(()=>void flyPriceEvent(node,delta),rapid?260:(score?420:680));
+  playSaleSound(delta,0);
+  removeScoreHit(node,rapid?620:(score?850:1050));
 }
 function status(s){
   const el=$('#status'); if(!el)return;
@@ -253,51 +311,33 @@ function comparableSnapshots(previous,current){
 
 async function playVerifiedOrderEvents(previous,current,events){
   const verified=(events||[]).map(e=>({...e,amount:Number(e.amount)||0})).filter(e=>Math.abs(e.amount)>.001);
-  const nodes=await stagePriceEvents(verified.map(e=>e.amount));
-  let runningTotal=Number(previous.total)||0;
-  let runningOrders=Math.round(Number(previous.orders)||0);
+  const nodes=await burstVerifiedPrices(verified.map(e=>e.amount));
 
-  for(let i=0;i<verified.length;i++){
-    const event=verified[i];
-    const amount=event.amount;
-    const nextTotal=Math.round((runningTotal+amount)*100)/100;
-    const nextOrders=runningOrders+1;
-    const node=nodes[i]||createPriceEvent(amount,i,verified.length);
+  // Let the real order values hit over the last digits while the main verified score
+  // runs continuously to the new Employee Statistic total. No fake split is created.
+  await sleep(140);
+  const count=Promise.all([
+    animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
+    animateScoreCounter(ordersShown,current.orders,{duration:Math.max(520,Math.min(1200,verified.length*115)),render:renderOrderScore,element:$('#orders')})
+  ]);
 
-    // The popup whooshes into the main score. Counting starts during the impact,
-    // then deliberately slows for the final numbers before landing exactly on truth.
-    const fly=flyPriceEvent(node,amount);
-    await sleep(380);
-    const count=Promise.all([
-      animateScoreCounter(totalShown,nextTotal,{render:renderMainScore,element:$('#mega'),money:true}),
-      animateScoreCounter(ordersShown,nextOrders,{duration:360,render:renderOrderScore,element:$('#orders')})
-    ]);
-    await Promise.all([fly,count]);
-    runningTotal=nextTotal;
-    runningOrders=nextOrders;
-    if(i<verified.length-1)await sleep(140);
-  }
-
-  // Employee Statistic remains the source of truth. The animation may only end here.
+  // Keep several real prices visible over the score briefly, then peel them away
+  // in the same rapid rhythm they arrived.
+  nodes.forEach((node,i)=>removeScoreHit(node,780+i*85));
+  await count;
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
 async function playVerifiedAggregateDelta(previous,current,delta){
   if(Math.abs(delta)>.001){
-    const nodes=await stagePriceEvents([delta]);
-    const fly=flyPriceEvent(nodes[0],delta);
-    await sleep(380);
-    await Promise.all([
-      fly,
-      animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
-      animateScoreCounter(ordersShown,current.orders,{duration:430,render:renderOrderScore,element:$('#orders')})
-    ]);
-  }else{
-    await Promise.all([
-      animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
-      animateScoreCounter(ordersShown,current.orders,{duration:430,render:renderOrderScore,element:$('#orders')})
-    ]);
+    const nodes=await burstVerifiedPrices([delta]);
+    nodes.forEach(node=>removeScoreHit(node,900));
+    await sleep(120);
   }
+  await Promise.all([
+    animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
+    animateScoreCounter(ordersShown,current.orders,{duration:560,render:renderOrderScore,element:$('#orders')})
+  ]);
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
@@ -600,6 +640,7 @@ async function runHistoryCycle(){
 
 runLiveCycle();
 historyTimer=setTimeout(runHistoryCycle,30000);
-window.addEventListener('beforeunload',()=>{stop=true;stopWorldScenes?.();clearTimeout(liveTimer);clearTimeout(historyTimer)});
+window.addEventListener('beforeunload',()=>{stop=true;stopSeasonAtmospheres?.();clearTimeout(liveTimer);clearTimeout(historyTimer)});
+if($('#soundBtn'))$('#soundBtn').onclick=toggleSound;
 if($('#fullBtn'))$('#fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()};
 if($('#logoutBtn'))$('#logoutBtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.href='/login'};
