@@ -1,19 +1,28 @@
-# Pancake Live Sales Monitor v1.2.5
+# Pancake Live Sales Monitor v1.2.7
 
-Database-free live Pancake POS sales monitor designed for Vercel and multiple devices.
+Database-free live Pancake POS sales monitor for Vercel and multiple devices.
 
-## v1.2 — Shared multi-device mode
+## v1.2.7 — Employee Statistic / analytics endpoint fix
 
-This version supports two configuration modes:
+The live report now reads Pancake's sales analytics endpoint:
 
-1. **Shared Vercel Environment mode (recommended)** — Pancake API credentials live in Vercel Environment Variables. Every phone/computer that logs in sees the same live sales configuration.
-2. **Browser cookie mode** — useful for local testing only. Settings apply only to that browser.
+```text
+GET /shops/{SHOP_ID}/analytics/sale
+```
 
-If any `PANCAKE_POS_API_KEY_*` variable is present, Shared mode automatically takes priority.
+The request uses Bangkok-day `since` / `until` values. Historical cards use:
+
+```text
+split_by[]=Time.day
+```
+
+The old `/orders/statistics` route is no longer used. On affected Pancake accounts that route was interpreted like an order-detail path and could return an Order permission message even with HTTP 200.
+
+For installations with many shops, the dashboard uses rolling batches instead of trying to query every shop inside one serverless invocation. The default live batch is 8 shops; the screen commits a new total only after a full shop cycle completes. This avoids Vercel timeouts and prevents partial batches from creating fake increase/decrease animations.
 
 ## Login
 
-The build contains the Owner login requested for first run. For an internet-facing deployment, set your own values in Vercel:
+For production on Vercel set:
 
 ```text
 APP_USER=Owner
@@ -21,9 +30,9 @@ APP_PASSWORD=<your password>
 APP_SECRET=<long random secret>
 ```
 
-## Shared Pancake configuration on Vercel
+## Shared Pancake configuration
 
-In **Vercel → Project → Settings → Environment Variables**, set:
+In **Vercel → Project → Settings → Environment Variables**:
 
 ```text
 PANCAKE_POS_API_KEY_1=<your Pancake POS API key>
@@ -31,9 +40,7 @@ PANCAKE_LABEL_1=Main Account
 PANCAKE_SHOP_IDS_1=ALL
 ```
 
-`ALL` means the server automatically discovers every store available to the API key. Store discovery is cached in warm serverless instances to avoid rediscovering on every request.
-
-If you want only specific stores:
+`ALL` automatically discovers every shop visible to that key. Or specify IDs:
 
 ```text
 PANCAKE_SHOP_IDS_1=12345,67890,99887
@@ -51,7 +58,37 @@ PANCAKE_LABEL_3=Third Account
 PANCAKE_SHOP_IDS_3=ALL
 ```
 
-A shop visible under more than one API key is counted only once by Shop ID.
+A Shop ID present under more than one API key is counted once.
+
+### Money unit
+
+The captured Pancake sales metric used by this project is converted with a divisor of `100` by default. If your account returns whole currency units instead, set:
+
+```text
+PANCAKE_MONEY_DIVISOR=1
+```
+
+Normally leave it unset.
+
+## Dashboard behavior
+
+- Browser requests one live batch every second.
+- Default live batch: 8 shops (server clamps requests to 12 max).
+- A total is displayed as a completed snapshot only after all selected shops have been visited in the cycle.
+- Historical 4-day data is loaded separately in batches and merged with today's live total.
+- Last complete good total remains on screen during temporary API errors.
+- Failed shops are shown as `DEGRADED` instead of silently replacing the total with zero.
+- No database / Supabase / Firebase is required.
+
+## Safe diagnostics
+
+While logged in, open:
+
+```text
+/api/diagnostics
+```
+
+It probes a small sample of configured shops and reports the analytics response shape and parsed revenue/order values. API keys are not returned.
 
 ## Run locally
 
@@ -69,60 +106,20 @@ Open:
 http://localhost:3000
 ```
 
-For local shared-env testing, set the variables before starting the server or copy `.env.example` into your own environment loader/workflow. This project intentionally has no database.
-
-## Settings page
-
-Open:
-
-```text
-/settings
-```
-
-When Shared Vercel mode is active, the page becomes read-only for credentials and clearly displays **Shared Vercel Configuration**. You can still run `Test & Load Stores` against the shared key.
-
-To change the shared API key or store selection, edit Vercel Environment Variables and redeploy.
-
-When Shared mode is not configured, `/settings` falls back to the original encrypted HttpOnly browser-cookie mode for local testing.
-
-## Live dashboard
-
-- polls `/api/sales` every 1 second using single-flight polling
-- 5-day sales display
-- positive sales animation
-- cancellation / negative sales animation
-- seasonal animated backgrounds
-- iOS Liquid Glass UI
-- no database / Supabase / Firebase
-
-If Pancake temporarily fails, the dashboard keeps the last known good total instead of turning an API failure into a fake cancellation animation.
-
-## Vercel deployment
-
-1. Upload/import the project to Vercel.
-2. Add the Environment Variables shown above.
-3. Deploy/redeploy.
-4. Open the Vercel URL on any device.
-5. Sign in with the same Owner account.
-6. All devices use the same Pancake API/shop configuration.
-
-No local SQLite/database is required.
-
-## Security
-
-Do not commit real Pancake API keys or production passwords to a public Git repository. Use Vercel Environment Variables.
-
-Change `APP_SECRET` to a long random value before public deployment. Changing it invalidates existing login cookies, which is expected.
-
-## Pancake API endpoints used
+## Pancake endpoints used
 
 ```text
 GET https://pos.pages.fm/api/v1/shops?api_key=...
-GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/orders/statistics?api_key=...&start_date=...&end_date=...&group_by=date
+GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/analytics/sale?api_key=...&since=...&until=...
+GET https://pos.pages.fm/api/v1/shops/{SHOP_ID}/analytics/sale?api_key=...&since=...&until=...&split_by[]=Time.day
 ```
 
-## Tests
+## Verification
+
+Run:
 
 ```bash
 npm test
 ```
+
+The test suite checks syntax, authentication/config masking, captured sales parsing, analytics response parsing, rolling multi-shop batches, correct `/analytics/sale` URLs, `since`/`until`, daily `split_by[]`, and verifies that `/orders/statistics` is never called.

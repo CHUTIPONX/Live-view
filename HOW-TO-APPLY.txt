@@ -1,19 +1,15 @@
-Pancake Live Sales Monitor v1.2.4 HOTFIX
+วิธีอัปเดตแบบลากทั้งก้อน (ง่ายสุด)
 
-WHY THE LIVE SITE SHOWED 0 / ERROR
-- The deployed GitHub repo was still using the older grouped-by-date parser.
-- Pancake returned HTTP 200, but the code did not read the live response summary correctly.
+1) แตก ZIP นี้ก่อน
+2) เปิดโฟลเดอร์ pancake-live-sales-monitor-v1.2.7
+3) ต้องมองเห็น api / lib / public / package.json / vercel.json อยู่ตรงหน้า
+4) Ctrl+A เลือกของข้างในทั้งหมด
+5) GitHub > CHUTIPONX/Live-view > main > Add file > Upload files
+6) ลากของทั้งหมดไปวาง แล้ว Commit changes
+7) รอ Vercel ขึ้น Ready
+8) กลับหน้าเว็บ กด Ctrl+Shift+R
 
-FIX
-- Today total reads Pancake statistics summary.price directly.
-- Converts satang to baht (/100).
-- Orders read summary.order_count.
-- Supports summary at root, data.summary, result.summary, or success.summary.
-- If Pancake changes the response again, the error now includes safe response-shape keys for debugging.
-- 1-second polling, +/- animation, no database, and last-good retention remain unchanged.
+อย่าลากไฟล์ ZIP เข้า repo และอย่าสร้างโฟลเดอร์ pancake-live-sales-monitor-v1.2.7 ครอบอีกชั้น
 
-FAST APPLY
-1. In GitHub repo CHUTIPONX/Live-view open lib/core.mjs.
-2. Replace it with lib/core.mjs from this package.
-3. Commit directly to main.
-4. Wait for Vercel production deployment to finish, then hard refresh the live page.
+v1.2.7 แก้ endpoint เป็น /shops/{SHOP_ID}/analytics/sale แล้ว
+ถ้ายังมีปัญหา หลังล็อกอินเปิด /api/diagnostics เพื่อดูผลตรวจแบบไม่เปิดเผย API key
