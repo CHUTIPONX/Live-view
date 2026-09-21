@@ -3,7 +3,7 @@ import { scenicViews, SCENIC_VIEW_COUNT } from './scenic-videos.js';
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v152';
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v164';
 
 let activeScenicVideo = -1;
 let scenicCurrentIndex = -1;
@@ -18,7 +18,6 @@ let totalShown = 0;
 let ordersShown = 0;
 let lastComplete = null;
 let historyDays = null;
-let deltaFxTimer = null;
 
 function particles(){
   const box=$('#seasonParticles'); if(!box)return; box.innerHTML='';
@@ -262,25 +261,55 @@ function animateScoreCounter(from,to,{duration,render,element,money=false}={}){
   const target=Math.round(b*scale);
   const diff=target-start;
   if(!diff){render?.(target/scale);return Promise.resolve()}
+
+  const sign=Math.sign(diff);
   const distance=Math.abs(diff);
-  const ms=Number(duration)||Math.max(560,Math.min(1800,520+Math.min(distance,500)*2.6));
   const dir=diff>0?'up':'down';
-  element?.classList.remove('score-up','score-down');
+  const exactTail=Math.min(distance,money?(scale===1?64:120):14);
+  const fastDistance=Math.max(0,distance-exactTail);
+  const fastTarget=start+(sign*fastDistance);
+
+  element?.classList.remove('score-up','score-down','score-arrive');
   element?.classList.add('score-counting',`score-${dir}`);
-  return new Promise(resolve=>{
+
+  const fastPhase=()=>new Promise(resolve=>{
+    if(!fastDistance){resolve();return}
+    const ms=Number(duration)||Math.max(300,Math.min(920,330+Math.log10(fastDistance+1)*180));
     const st=performance.now();
-    let last=null;
+    let last=start;
     function tick(now){
       const p=Math.min(1,(now-st)/ms);
-      const units=start+Math.sign(diff)*Math.min(distance,Math.floor(distance*p));
+      // Strong ease-out: fast when far away, visibly slower as the score closes in.
+      const eased=1-Math.pow(1-p,3.7);
+      const units=start+(sign*Math.min(fastDistance,Math.floor(fastDistance*eased)));
       if(units!==last){last=units;render?.(units/scale)}
       if(p<1){requestAnimationFrame(tick);return}
-      render?.(target/scale);
-      element?.classList.remove('score-counting','score-up','score-down');
+      render?.(fastTarget/scale);
       resolve();
     }
     requestAnimationFrame(tick);
   });
+
+  const exactFinish=async()=>{
+    if(!exactTail)return;
+    for(let i=1;i<=exactTail;i++){
+      const units=fastTarget+(sign*i);
+      render?.(units/scale);
+      const p=i/exactTail;
+      // The final numbers are deliberately one-by-one and progressively slower.
+      const wait=Math.round(5+31*Math.pow(p,2.35));
+      await sleep(wait);
+    }
+  };
+
+  return (async()=>{
+    await fastPhase();
+    await exactFinish();
+    render?.(target/scale);
+    element?.classList.remove('score-counting','score-up','score-down');
+    element?.classList.add('score-arrive');
+    setTimeout(()=>element?.classList.remove('score-arrive'),430);
+  })();
 }
 function renderMainScore(v){
   const value=Math.max(0,Number(v)||0);
@@ -293,18 +322,75 @@ function renderOrderScore(v){
   const e=$('#orders');if(e)e.textContent=scoreFmt.format(value);
   ordersShown=value;
 }
-function deltaFx(delta,{rapid=false,score=false}={}){
-  if(delta===undefined||delta===null)return;
-  const layer=$('#deltaFx'); if(!layer)return;
-  const pos=Number(delta)>=0;
-  if(deltaFxTimer){clearTimeout(deltaFxTimer);deltaFxTimer=null}
-  layer.className=`delta-layer show ${pos?'gain':'loss'}${rapid?' rapid':''}${score?' score-pop':''}`;
-  const bits=Array.from({length:34},(_,i)=>`<i style="--a:${i*(360/34)}deg;--d:${130+(i%8)*22}px;--s:${4+(i%5)}px"></i>`).join('');
-  layer.innerHTML=`<div class="ring r1"></div><div class="ring r2"></div><div class="delta-num">${pos?'+':'−'}฿${nf.format(Math.abs(Number(delta)||0))}</div><div class="burst">${bits}</div>`;
+function priceSlot(index,total){
+  const cx=window.innerWidth/2;
+  const cy=window.innerHeight/2;
+  const ring=Math.floor(index/8);
+  const angle=((index%8)/8)*Math.PI*2-Math.PI/2+(ring*.31);
+  const rx=Math.min(window.innerWidth*.31,390)+(ring*34);
+  const ry=Math.min(window.innerHeight*.24,230)+(ring*18);
+  const x=Math.max(84,Math.min(window.innerWidth-84,cx+Math.cos(angle)*rx));
+  const y=Math.max(100,Math.min(window.innerHeight-92,cy+Math.sin(angle)*ry));
+  return {x,y};
+}
+function cleanupPriceLayer(){
+  const layer=$('#deltaFx');if(!layer)return;
+  if(!layer.querySelector('.price-event'))layer.classList.remove('show','queue-mode');
+}
+function createPriceEvent(amount,index=0,total=1){
+  const layer=$('#deltaFx');if(!layer)return null;
+  const value=Number(amount)||0;
+  const pos=value>=0;
+  const slot=priceSlot(index,total);
+  const node=document.createElement('div');
+  node.className=`price-event ${pos?'gain':'loss'}`;
+  node.style.left=`${slot.x}px`;
+  node.style.top=`${slot.y}px`;
+  node.innerHTML=`<span>${pos?'+':'−'}฿${nf.format(Math.abs(value))}</span><i></i>`;
+  layer.classList.add('show','queue-mode');
+  layer.appendChild(node);
+  requestAnimationFrame(()=>node.classList.add('is-visible'));
+  return node;
+}
+async function stagePriceEvents(amounts){
+  const clean=(amounts||[]).map(Number).filter(v=>Number.isFinite(v)&&Math.abs(v)>.001);
+  const nodes=[];
+  for(let i=0;i<clean.length;i++){
+    const node=createPriceEvent(clean[i],i,clean.length);
+    if(node)nodes.push(node);
+    // A whole detected batch can be visible together instead of replacing the last popup.
+    if(i<clean.length-1)await sleep(Math.min(95,55+(i%3)*14));
+  }
+  if(nodes.length)await sleep(210);
+  return nodes;
+}
+async function flyPriceEvent(node,amount){
+  if(!node)return;
+  const mega=$('#mega');
+  if(!mega){node.remove();cleanupPriceLayer();return}
+  const from=node.getBoundingClientRect();
+  const to=mega.getBoundingClientRect();
+  const dx=(to.left+to.width/2)-(from.left+from.width/2);
+  const dy=(to.top+to.height*.46)-(from.top+from.height/2);
+  node.classList.add('is-flying');
+  const anim=node.animate([
+    {transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0px)'},
+    {offset:.58,transform:`translate(calc(-50% + ${dx*.68}px),calc(-50% + ${dy*.68}px)) scale(.72)`,opacity:1,filter:'blur(0px)'},
+    {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.16)`,opacity:0,filter:'blur(3px)'}
+  ],{duration:620,easing:'cubic-bezier(.18,.84,.22,1)',fill:'forwards'});
+  await sleep(390);
+  mega.classList.remove('score-catch');void mega.offsetWidth;mega.classList.add('score-catch');
   const stage=$('#stage');
   stage?.classList.remove('gain-hit','loss-hit');
-  if(stage){void stage.offsetWidth;stage.classList.add(pos?'gain-hit':'loss-hit')}
-  deltaFxTimer=setTimeout(()=>{layer.className='delta-layer';layer.innerHTML='';deltaFxTimer=null},score?1450:(rapid?900:3500));
+  if(stage){void stage.offsetWidth;stage.classList.add(Number(amount)>=0?'gain-hit':'loss-hit')}
+  await anim.finished.catch(()=>{});
+  node.remove();
+  cleanupPriceLayer();
+}
+function deltaFx(delta,{rapid=false,score=false}={}){
+  const node=createPriceEvent(delta,0,1);
+  if(!node)return;
+  setTimeout(()=>void flyPriceEvent(node,delta),rapid?260:(score?420:680));
 }
 function status(s){
   const el=$('#status'); if(!el)return;
@@ -383,39 +469,52 @@ function comparableSnapshots(previous,current){
 }
 
 async function playVerifiedOrderEvents(previous,current,events){
+  const verified=(events||[]).map(e=>({...e,amount:Number(e.amount)||0})).filter(e=>Math.abs(e.amount)>.001);
+  const nodes=await stagePriceEvents(verified.map(e=>e.amount));
   let runningTotal=Number(previous.total)||0;
   let runningOrders=Math.round(Number(previous.orders)||0);
-  for(const event of events){
-    const amount=Number(event.amount)||0;
+
+  for(let i=0;i<verified.length;i++){
+    const event=verified[i];
+    const amount=event.amount;
     const nextTotal=Math.round((runningTotal+amount)*100)/100;
     const nextOrders=runningOrders+1;
+    const node=nodes[i]||createPriceEvent(amount,i,verified.length);
 
-    // Keep the old rhythm: verified price pops first, then the main score counts.
-    if(Math.abs(amount)>.001){
-      deltaFx(amount,{score:true});
-      await sleep(260);
-    }
-    await Promise.all([
+    // The popup whooshes into the main score. Counting starts during the impact,
+    // then deliberately slows for the final numbers before landing exactly on truth.
+    const fly=flyPriceEvent(node,amount);
+    await sleep(250);
+    const count=Promise.all([
       animateScoreCounter(totalShown,nextTotal,{render:renderMainScore,element:$('#mega'),money:true}),
-      animateScoreCounter(ordersShown,nextOrders,{duration:420,render:renderOrderScore,element:$('#orders')})
+      animateScoreCounter(ordersShown,nextOrders,{duration:360,render:renderOrderScore,element:$('#orders')})
     ]);
+    await Promise.all([fly,count]);
     runningTotal=nextTotal;
     runningOrders=nextOrders;
-    await sleep(150);
+    if(i<verified.length-1)await sleep(75);
   }
-  // Employee Statistic remains the source of truth; snap to the verified snapshot.
+
+  // Employee Statistic remains the source of truth. The animation may only end here.
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
 async function playVerifiedAggregateDelta(previous,current,delta){
   if(Math.abs(delta)>.001){
-    deltaFx(delta,{score:true});
-    await sleep(260);
+    const nodes=await stagePriceEvents([delta]);
+    const fly=flyPriceEvent(nodes[0],delta);
+    await sleep(250);
+    await Promise.all([
+      fly,
+      animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
+      animateScoreCounter(ordersShown,current.orders,{duration:430,render:renderOrderScore,element:$('#orders')})
+    ]);
+  }else{
+    await Promise.all([
+      animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
+      animateScoreCounter(ordersShown,current.orders,{duration:430,render:renderOrderScore,element:$('#orders')})
+    ]);
   }
-  await Promise.all([
-    animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
-    animateScoreCounter(ordersShown,current.orders,{duration:520,render:renderOrderScore,element:$('#orders')})
-  ]);
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
@@ -431,13 +530,11 @@ async function renderComplete(d){
   if(isNew){
     if(comparable&&delta>0&&verifiedEvents.length){
       await playVerifiedOrderEvents(previous,d,verifiedEvents);
-    }else if(comparable&&delta<0){
-      // A negative complete-snapshot movement is real, but may be cancellation/edit;
-      // show one verified popup first, then count the scoreboard down.
+    }else if(comparable&&Math.abs(delta)>.001){
+      // If individual order reconciliation is unavailable, show the exact verified
+      // snapshot movement as one popup. Never invent a per-order split.
       await playVerifiedAggregateDelta(previous,d,delta);
     }else{
-      // Positive movement without reconciled individual orders is never split or
-      // labelled as fake per-order prices. The verified total still counts to target.
       drawNumbers(d,{animate:!!previous,showDelta:false,delta});
     }
     saveComplete(mergeHistory(d));

@@ -27,11 +27,12 @@ if(!core.includes('PLSM_CONFIG_STORE')||!core.includes("import('@vercel/blob')")
 if(pkg.dependencies?.['@vercel/blob']!=='2.6.1')throw new Error('@vercel/blob must be pinned to 2.6.1');
 if(lock.packages?.['']?.dependencies?.['@vercel/blob']!=='2.6.1')throw new Error('package-lock root dependency does not match package.json');
 if(!core.includes('fetchVerifiedOrderEvents')||!core.includes('/orders'))throw new Error('Verified individual order-event support is missing');
-if(!app.includes('reconcileIndividualOrderEvents')||!app.includes('playVerifiedOrderEvents'))throw new Error('Sequential verified order animation is missing');
+if(!app.includes('reconcileIndividualOrderEvents')||!app.includes('playVerifiedOrderEvents'))throw new Error('Verified order animation is missing');
 
 const css=fs.readFileSync('public/style.css','utf8');
 if(!app.includes('animateScoreCounter')||!app.includes('scoreFmt'))throw new Error('Sports-score integer counter is missing');
-if(!app.includes("deltaFx(amount,{score:true})")||!app.includes('await sleep(260)'))throw new Error('Price-popup-before-score rhythm is missing');
+if(!app.includes('stagePriceEvents')||!app.includes('flyPriceEvent')||!app.includes('priceSlot'))throw new Error('Multi-price popup/into-score animation is missing');
+if(!app.includes('exactFinish')||!app.includes('Math.pow(p,2.35)')||!app.includes('exactTail'))throw new Error('Slow-near-target scoreboard finish is missing');
 if(!css.includes('backdrop-filter:blur(1.5px) saturate(110%)'))throw new Error('Main panel blur is not at the crisp setting');
 if(!css.includes('.season-video.ready.active{opacity:.985}'))throw new Error('Crisp crossfade video treatment is missing');
 if(!css.includes('.season{position:fixed;inset:0;'))throw new Error('Background still has artificial overscan/zoom');
@@ -44,7 +45,7 @@ const securityServer=fs.readFileSync('lib/security.mjs','utf8');
 const settingsHtml=fs.readFileSync('public/settings.html','utf8');
 const loginHtml=fs.readFileSync('public/login.html','utf8');
 const vercel=fs.readFileSync('vercel.json','utf8');
-if(!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Large red security warning text is missing');
+if(!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Red security warning text is missing');
 if(!security.includes("key === 'f12'")||!security.includes("key === 'u'")||!security.includes("'contextmenu'"))throw new Error('Inspect/source shortcut deterrence is missing');
 if(!security.includes('/api/security-token')||!security.includes('x-csrf-token'))throw new Error('Client CSRF fetch protection is missing');
 if(!index.includes('<script src="/security.js"></script>')||!settingsHtml.includes('<script src="/security.js"></script>')||!loginHtml.includes('<script src="/security.js"></script>'))throw new Error('Security guard must load on every public page');
@@ -56,8 +57,10 @@ if(!vercel.includes('Content-Security-Policy')||!vercel.includes('Permissions-Po
 console.log('Security checks: CSRF · same-origin · CSP · login throttle · inspect warning: PASS');
 
 if(!index.includes('100 JAPAN VIEWS · 四季 · FULL CLIP'))throw new Error('Japan-only scenic label is missing');
-if(!security.includes('ไม่อนุญาตให้ตรวจสอบหรือแก้ไขระบบ')||!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Japanese-styled security warning copy is missing');
-if(!css.includes('.security-warning-kamon')||!css.includes('Hiragino Sans'))throw new Error('Japan security styling/font stack is missing');
+if(!security.includes('ไม่อนุญาตให้ตรวจสอบ')||!security.includes('หรือแก้ไขระบบ')||!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Japanese-styled security warning copy is missing');
+if(!css.includes('.security-warning-kamon')||!css.includes('IBM Plex Sans Thai')||!index.includes('fonts.googleapis.com/css2'))throw new Error('Refined Thai/Japan security font styling is missing');
+if(!securityServer.includes('https://fonts.googleapis.com')||!securityServer.includes('https://fonts.gstatic.com'))throw new Error('CSP does not allow the selected web fonts');
+if(pkg.version!=='1.6.4'||lock.version!=='1.6.4'||lock.packages?.['']?.version!=='1.6.4')throw new Error('Package version is not v1.6.4');
 
 console.log('Scenic playlist checks: 100 unique Japan videos · FOUR SEASONS · FULL CLIP · ended-event · one-next preload');
 console.log('Static integration checks: PASS');

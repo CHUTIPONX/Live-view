@@ -1,0 +1,27 @@
+Pancake Live Sales Monitor v1.6.4 - Test Report
+================================================
+
+npm test
+- Node syntax checks: PASS
+- Static integration checks: PASS
+- Existing Pancake API self-test: PASS
+- CSRF / same-origin / CSP checks: PASS
+- 100 unique Japan scenic video checks: PASS
+
+v1.6.4 presentation checks
+- Multi-price stagePriceEvents(): PASS
+- Price fly-to-main flyPriceEvent(): PASS
+- Multiple popup DOM nodes are not overwritten: PASS
+- Main score fast phase + slow exact tail: PASS
+- Final exact target snap: PASS
+- Aggregate delta remains verified-only: PASS
+- IBM Plex Sans Thai / Manrope / Noto Sans JP links: PASS
+- CSP allows fonts.googleapis.com + fonts.gstatic.com: PASS
+
+Local smoke test
+- GET /: HTTP 200 PASS
+- style.css served: PASS
+- Google Fonts links present: PASS
+- Security CSP header present: PASS
+
+No Pancake sales-source or account-aggregation logic was changed in this release.

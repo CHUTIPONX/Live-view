@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const WARNING_TEXT = 'ไม่อนุญาตให้ตรวจสอบหรือแก้ไขระบบ';
-  const SUB_TEXT = '警告 · ACCESS RESTRICTED';
+  const WARNING_TEXT = ['ไม่อนุญาตให้ตรวจสอบ','หรือแก้ไขระบบ'];
+  const SUB_TEXT = 'ACCESS RESTRICTED · 保護モード';
   const originalFetch = window.fetch.bind(window);
   let lastWarningAt = 0;
   let devtoolsFlag = false;
@@ -65,11 +65,12 @@
     overlay.innerHTML = `
       <div class="security-warning-frame" aria-hidden="true"></div>
       <div class="security-warning-inner">
+        <div class="security-warning-topline">PROTECTED VIEW</div>
         <div class="security-warning-kamon" aria-hidden="true"><span></span><i></i></div>
         <div class="security-warning-sub">${SUB_TEXT}</div>
-        <div class="security-warning-title">${WARNING_TEXT}</div>
+        <div class="security-warning-title"><span>${WARNING_TEXT[0]}</span><span>${WARNING_TEXT[1]}</span></div>
         <div class="security-warning-rule"><i></i><b></b><i></i></div>
-        <div class="security-warning-note">กรุณาปิดเครื่องมือนักพัฒนาและกลับเข้าสู่หน้าหลัก</div>
+        <div class="security-warning-note">กรุณาปิดเครื่องมือนักพัฒนา แล้วกลับเข้าสู่หน้าหลักเพื่อใช้งานต่อ</div>
         <div class="security-warning-foot">โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ</div>
       </div>`;
     document.body.appendChild(overlay);
@@ -136,7 +137,7 @@
   // This is deterrence only. Actual protection lives server-side: authenticated
   // API routes, CSRF validation, no raw secrets in public settings, CSP and no-store.
   Object.defineProperty(window, '__PLSM_SECURITY__', {
-    value: Object.freeze({ enabled:true, version:'1.6.3' }),
+    value: Object.freeze({ enabled:true, version:'1.6.4' }),
     writable:false,
     configurable:false,
     enumerable:false

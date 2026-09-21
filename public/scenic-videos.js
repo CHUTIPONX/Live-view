@@ -1,4 +1,4 @@
-// Curated JAPAN ONLY background playlist for Pancake Live Sales v1.6.3.
+// Curated JAPAN ONLY background playlist for Pancake Live Sales v1.6.4.
 // 100 Pexels video IDs sourced from Japan/Japan Nature/Japan Travel searches.
 // Only the current clip and the next clip are loaded; clips change only after 'ended'.
 export const scenicViews = [
