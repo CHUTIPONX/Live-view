@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
-import { aggregateHistory, aggregateSales, fiveDays, parsePancakeSalesSummary } from './lib/core.mjs';
+import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fiveDays, listShops, parsePancakeSalesSummary } from './lib/core.mjs';
 
 const envKeys=[
   'PANCAKE_CONNECTIONS_JSON','PANCAKE_POS_API_KEY','PANCAKE_POS_API_KEY_1','PANCAKE_POS_API_KEY_2','PANCAKE_POS_API_KEY_3',
@@ -64,6 +64,59 @@ try{
   const got=await getSettings({headers:{cookie:`${sessionCookie}; ${settingsCookie}`}});
   assert.equal(got.status,200);assert.ok(!got.body.includes('secret-test-key'));
 
+  // v1.3.1 report batching: one Vercel invocation handles at most 6 shops,
+  // while every batch in the plan uses the exact same frozen cutoff.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v131-batch-key';
+  process.env.PANCAKE_SHOP_IDS_1=Array.from({length:13},(_,i)=>String(93001+i)).join(',');
+  process.env.PANCAKE_LABEL_1='Batch Account';
+  const batchUrls=[];
+  const batchAttempts=new Map();
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    batchUrls.push(u);
+    assert.equal(u.pathname.endsWith('/analytics/sale'),true);
+    const shopId=u.pathname.split('/')[4];
+    const n=(batchAttempts.get(shopId)||0)+1;batchAttempts.set(shopId,n);
+    // One shop times out once. The server-side per-shop retry must recover inside its small batch.
+    if(shopId==='93003'&&n===1){const e=new Error('The operation was aborted due to timeout');e.name='TimeoutError';throw e;}
+    const rawPrice=(Number(shopId)-93000)*10000;
+    return response({success:true,summary:{price:rawPrice,price_data:rawPrice,order_count:1,product_count:1}});
+  };
+  const plan131=await createReportPlan({},'live');
+  assert.equal(plan131.ready,true);
+  assert.equal(plan131.shops,13);
+  assert.equal(plan131.batchSize,6);
+  assert.equal(plan131.totalBatches,3);
+  const batches131=[];
+  for(let batch=0;batch<plan131.totalBatches;batch++) batches131.push(await fetchReportBatch({}, {token:plan131.token,batch}));
+  assert.deepEqual(batches131.map(x=>x.count),[6,6,1]);
+  assert.ok(batches131.every(x=>x.completeBatch===true));
+  const items131=batches131.flatMap(x=>x.results);
+  assert.equal(items131.length,13);
+  assert.equal(items131.reduce((n,x)=>n+x.revenue,0),9100);
+  assert.equal(batchAttempts.get('93003'),2);
+  assert.ok(batchUrls.every(u=>u.searchParams.get('since')===plan131.since));
+  assert.ok(batchUrls.every(u=>u.searchParams.get('until')===plan131.until));
+
+  // History is batched through the same architecture instead of one all-shop function.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v131-history-batch-key';
+  process.env.PANCAKE_SHOP_IDS_1='94001,94002,94003,94004,94005,94006,94007';
+  const planHist131=await createReportPlan({},'history');
+  assert.equal(planHist131.ready,true);
+  assert.equal(planHist131.totalBatches,2);
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    assert.deepEqual(u.searchParams.getAll('split_by[]'),['Time.day','User.id']);
+    return response({success:true,data:planHist131.days.map(date=>({'Time.day':date,'User.id':'u1',result:{price:10000,price_data:10000,order_count:1}}))});
+  };
+  const hb0=await fetchReportBatch({}, {token:planHist131.token,batch:0});
+  const hb1=await fetchReportBatch({}, {token:planHist131.token,batch:1});
+  assert.equal(hb0.completeBatch,true);assert.equal(hb0.count,6);
+  assert.equal(hb1.completeBatch,true);assert.equal(hb1.count,1);
+  assert.ok(hb0.results.every(x=>Array.isArray(x.days)&&x.days.length===4));
+
   // Complete live snapshot: exact Employee Statistic query, all shops required.
   clearPancakeEnv();
   process.env.PANCAKE_POS_API_KEY_1='v129-complete-key';
@@ -109,6 +162,49 @@ try{
   assert.equal(partial.orders,null);
   assert.equal(partial.okShops,1);assert.equal(partial.failedShops,1);
   assert.equal(partial.deltaTrusted,false);
+
+  // Multi-account resilience: slower accounts may timeout once, then recover independently.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v130-account-1';
+  process.env.PANCAKE_SHOP_IDS_1='55101';
+  process.env.PANCAKE_LABEL_1='Account 1';
+  process.env.PANCAKE_POS_API_KEY_2='v130-account-2';
+  process.env.PANCAKE_SHOP_IDS_2='55201';
+  process.env.PANCAKE_LABEL_2='Account 2';
+  process.env.PANCAKE_POS_API_KEY_3='v130-account-3';
+  process.env.PANCAKE_SHOP_IDS_3='55301';
+  process.env.PANCAKE_LABEL_3='Account 3';
+  const attempts=new Map();
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    const shopId=u.pathname.split('/')[4];
+    const n=(attempts.get(shopId)||0)+1;attempts.set(shopId,n);
+    if((shopId==='55201'||shopId==='55301')&&n===1){
+      const e=new Error('The operation was aborted due to timeout');e.name='TimeoutError';throw e;
+    }
+    const rawPrice=shopId==='55101'?100000:shopId==='55201'?200000:300000;
+    return response({success:true,summary:{price:rawPrice,price_data:rawPrice,order_count:1,product_count:1}});
+  };
+  const multi=await aggregateSales({});
+  assert.equal(multi.complete,true);
+  assert.equal(multi.total,6000);
+  assert.equal(multi.okShops,3);
+  assert.equal(attempts.get('55101'),1);
+  assert.equal(attempts.get('55201'),2);
+  assert.equal(attempts.get('55301'),2);
+
+  // Store discovery also retries a one-off timeout.
+  let shopAttempts=0;
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    assert.equal(u.pathname.endsWith('/shops'),true);
+    shopAttempts++;
+    if(shopAttempts===1){const e=new Error('The operation was aborted due to timeout');e.name='TimeoutError';throw e;}
+    return response({success:true,data:[{id:'9001',name:'Recovered Shop'}]});
+  };
+  const recoveredShops=await listShops('retry-key');
+  assert.equal(shopAttempts,2);
+  assert.deepEqual(recoveredShops,[{id:'9001',name:'Recovered Shop'}]);
 
   // Historical totals use Pancake grouped Employee Statistic rows (day + employee).
   clearPancakeEnv();

@@ -1,5 +1,5 @@
 const $ = s => document.querySelector(s);
-const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const themes = [['spring','SPRING'],['summer','SUMMER'],['rain','RAIN'],['autumn','AUTUMN'],['winter','WINTER'],['sakura','SAKURA'],['aurora','AURORA'],['night','NIGHT']];
 const CACHE_KEY = 'plsm_verified_employee_snapshot_v130';
 
@@ -118,10 +118,10 @@ function drawNumbers(snapshot,{animate=true,showDelta=false,delta=0}={}){
   const safe=mergeHistory(snapshot);
   if(showDelta&&Math.abs(delta)>.001)deltaFx(delta);
   if(animate){
-    animateNumber(totalShown,safe.total,safe.total<totalShown?1200:780,v=>{const e=$('#mega span');if(e)e.textContent=nf.format(Math.max(0,Math.round(v)));totalShown=v});
-    animateNumber(ordersShown,safe.orders,520,v=>{const e=$('#orders');if(e)e.textContent=nf.format(Math.max(0,Math.round(v)));ordersShown=v});
+    animateNumber(totalShown,safe.total,safe.total<totalShown?1200:780,v=>{const e=$('#mega span');if(e)e.textContent=nf.format(Math.max(0,v));totalShown=v});
+    animateNumber(ordersShown,safe.orders,520,v=>{const e=$('#orders');if(e)e.textContent=nf.format(Math.max(0,v));ordersShown=v});
   }else{
-    if($('#mega span'))$('#mega span').textContent=nf.format(Math.max(0,Math.round(safe.total)));
+    if($('#mega span'))$('#mega span').textContent=nf.format(Math.max(0,safe.total));
     if($('#orders'))$('#orders').textContent=nf.format(Math.max(0,Math.round(safe.orders)));
     totalShown=safe.total;ordersShown=safe.orders;
   }
@@ -141,7 +141,7 @@ function renderComplete(d){
   const gapMs=Number.isFinite(previousMs)&&Number.isFinite(currentMs)?currentMs-previousMs:Infinity;
   // +/- is only shown for near-consecutive COMPLETE Employee Statistic snapshots.
   // Reloading after a long gap never invents a giant sale/cancellation animation.
-  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date&&gapMs>0&&gapMs<=15000;
+  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date&&gapMs>0&&gapMs<=180000;
   const delta=comparable?Number(d.total)-Number(lastComplete.total):0;
 
   status('LIVE');
@@ -177,45 +177,179 @@ async function readResponse(r){
 
 showSales();status('SYNCING');
 lastComplete=loadComplete();
-if(lastComplete){drawNumbers(lastComplete,{animate:false,showDelta:false});if($('#updated'))$('#updated').textContent='Checking verified Pancake snapshot…'}
-
-async function poll(){
-  if(stop)return;
-  if(document.hidden){setTimeout(poll,1000);return}
-  if(polling){setTimeout(poll,250);return}
-  polling=true;$('#status b')?.classList.add('fetch');
-  try{
-    const r=await fetch('/api/sales',{cache:'no-store'});
-    if(r.status===401){location.href='/login';return}
-    const {text,json}=await readResponse(r);
-    if(!r.ok){renderHold({complete:false,status:'HOLD',shops:lastComplete?.shops||0,okShops:0,failedShops:lastComplete?.shops||0,errors:[`Sales API HTTP ${r.status}${json?.error?` · ${json.error}`:text?` · ${text.slice(0,160)}`:''}`],staleSnapshot:lastComplete})}
-    else if(!json){renderHold({complete:false,status:'HOLD',shops:lastComplete?.shops||0,okShops:0,failedShops:lastComplete?.shops||0,errors:['Sales API returned non-JSON data'],staleSnapshot:lastComplete})}
-    else applySales(json);
-  }catch(e){renderHold({complete:false,status:'HOLD',shops:lastComplete?.shops||0,okShops:0,failedShops:lastComplete?.shops||0,errors:[`Unable to connect · ${e?.message||'network error'}`],staleSnapshot:lastComplete})}
-  finally{polling=false;$('#status b')?.classList.remove('fetch');if(!stop)setTimeout(poll,1000)}
+if(lastComplete){
+  drawNumbers(lastComplete,{animate:false,showDelta:false});
+  if($('#updated'))$('#updated').textContent='Preparing verified Pancake snapshot…';
 }
 
-async function pollHistory(){
-  if(stop)return;
-  if(historyPolling){setTimeout(pollHistory,1000);return}
-  historyPolling=true;
-  let delay=5*60*1000;
-  try{
-    const r=await fetch('/api/history',{cache:'no-store'});
-    if(r.status===401)return;
-    const {json}=await readResponse(r);
-    if(r.ok&&json?.complete===true&&Array.isArray(json.days)){
-      historyDays=json.days;
-      if(lastComplete)drawNumbers(lastComplete,{animate:false,showDelta:false});
-    }else if(!r.ok||json?.complete===false){
-      // Never replace verified historical totals with partial values.
-      delay=60*1000;
+let currentLivePlan=null;
+let liveCycleRunning=false;
+let historyCycleRunning=false;
+let liveTimer=null;
+let historyTimer=null;
+const BATCH_REQUEST_CONCURRENCY=3;
+
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+
+async function getReportPlan(kind){
+  const r=await fetch(`/api/report-plan?kind=${encodeURIComponent(kind)}&_=${Date.now()}`,{cache:'no-store'});
+  if(r.status===401){location.href='/login';throw new Error('Unauthorized')}
+  const {text,json}=await readResponse(r);
+  if(!r.ok)throw new Error(`Report plan HTTP ${r.status}${json?.error?` · ${json.error}`:text?` · ${text.slice(0,160)}`:''}`);
+  if(!json)throw new Error('Report plan returned non-JSON data');
+  return json;
+}
+
+async function getReportBatch(plan,batch){
+  const r=await fetch('/api/report-batch',{
+    method:'POST',
+    cache:'no-store',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({token:plan.token,batch})
+  });
+  if(r.status===401){location.href='/login';throw new Error('Unauthorized')}
+  const {text,json}=await readResponse(r);
+  if(!r.ok)throw new Error(`Batch ${batch+1}/${plan.totalBatches} HTTP ${r.status}${json?.error?` · ${json.error}`:text?` · ${text.slice(0,160)}`:''}`);
+  if(!json)throw new Error(`Batch ${batch+1}/${plan.totalBatches} returned non-JSON data`);
+  return json;
+}
+
+async function runBatches(plan,onProgress=()=>{}){
+  const all=new Array(Number(plan.shops)||0);
+  let nextBatch=0;
+  let done=0;
+  let stopped=false;
+  const errors=[];
+
+  async function worker(){
+    while(!stopped){
+      const batch=nextBatch++;
+      if(batch>=Number(plan.totalBatches||0))return;
+      let json;
+      try{json=await getReportBatch(plan,batch)}
+      catch(e){errors.push(e?.message||String(e));stopped=true;return}
+
+      if(json.planId!==plan.planId){errors.push(`Batch ${batch+1} belongs to a different snapshot`);stopped=true;return}
+      if(json.completeBatch!==true){
+        const detail=Array.isArray(json.errors)&&json.errors.length?json.errors[0]:'Pancake batch incomplete';
+        errors.push(`Batch ${batch+1}/${plan.totalBatches} incomplete · ${detail}`);
+        stopped=true;return;
+      }
+      for(const item of json.results||[]){
+        if(!item?.ok){errors.push(item?.error||`Shop ${item?.shopId||'?'} incomplete`);stopped=true;return}
+        const index=Number(item.index);
+        if(Number.isInteger(index)&&index>=0&&index<all.length)all[index]=item;
+      }
+      done+=(json.results||[]).length;
+      onProgress(Math.min(done,all.length),all.length,json);
     }
-  }catch{delay=60*1000}
-  finally{historyPolling=false;if(!stop)setTimeout(pollHistory,delay)}
+  }
+
+  const workers=Array.from({length:Math.max(1,Math.min(BATCH_REQUEST_CONCURRENCY,Number(plan.totalBatches)||1))},()=>worker());
+  await Promise.all(workers);
+  if(errors.length){const e=new Error(errors[0]);e.progress={done,total:all.length};throw e}
+  const missing=all.reduce((n,x)=>n+(x?0:1),0);
+  if(missing){const e=new Error(`${missing} shop result(s) missing from complete snapshot`);e.progress={done:all.length-missing,total:all.length};throw e}
+  return all;
 }
 
-poll();setTimeout(pollHistory,6000);
-window.addEventListener('beforeunload',()=>stop=true);
+function snapshotFromLiveResults(plan,results){
+  const total=results.reduce((sum,x)=>sum+Number(x.revenue||0),0);
+  const orders=results.reduce((sum,x)=>sum+Number(x.orders||0),0);
+  return {
+    complete:true,
+    status:'LIVE',
+    total,
+    orders,
+    days:[{date:plan.date,revenue:total,orders}],
+    updatedAt:new Date().toISOString(),
+    observedThrough:plan.observedThrough,
+    snapshotId:plan.planId,
+    shopSetHash:plan.shopSetHash,
+    shops:plan.shops,
+    okShops:plan.shops,
+    failedShops:0,
+    errors:[],
+    source:plan.source,
+    moneyUnit:'baht'
+  };
+}
+
+function renderSyncProgress(plan,done=0){
+  showSales();status('SYNCING');
+  const up=$('#updated');
+  if(up)up.textContent=`Verifying ${done}/${plan.shops} shops · displayed total unchanged`;
+  setError('');
+}
+
+async function runLiveCycle(){
+  if(stop||liveCycleRunning)return;
+  liveCycleRunning=true;
+  let retryDelay=2000;
+  let progress={done:0,total:currentLivePlan?.shops||lastComplete?.shops||0};
+  try{
+    const plan=await getReportPlan('live');
+    currentLivePlan=plan;
+    if(plan.status==='UNCONFIGURED'){showUnconfigured();retryDelay=5000;return}
+    if(plan.ready!==true){
+      renderHold({complete:false,status:'HOLD',shops:plan.shops||lastComplete?.shops||0,okShops:0,failedShops:plan.shops||0,errors:plan.errors||['Unable to create complete Pancake report plan'],staleSnapshot:lastComplete});
+      retryDelay=3000;return;
+    }
+
+    progress={done:0,total:plan.shops};
+    renderSyncProgress(plan,0);
+    const results=await runBatches(plan,(done,total)=>{
+      progress={done,total};
+      renderSyncProgress(plan,done);
+    });
+    const snapshot=snapshotFromLiveResults(plan,results);
+    renderComplete(snapshot);
+    retryDelay=1500;
+  }catch(e){
+    const p=e?.progress||progress;
+    const shops=Number(p?.total||currentLivePlan?.shops||lastComplete?.shops||0);
+    const done=Number(p?.done||0);
+    renderHold({
+      complete:false,status:'HOLD',shops,okShops:done,failedShops:Math.max(0,shops-done),
+      errors:[e?.message||'Live sync failed'],staleSnapshot:lastComplete
+    });
+    retryDelay=3000;
+  }finally{
+    liveCycleRunning=false;
+    if(!stop){clearTimeout(liveTimer);liveTimer=setTimeout(runLiveCycle,retryDelay)}
+  }
+}
+
+function mergeHistoryBatchResults(plan,results){
+  const map=new Map((plan.days||[]).map(date=>[date,{date,revenue:0,orders:0}]));
+  for(const item of results){
+    for(const row of item.days||[]){
+      const target=map.get(String(row.date||''));
+      if(target){target.revenue+=Number(row.revenue)||0;target.orders+=Number(row.orders)||0}
+    }
+  }
+  return (plan.days||[]).map(date=>map.get(date));
+}
+
+async function runHistoryCycle(){
+  if(stop||historyCycleRunning)return;
+  historyCycleRunning=true;
+  let delay=10*60*1000;
+  try{
+    const plan=await getReportPlan('history');
+    if(plan.ready!==true){delay=60*1000;return}
+    const results=await runBatches(plan);
+    historyDays=mergeHistoryBatchResults(plan,results);
+    if(lastComplete)drawNumbers(lastComplete,{animate:false,showDelta:false});
+  }catch{delay=60*1000}
+  finally{
+    historyCycleRunning=false;
+    if(!stop){clearTimeout(historyTimer);historyTimer=setTimeout(runHistoryCycle,delay)}
+  }
+}
+
+runLiveCycle();
+historyTimer=setTimeout(runHistoryCycle,30000);
+window.addEventListener('beforeunload',()=>{stop=true;clearTimeout(liveTimer);clearTimeout(historyTimer)});
 if($('#fullBtn'))$('#fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()};
 if($('#logoutBtn'))$('#logoutBtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.href='/login'};
