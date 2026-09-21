@@ -24,12 +24,12 @@
         <div>
           <div class="micro-label">CONNECTION</div>
           <h2>Pancake POS API</h2>
-          <p>Connect API keys, then choose which stores are included in the live total. <small>ไม่ใช้ Database</small></p>
+          <p>Add as many Pancake accounts as needed. Duplicate shops are counted once. <small>Vercel shared config · no 3-account limit</small></p>
         </div>
         <button id="addBtn" class="soft liquid-control"><span class="plus">+</span> Add API</button>
       </div>
 
-      <div id="sharedBanner" class="shared-banner liquid-glass hidden"><b>Shared Vercel Configuration</b><span>API settings come from Vercel Environment Variables and are shared by every device.</span><small>แก้ API ที่ Vercel → Settings → Environment Variables</small></div>
+      <div id="sharedBanner" class="shared-banner liquid-glass hidden"><b id="sharedBannerTitle">Shared Vercel Configuration</b><span id="sharedBannerText">API settings are shared by every device.</span><small id="sharedBannerHelp">Vercel managed configuration</small></div>
 
       <div id="connections" class="connections"></div>
       <button id="emptyAdd" class="empty-add hidden"><span class="plus-large">+</span><span>Add POS API Key</span></button>
@@ -41,8 +41,8 @@
     </section>
 
     <section class="info-card">
-      <div class="liquid-glass"><span class="info-dot"></span><b>Realtime</b><span>Single-flight refresh every 1 second</span></div>
-      <div class="liquid-glass"><span class="info-dot"></span><b>No Database</b><span>Shared API settings can come directly from Vercel Environment Variables</span></div>
+      <div class="liquid-glass"><span class="info-dot"></span><b>Realtime</b><span>Verified batched refresh · complete snapshot only</span></div>
+      <div class="liquid-glass"><span class="info-dot"></span><b>No 3-Account Limit</b><span>Vercel Private Blob lets you add/delete from this page; Environment entries can continue _4, _5, _6…</span></div>
       <div class="liquid-glass"><span class="info-dot"></span><b>Vercel Ready</b><span>Static UI with serverless API routes</span></div>
     </section>
   </main>

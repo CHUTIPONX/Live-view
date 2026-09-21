@@ -1,0 +1,47 @@
+Pancake Live Sales Monitor v1.5.1 — Test Report
+Date: 2026-09-21
+
+RESULT: PASS
+
+1) Syntax / static integration
+- server.mjs PASS
+- lib/core.mjs PASS
+- lib/handlers.mjs PASS
+- lib/vercel.mjs PASS
+- public/app.js PASS
+- api/order-events.js PASS
+- all existing API routes PASS
+- Vercel Blob shared config integration PASS
+- seasonal video integration PASS
+
+2) Employee Statistic source-of-truth regressions
+- summary.price / 100 PASS
+- summary overrides employee data rows PASS
+- success:true + data:[] + summary:{} => authoritative zero PASS
+- malformed/ambiguous summary fails closed PASS
+- partial shop snapshot never publishes subtotal PASS
+- duplicate Shop ID across accounts counted once PASS
+- credential permission fallback PASS
+- timeout retry PASS
+- 52 shops / 9 batches PASS
+
+3) v1.5.1 real per-order animation evidence
+- /orders endpoint uses inserted_at interval PASS
+- 2 real orders at raw total_price=19900 parse to ฿199 + ฿199 PASS
+- event sum = ฿398 PASS
+- order event response returns no customer PII PASS
+- interval over 100 orders / multiple pages fails closed PASS
+- no average splitting / guessed order price in implementation PASS
+- Employee Statistic remains authoritative total; /orders is animation evidence only PASS
+
+4) Local HTTP smoke
+- GET / => HTTP 200 PASS
+- POST /api/order-events without login => HTTP 401 PASS
+
+Command:
+npm test
+
+Output:
+Static integration checks: PASS
+Syntax check: PASS
+Self-test: PASS

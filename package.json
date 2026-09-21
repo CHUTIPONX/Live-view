@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.4.0",
+  "version": "1.5.1",
   "private": true,
   "type": "module",
-  "description": "Pancake POS Employee Statistic monitor with authoritative zero-sales handling, stable cross-device cutoffs, timeout-safe batching, and complete-snapshot-only totals",
+  "description": "Pancake Employee Statistic live sales monitor with exact per-order delta queue, unlimited accounts, complete snapshots, and seasonal video backgrounds",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
@@ -13,5 +13,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.6.1"
   }
 }

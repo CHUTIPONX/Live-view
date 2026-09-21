@@ -1,12 +1,12 @@
-Pancake Live Sales v1.4.0 - อัปเดตแบบลากทั้งก้อน
+Pancake Live Sales v1.5.1 — วิธีอัป
 
-1. แตก pancake-live-sales-monitor-v1.4.0.zip
-2. เข้าโฟลเดอร์ pancake-live-sales-monitor-v1.4.0
-3. ต้องเห็น api / lib / public / package.json / vercel.json
-4. Ctrl+A เลือกของข้างในทั้งหมด
-5. GitHub repo Live-view > Add file > Upload files
-6. ลากทั้งหมดลงไป แล้ว Commit changes
-7. รอ Vercel Deployment = Ready
-8. กลับหน้า Live แล้ว Ctrl+Shift+R
+1. แตก pancake-live-sales-monitor-v1.5.1.zip
+2. เข้าโฟลเดอร์จนเห็น api / lib / public / package.json / vercel.json
+3. Ctrl+A เลือกไฟล์และโฟลเดอร์ทั้งหมดด้านใน
+4. GitHub repo Live-view > Add file > Upload files
+5. Commit changes
+6. รอ Vercel ขึ้น Ready
+7. กด Ctrl+Shift+R
 
-อย่าอัปโหลดไฟล์ ZIP เข้า repo และอย่าสร้างโฟลเดอร์ v1.4.0 ครอบ api/lib/public อีกชั้น
+สำคัญ: ต้องมี api/order-events.js ด้วย
+อย่าอัป ZIP ตรง ๆ และอย่าสร้างโฟลเดอร์ v1.5.1 ครอบโปรเจกต์อีกชั้น

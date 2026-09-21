@@ -1,0 +1,16 @@
+Season Video Sources — Pexels
+=============================
+The dashboard streams these videos remotely; the ZIP does not redistribute the source files.
+Pexels License: https://www.pexels.com/license/
+
+SPRING  — https://www.pexels.com/video/16422889/  (3840x2160)
+SUMMER  — https://www.pexels.com/video/2181400/   (3840x2160)
+RAIN    — https://www.pexels.com/video/33938712/ (3840x2160)
+AUTUMN  — https://www.pexels.com/video/10320339/ (3840x2160)
+WINTER  — https://www.pexels.com/video/11269162/ (3840x2160)
+SAKURA  — https://www.pexels.com/video/25811364/ (3840x2160)
+AURORA  — https://www.pexels.com/video/30767659/ (4K timelapse)
+NIGHT   — https://www.pexels.com/video/30560746/ (3840x2160)
+
+Pexels currently states its photos/videos are free for personal and commercial use and attribution
+is not required, subject to the Pexels License / Terms. Keep this source list for provenance.

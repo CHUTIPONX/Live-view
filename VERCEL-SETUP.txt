@@ -1,32 +1,72 @@
-Pancake Live Sales Monitor v1.2.9 — Vercel Setup
+Pancake Live Sales Monitor v1.5.1 — Vercel Setup
+================================================
 
-Vercel > Project > Settings > Environment Variables
+RECOMMENDED: ADD / DELETE PANCAKE ACCOUNTS FROM THE WEB APP
+----------------------------------------------------------
+One-time setup in Vercel:
+
+1) Vercel Project -> Storage -> create/connect a PRIVATE Blob store to this project.
+2) Vercel Project -> Settings -> Environment Variables:
 
 APP_USER=Owner
 APP_PASSWORD=<your password>
-APP_SECRET=<long random secret, 32+ characters>
+APP_SECRET=<long random secret, 32+ chars>
+PLSM_CONFIG_STORE=blob
 
-PANCAKE_POS_API_KEY_1=<your real Pancake POS API key>
-PANCAKE_LABEL_1=Main Account
+3) Redeploy ONCE.
+4) Open /settings in Pancake Live.
+5) Press + Add API, paste a Pancake POS API key, Test & Load Stores, then Save Settings.
+6) From now on accounts can be added/deleted from /settings. They are shared across devices
+   because the encrypted account configuration lives in Vercel Private Blob.
+
+The app encrypts the Blob payload again with APP_SECRET before storage.
+Never put a Pancake API key in public client-side JavaScript.
+
+BOOTSTRAP EXISTING VERCEL ENV ACCOUNTS
+--------------------------------------
+If you already have PANCAKE_POS_API_KEY_1, _2, _3, etc., keep them during the first deploy.
+With PLSM_CONFIG_STORE=blob and an empty Blob, /settings shows them as bootstrap accounts.
+Press Save Settings once to copy them into the encrypted shared Blob config.
+After verifying it works, you may remove the old PANCAKE_* account variables from Vercel.
+APP_USER / APP_PASSWORD / APP_SECRET / PLSM_CONFIG_STORE must remain.
+
+ENV-ONLY MODE (NO BLOB)
+-----------------------
+The app no longer has a 3-account ceiling. You can continue:
+
+PANCAKE_POS_API_KEY_1=...
+PANCAKE_LABEL_1=Account 1
 PANCAKE_SHOP_IDS_1=ALL
-
-Optional:
 PANCAKE_POS_API_KEY_2=...
-PANCAKE_LABEL_2=Second Account
+PANCAKE_LABEL_2=Account 2
 PANCAKE_SHOP_IDS_2=ALL
 PANCAKE_POS_API_KEY_3=...
-PANCAKE_LABEL_3=Third Account
-PANCAKE_SHOP_IDS_3=ALL
+PANCAKE_POS_API_KEY_4=...
+PANCAKE_POS_API_KEY_5=...
+...etc.
 
-Use ALL for automatic shop discovery, or comma-separated Shop IDs.
+Named suffixes also work, e.g. PANCAKE_POS_API_KEY_THAILAND.
+Or use PANCAKE_CONNECTIONS_JSON with any number of entries.
+Environment-only configuration is read-only in the app and requires redeploy after Vercel env changes.
 
-Do NOT set PANCAKE_MONEY_DIVISOR. v1.2.9 fixes the Employee Statistic raw money divisor at 100 in code.
-After changing Environment Variables, redeploy.
+STORE SELECTION
+---------------
+PANCAKE_SHOP_IDS_N=ALL        -> automatic shop discovery
+PANCAKE_SHOP_IDS_N=123,456    -> fixed selected Shop IDs
 
-v1.2.9 live source:
-/shops/{SHOP_ID}/analytics/sale
+Duplicate Shop IDs across accounts are counted ONCE. If the same shop exists under multiple
+credentials, extra credentials are kept as fallbacks for permission/API failures.
+
+SALES SOURCE OF TRUTH
+---------------------
+Endpoint: /shops/{SHOP_ID}/analytics/sale
 split_by[]=User.id
-summary.price / 100
+Sales: summary.price / 100
+Orders: summary.order_count
+Products: summary.product_count
 
-Authenticated diagnostics:
-/api/diagnostics
+success:true + data:[] + summary:{} means that shop has zero matching sales for the period.
+Timeout / permission / malformed response does NOT become zero; the dashboard holds the previous
+complete verified total instead.
+
+Authenticated diagnostics: /api/diagnostics

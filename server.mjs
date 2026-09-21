@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { diagnostics, getSettings, history, login, logout, reportBatch, reportPlan, sales, saveSettings, shops } from './lib/handlers.mjs';
+import { diagnostics, getSettings, history, login, logout, orderEvents, reportBatch, reportPlan, sales, saveSettings, shops } from './lib/handlers.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const pub = path.join(root,'public');
@@ -17,7 +17,8 @@ const api = {
   '/api/history':history,
   '/api/diagnostics':diagnostics,
   '/api/report-plan':reportPlan,
-  '/api/report-batch':reportBatch
+  '/api/report-batch':reportBatch,
+  '/api/order-events':orderEvents
 };
 const mime = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.ico':'image/x-icon','.json':'application/json; charset=utf-8'};
 

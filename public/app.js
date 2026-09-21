@@ -1,7 +1,16 @@
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
-const themes = [['spring','SPRING'],['summer','SUMMER'],['rain','RAIN'],['autumn','AUTUMN'],['winter','WINTER'],['sakura','SAKURA'],['aurora','AURORA'],['night','NIGHT']];
-const CACHE_KEY = 'plsm_verified_employee_snapshot_v140';
+const themes = [
+  {key:'spring',name:'SPRING',video:'https://www.pexels.com/download/video/16422889/',page:'https://www.pexels.com/video/16422889/'},
+  {key:'summer',name:'SUMMER',video:'https://www.pexels.com/download/video/2181400/',page:'https://www.pexels.com/video/2181400/'},
+  {key:'rain',name:'RAIN',video:'https://www.pexels.com/download/video/33938712/',page:'https://www.pexels.com/video/33938712/'},
+  {key:'autumn',name:'AUTUMN',video:'https://www.pexels.com/download/video/10320339/',page:'https://www.pexels.com/video/10320339/'},
+  {key:'winter',name:'WINTER',video:'https://www.pexels.com/download/video/11269162/',page:'https://www.pexels.com/video/11269162/'},
+  {key:'sakura',name:'SAKURA',video:'https://www.pexels.com/download/video/25811364/',page:'https://www.pexels.com/video/25811364/'},
+  {key:'aurora',name:'AURORA',video:'https://www.pexels.com/download/video/30767659/',page:'https://www.pexels.com/video/30767659/'},
+  {key:'night',name:'NIGHT',video:'https://www.pexels.com/download/video/30560746/',page:'https://www.pexels.com/video/30560746/'}
+];
+const CACHE_KEY = 'plsm_verified_employee_snapshot_v151';
 
 let theme = 0;
 let stop = false;
@@ -11,6 +20,7 @@ let totalShown = 0;
 let ordersShown = 0;
 let lastComplete = null;
 let historyDays = null;
+let deltaFxTimer = null;
 
 function particles(){
   const box=$('#seasonParticles'); if(!box)return; box.innerHTML='';
@@ -24,13 +34,42 @@ function particles(){
   }
 }
 particles();
-function rotateTheme(){
-  theme=(theme+1)%themes.length;
-  const [cls,name]=themes[theme];
-  if($('#season'))$('#season').className=`season season-${cls}`;
-  if($('#seasonName'))$('#seasonName').textContent=name;
+const reduceMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
+function applyTheme(index,{reloadVideo=true}={}){
+  const item=themes[index]||themes[0];
+  const season=$('#season');
+  if(season)season.className=`season season-${item.key}`;
+  if($('#seasonName'))$('#seasonName').textContent=item.name;
+  const source=$('#seasonSource');
+  if(source)source.href=item.page;
+  const video=$('#seasonVideo');
+  if(video){
+    video.classList.remove('failed','ready');
+    if(reduceMotion){
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      video.classList.add('failed');
+    }else if(reloadVideo && video.dataset.theme!==item.key){
+      video.dataset.theme=item.key;
+      video.src=item.video;
+      video.load();
+      const play=video.play();
+      if(play?.catch)play.catch(()=>video.classList.add('failed'));
+    }
+  }
   particles();
 }
+function rotateTheme(){
+  theme=(theme+1)%themes.length;
+  applyTheme(theme);
+}
+const seasonVideo=$('#seasonVideo');
+if(seasonVideo){
+  seasonVideo.addEventListener('loadeddata',()=>seasonVideo.classList.add('ready'));
+  seasonVideo.addEventListener('error',()=>seasonVideo.classList.add('failed'));
+}
+applyTheme(theme);
 setInterval(rotateTheme,10*60*1000);
 
 function clock(){
@@ -43,25 +82,28 @@ function clock(){
 clock();setInterval(clock,1000);
 
 function animateNumber(from,to,duration,render){
-  const st=performance.now(),dif=to-from;
-  function tick(n){
-    const p=Math.min(1,(n-st)/duration),e=1-Math.pow(1-p,4);
-    render(from+dif*e);
-    if(p<1)requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
+  return new Promise(resolve=>{
+    const st=performance.now(),dif=to-from;
+    function tick(n){
+      const p=Math.min(1,(n-st)/duration),e=1-Math.pow(1-p,4);
+      render(from+dif*e);
+      if(p<1)requestAnimationFrame(tick); else resolve();
+    }
+    requestAnimationFrame(tick);
+  });
 }
-function deltaFx(delta){
-  if(!delta)return;
+function deltaFx(delta,{rapid=false}={}){
+  if(delta===undefined||delta===null)return;
   const layer=$('#deltaFx'); if(!layer)return;
-  const pos=delta>0;
-  layer.className=`delta-layer show ${pos?'gain':'loss'}`;
+  const pos=Number(delta)>=0;
+  if(deltaFxTimer){clearTimeout(deltaFxTimer);deltaFxTimer=null}
+  layer.className=`delta-layer show ${pos?'gain':'loss'}${rapid?' rapid':''}`;
   const bits=Array.from({length:34},(_,i)=>`<i style="--a:${i*(360/34)}deg;--d:${130+(i%8)*22}px;--s:${4+(i%5)}px"></i>`).join('');
-  layer.innerHTML=`<div class="ring r1"></div><div class="ring r2"></div><div class="delta-num">${pos?'+':'−'}฿${nf.format(Math.abs(delta))}</div><div class="burst">${bits}</div>`;
+  layer.innerHTML=`<div class="ring r1"></div><div class="ring r2"></div><div class="delta-num">${pos?'+':'−'}฿${nf.format(Math.abs(Number(delta)||0))}</div><div class="burst">${bits}</div>`;
   const stage=$('#stage');
   stage?.classList.remove('gain-hit','loss-hit');
   if(stage){void stage.offsetWidth;stage.classList.add(pos?'gain-hit':'loss-hit')}
-  setTimeout(()=>{layer.className='delta-layer';layer.innerHTML=''},3500);
+  deltaFxTimer=setTimeout(()=>{layer.className='delta-layer';layer.innerHTML='';deltaFxTimer=null},rapid?900:3500);
 }
 function status(s){
   const el=$('#status'); if(!el)return;
@@ -133,22 +175,55 @@ function timeText(iso){
   if(!iso)return '--:--:--';
   return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(iso));
 }
-function renderComplete(d){
-  showSales();
-  const isNew=!lastComplete||lastComplete.snapshotId!==d.snapshotId;
-  const previousMs=lastComplete?.observedThrough?Date.parse(lastComplete.observedThrough):NaN;
-  const currentMs=d?.observedThrough?Date.parse(d.observedThrough):NaN;
+function comparableSnapshots(previous,current){
+  const previousMs=previous?.observedThrough?Date.parse(previous.observedThrough):NaN;
+  const currentMs=current?.observedThrough?Date.parse(current.observedThrough):NaN;
   const gapMs=Number.isFinite(previousMs)&&Number.isFinite(currentMs)?currentMs-previousMs:Infinity;
-  // +/- is only shown for near-consecutive COMPLETE Employee Statistic snapshots.
-  // Reloading after a long gap never invents a giant sale/cancellation animation.
-  const comparable=isNew&&lastComplete?.complete===true&&lastComplete.shopSetHash===d.shopSetHash&&lastComplete.days?.at(-1)?.date===d.days?.at(-1)?.date&&gapMs>0&&gapMs<=60000;
-  const delta=comparable?Number(d.total)-Number(lastComplete.total):0;
+  return !!(previous?.complete===true&&current?.complete===true&&previous.shopSetHash===current.shopSetHash&&previous.days?.at(-1)?.date===current.days?.at(-1)?.date&&gapMs>0&&gapMs<=60000);
+}
+
+async function playVerifiedOrderEvents(previous,current,events){
+  let runningTotal=Number(previous.total)||0;
+  let runningOrders=Number(previous.orders)||0;
+  const stepMs=events.length>12?520:events.length>6?650:820;
+  for(const event of events){
+    const amount=Number(event.amount)||0;
+    const nextTotal=runningTotal+amount;
+    const nextOrders=runningOrders+1;
+    if(Math.abs(amount)>.001)deltaFx(amount,{rapid:true});
+    await Promise.all([
+      animateNumber(totalShown,nextTotal,Math.min(560,stepMs-80),v=>{const e=$('#mega span');if(e)e.textContent=nf.format(Math.max(0,v));totalShown=v}),
+      animateNumber(ordersShown,nextOrders,Math.min(360,stepMs-160),v=>{const e=$('#orders');if(e)e.textContent=nf.format(Math.max(0,Math.round(v)));ordersShown=v})
+    ]);
+    runningTotal=nextTotal;
+    runningOrders=nextOrders;
+    if(stepMs>580)await sleep(Math.max(70,stepMs-560));
+  }
+  // Employee Statistic is still the source of truth. Snap exactly to the verified
+  // complete snapshot after the event queue, never to a sum invented by the UI.
+  drawNumbers(current,{animate:false,showDelta:false});
+}
+
+async function renderComplete(d){
+  showSales();
+  const previous=lastComplete;
+  const isNew=!previous||previous.snapshotId!==d.snapshotId;
+  const comparable=isNew&&comparableSnapshots(previous,d);
+  const delta=comparable?Number(d.total)-Number(previous.total):0;
+  const verifiedEvents=Array.isArray(d.verifiedEvents)?d.verifiedEvents:[];
 
   status('LIVE');
   if(isNew){
-    drawNumbers(d,{animate:!!lastComplete,showDelta:comparable,delta});
+    if(comparable&&delta>0&&verifiedEvents.length){
+      await playVerifiedOrderEvents(previous,d,verifiedEvents);
+    }else{
+      // Positive multi-order movement without reconciled order evidence is never split
+      // or shown as a guessed per-order popup. Negative movement can still show as one
+      // verified Employee Statistic delta because it may be a cancellation/edit.
+      drawNumbers(d,{animate:!!previous,showDelta:comparable&&delta<0,delta});
+    }
     saveComplete(mergeHistory(d));
-  }else if(!lastComplete){
+  }else if(!previous){
     drawNumbers(d,{animate:false,showDelta:false});
     saveComplete(mergeHistory(d));
   }
@@ -167,7 +242,7 @@ function renderHold(d){
 }
 function applySales(d){
   if(d.status==='UNCONFIGURED'){showUnconfigured();return}
-  if(d.complete===true){renderComplete(d);return}
+  if(d.complete===true){void renderComplete(d);return}
   renderHold(d);
 }
 async function readResponse(r){
@@ -293,7 +368,8 @@ function snapshotFromLiveResults(plan,results){
     failedShops:0,
     errors:[],
     source:plan.source,
-    moneyUnit:'baht'
+    moneyUnit:'baht',
+    shopResults:results.map(x=>({shopId:String(x.shopId),revenue:Number(x.revenue)||0,orders:Number(x.orders)||0,products:Number(x.products)||0,zeroSales:!!x.zeroSales}))
   };
 }
 
@@ -302,6 +378,59 @@ function renderSyncProgress(plan,done=0){
   const up=$('#updated');
   if(up)up.textContent=`Verifying ${done}/${plan.shops} shops · displayed total unchanged`;
   setError('');
+}
+
+
+function shopMap(snapshot){
+  return new Map((Array.isArray(snapshot?.shopResults)?snapshot.shopResults:[]).map(x=>[String(x.shopId),x]));
+}
+
+async function reconcileIndividualOrderEvents(plan,previous,current){
+  if(!comparableSnapshots(previous,current))return [];
+  const totalDelta=Number(current.total)-Number(previous.total);
+  const orderDelta=Math.round(Number(current.orders)-Number(previous.orders));
+  if(!(totalDelta>0)||!(orderDelta>0))return [];
+
+  const prev=shopMap(previous),cur=shopMap(current);
+  if(!prev.size||prev.size!==cur.size)return [];
+  const changed=[];
+  let positiveOrderDeltas=0;
+  for(const [shopId,c] of cur){
+    const p=prev.get(shopId); if(!p)return [];
+    const dOrders=Math.round(Number(c.orders||0)-Number(p.orders||0));
+    const dRevenue=Number(c.revenue||0)-Number(p.revenue||0);
+    if(dOrders<0)return []; // cancellation/edit mixed into the same interval: do not guess.
+    if(dOrders===0){if(Math.abs(dRevenue)>.009)return [];continue}
+    if(dRevenue<-.009)return [];
+    positiveOrderDeltas+=dOrders;
+    changed.push({shopId,dOrders,dRevenue});
+  }
+  if(positiveOrderDeltas!==orderDelta||!changed.length)return [];
+
+  const r=await fetch('/api/order-events',{
+    method:'POST',cache:'no-store',headers:{'content-type':'application/json'},
+    body:JSON.stringify({token:plan.token,previousObservedThrough:previous.observedThrough,shopIds:changed.map(x=>x.shopId)})
+  });
+  if(r.status===401){location.href='/login';return []}
+  const {json}=await readResponse(r);
+  if(!r.ok||json?.complete!==true||!Array.isArray(json.events))return [];
+
+  const events=json.events.map(x=>({id:String(x.id||''),shopId:String(x.shopId||''),amount:Number(x.amount),insertedAt:String(x.insertedAt||'')}))
+    .filter(x=>x.id&&x.shopId&&Number.isFinite(x.amount));
+  const ids=new Set(events.map(x=>`${x.shopId}:${x.id}`));
+  if(ids.size!==events.length||events.length!==orderDelta)return [];
+
+  const byShop=new Map();
+  for(const e of events){
+    const x=byShop.get(e.shopId)||{count:0,sum:0};x.count++;x.sum+=e.amount;byShop.set(e.shopId,x);
+  }
+  for(const c of changed){
+    const x=byShop.get(c.shopId)||{count:0,sum:0};
+    if(x.count!==c.dOrders||Math.abs(x.sum-c.dRevenue)>.009)return [];
+  }
+  const sum=events.reduce((a,x)=>a+x.amount,0);
+  if(Math.abs(sum-totalDelta)>.009)return [];
+  return events;
 }
 
 async function runLiveCycle(){
@@ -325,7 +454,8 @@ async function runLiveCycle(){
       renderSyncProgress(plan,done);
     });
     const snapshot=snapshotFromLiveResults(plan,results);
-    renderComplete(snapshot);
+    try{snapshot.verifiedEvents=await reconcileIndividualOrderEvents(plan,lastComplete,snapshot)}catch{snapshot.verifiedEvents=[]}
+    await renderComplete(snapshot);
     retryDelay=7000;
   }catch(e){
     const p=e?.progress||progress;

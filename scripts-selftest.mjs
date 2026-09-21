@@ -1,17 +1,25 @@
 import assert from 'node:assert/strict';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
-import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fiveDays, listShops, parsePancakeSalesSummary } from './lib/core.mjs';
+import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fetchVerifiedOrderEvents, fiveDays, listShops, parsePancakeSalesSummary, readEnvSettings } from './lib/core.mjs';
 
-const envKeys=[
-  'PANCAKE_CONNECTIONS_JSON','PANCAKE_POS_API_KEY','PANCAKE_POS_API_KEY_1','PANCAKE_POS_API_KEY_2','PANCAKE_POS_API_KEY_3',
-  'PANCAKE_SHOP_IDS','PANCAKE_SHOP_IDS_1','PANCAKE_SHOP_IDS_2','PANCAKE_SHOP_IDS_3',
-  'PANCAKE_LABEL','PANCAKE_LABEL_1','PANCAKE_LABEL_2','PANCAKE_LABEL_3','PANCAKE_MONEY_DIVISOR',
+const baseEnvKeys=[
+  'PANCAKE_CONNECTIONS_JSON','PANCAKE_MONEY_DIVISOR','PLSM_CONFIG_STORE','PLSM_CONFIG_BLOB_PATH',
   'APP_USER','APP_PASSWORD','APP_SECRET'
 ];
-const originalEnv=Object.fromEntries(envKeys.map(k=>[k,process.env[k]]));
+const originalEnv={...process.env};
 const originalFetch=global.fetch;
-function restore(){for(const[k,v]of Object.entries(originalEnv)){if(v===undefined)delete process.env[k];else process.env[k]=v}global.fetch=originalFetch}
-function clearPancakeEnv(){for(const k of envKeys.filter(k=>k.startsWith('PANCAKE_')))delete process.env[k]}
+const originalBlobSdk=globalThis.__plsmBlobSdk;
+function restore(){
+  for(const k of Object.keys(process.env)) delete process.env[k];
+  Object.assign(process.env,originalEnv);
+  global.fetch=originalFetch;
+  if(originalBlobSdk===undefined)delete globalThis.__plsmBlobSdk;else globalThis.__plsmBlobSdk=originalBlobSdk;
+}
+function clearPancakeEnv(){
+  for(const k of Object.keys(process.env)){
+    if(k.startsWith('PANCAKE_')||k==='PLSM_CONFIG_STORE'||k==='PLSM_CONFIG_BLOB_PATH')delete process.env[k];
+  }
+}
 function response(body,status=200){const text=JSON.stringify(body);return{ok:status>=200&&status<300,status,headers:new Map(),text:async()=>text,json:async()=>body}}
 
 try{
@@ -19,6 +27,39 @@ try{
   process.env.APP_USER='Owner';
   process.env.APP_PASSWORD='selftest-password';
   process.env.APP_SECRET='selftest-secret-that-is-long-enough-for-tests';
+
+  // v1.5.0: Vercel configuration has no hard-coded 3-account ceiling.
+  // Numbered environment variables can continue _4, _5, ... and named suffixes.
+  clearPancakeEnv();
+  for(let i=1;i<=12;i++){
+    process.env[`PANCAKE_POS_API_KEY_${i}`]=`unlimited-key-${i}`;
+    process.env[`PANCAKE_SHOP_IDS_${i}`]=String(50000+i);
+    process.env[`PANCAKE_LABEL_${i}`]=`Account ${i}`;
+  }
+  let unlimited=readEnvSettings();
+  assert.equal(unlimited.connections.length,12);
+  assert.equal(unlimited.connections[11].label,'Account 12');
+  assert.deepEqual(unlimited.connections[11].shopIds,['50012']);
+
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_THAILAND='named-key-th';
+  process.env.PANCAKE_SHOP_IDS_THAILAND='60001';
+  process.env.PANCAKE_LABEL_THAILAND='Thailand';
+  process.env.PANCAKE_POS_API_KEY_LAO='named-key-la';
+  process.env.PANCAKE_SHOP_IDS_LAO='60002';
+  process.env.PANCAKE_LABEL_LAO='Laos';
+  unlimited=readEnvSettings();
+  assert.equal(unlimited.connections.length,2);
+  assert.deepEqual(new Set(unlimited.connections.map(x=>x.label)),new Set(['Thailand','Laos']));
+
+  clearPancakeEnv();
+  process.env.PANCAKE_CONNECTIONS_JSON=JSON.stringify(Array.from({length:15},(_,i)=>({
+    id:`json-${i+1}`,label:`JSON ${i+1}`,apiKey:`json-key-${i+1}`,shopIds:[String(61000+i)]
+  })));
+  unlimited=readEnvSettings();
+  assert.equal(unlimited.connections.length,15);
+  assert.equal(unlimited.source,'env-json');
+  clearPancakeEnv();
 
   // Real Employee Statistic response contract supplied from Pancake UI.
   const captured={
@@ -69,6 +110,42 @@ try{
   const good=await login({body:{username:'Owner',password:'selftest-password'}});
   assert.equal(good.status,200);
   const sessionCookie=good.headers['set-cookie'].split(';')[0];
+
+  // v1.5.0 Vercel Private Blob shared configuration: add/delete many accounts
+  // without changing environment variables or redeploying after the one-time setup.
+  let blobBody='';
+  globalThis.__plsmBlobSdk={
+    get:async()=>blobBody?{statusCode:200,stream:new Response(blobBody).body,blob:{contentType:'application/json',etag:'test-etag'}}:null,
+    put:async(_path,body,options)=>{
+      assert.equal(options.access,'private');
+      assert.equal(options.allowOverwrite,true);
+      blobBody=String(body);
+      return {pathname:'pancake-live/config.enc.json'};
+    }
+  };
+  process.env.PLSM_CONFIG_STORE='blob';
+  const blobConnections=Array.from({length:11},(_,i)=>({
+    id:`blob-${i+1}`,label:`Blob Account ${i+1}`,apiKey:`blob-secret-${i+1}`,shopIds:[String(70000+i)],autoAllShops:false
+  }));
+  const blobSaved=await saveSettings({headers:{cookie:sessionCookie},body:{connections:blobConnections}});
+  assert.equal(blobSaved.status,200);
+  assert.equal(JSON.parse(blobSaved.body).count,11);
+  assert.ok(blobBody.includes('payload'));
+  assert.equal(blobBody.includes('blob-secret-1'),false);
+  let blobGot=await getSettings({headers:{cookie:sessionCookie}});
+  let blobPublic=JSON.parse(blobGot.body);
+  assert.equal(blobPublic.connections.length,11);
+  assert.equal(blobPublic.writable,true);
+  assert.equal(blobPublic.configStore,'vercel-blob');
+  assert.equal(blobGot.body.includes('blob-secret-1'),false);
+  const blobRemoved=await saveSettings({headers:{cookie:sessionCookie},body:{connections:blobConnections.slice(0,9).map(x=>({...x,apiKey:''}))}});
+  assert.equal(JSON.parse(blobRemoved.body).count,9);
+  blobGot=await getSettings({headers:{cookie:sessionCookie}});
+  blobPublic=JSON.parse(blobGot.body);
+  assert.equal(blobPublic.connections.length,9);
+  delete process.env.PLSM_CONFIG_STORE;
+  delete globalThis.__plsmBlobSdk;
+
   const saved=await saveSettings({headers:{cookie:sessionCookie},body:{connections:[{id:'c1',label:'Main',apiKey:'secret-test-key',shopIds:['101','102']} ]}});
   assert.equal(saved.status,200);
   const settingsCookie=saved.headers['set-cookie'].split(';')[0];
@@ -200,6 +277,37 @@ try{
     assert.equal(p2.planId,p1.planId);
     assert.equal(Number(p1.cutoffBucketId)%10000,0);
   }finally{Date.now=realDateNow}
+
+
+  // v1.5.1: positive deltas can be decomposed into REAL individual order amounts.
+  // This endpoint is animation evidence only; it never replaces Employee Statistic totals.
+  clearPancakeEnv();
+  process.env.PANCAKE_POS_API_KEY_1='v151-order-events-key';
+  process.env.PANCAKE_SHOP_IDS_1='97501';
+  process.env.PANCAKE_LABEL_1='Order Events';
+  const eventPlan=await createReportPlan({},'live');
+  const previousObservedThrough=new Date(Date.parse(eventPlan.until)-10000).toISOString();
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    assert.equal(u.pathname.endsWith('/orders'),true);
+    assert.equal(u.searchParams.get('updateStatus'),'inserted_at');
+    assert.equal(u.searchParams.get('option_sort'),'inserted_at_asc');
+    return response({success:true,data:[
+      {id:'o-1',total_price:19900,inserted_at:'2026-09-21T17:00:01'},
+      {id:'o-2',total_price:19900,inserted_at:'2026-09-21T17:00:05'}
+    ],page_number:1,page_size:100,total_entries:2,total_pages:1});
+  };
+  const eventResult=await fetchVerifiedOrderEvents({}, {token:eventPlan.token,previousObservedThrough,shopIds:['97501']});
+  assert.equal(eventResult.complete,true);
+  assert.deepEqual(eventResult.events.map(x=>x.amount),[199,199]);
+  assert.equal(eventResult.events.reduce((n,x)=>n+x.amount,0),398);
+  assert.equal(eventResult.events.every(x=>!('bill_phone_number' in x)&&!('customer' in x)),true);
+
+  // Never pretend individual orders are known if the interval is too large to fit one page.
+  global.fetch=async()=>response({success:true,data:[],page_number:1,page_size:100,total_entries:101,total_pages:2});
+  const eventOverflow=await fetchVerifiedOrderEvents({}, {token:eventPlan.token,previousObservedThrough,shopIds:['97501']});
+  assert.equal(eventOverflow.complete,false);
+  assert.deepEqual(eventOverflow.events,[]);
 
   // History is batched through the same architecture instead of one all-shop function.
   clearPancakeEnv();

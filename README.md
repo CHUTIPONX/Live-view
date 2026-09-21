@@ -1,78 +1,29 @@
-# Pancake Live Sales Monitor v1.4.0
+# Pancake Live Sales Monitor v1.5.1
 
-รุ่นนี้ปรับ flow ยอดขายให้ยึด Pancake POS > ยอดขาย > Employee Statistic เป็น source of truth และแก้ปัญหาที่เจอจากการใช้งานจริงกับหลาย Account / 50+ ร้าน
+Dashboard ยอดขายจาก Pancake POS Employee Statistic โดยยึด `summary.price / 100` เป็นยอดรวมจริงเท่านั้น
 
-## กฎยอดขาย
+## v1.5.1 — เด้งยอดทีละออเดอร์จริง
 
-- Endpoint: `/shops/{SHOP_ID}/analytics/sale`
-- Group: `split_by[]=User.id`
-- ยอดขายของร้าน: `summary.price / 100`
-- จำนวนออเดอร์: `summary.order_count`
-- จำนวนสินค้า: `summary.product_count`
-- ห้ามรวม `data[].result.price` เพื่อสร้างยอด Live เอง
-- `success:true + data:[] + summary:{}` = ร้านไม่มีขายในช่วงนั้น = `0 บาท` อย่างถูกต้อง
-- ถ้า response คลุมเครือ/permission error/network error จะไม่เดาเป็น 0
+- ยอดรวมหลักยังมาจาก `GET /shops/{SHOP_ID}/analytics/sale` เท่านั้น
+- เมื่อ Complete Snapshot ใหม่มียอดและจำนวนออเดอร์เพิ่ม ระบบจะตรวจร้านที่เปลี่ยน แล้วเรียก `GET /shops/{SHOP_ID}/orders` เฉพาะช่วงระหว่าง Snapshot
+- ใช้ `total_price / 100` ของออเดอร์จริงเพื่อทำ animation ทีละบิล เช่น `+199`, `+199` แทนการเด้ง `+398` ก้อนเดียว
+- ก่อนเล่น animation ระบบ reconcile ทั้งจำนวนออเดอร์และยอดเงิน **รายร้าน** และ **ยอดรวม** ให้ตรงกับ Employee Statistic 100%
+- ถ้า order list ไม่ครบ, timeout, มีการแก้/ยกเลิกปน, หรือผลรวมไม่ตรง ระบบจะ **ไม่หารเฉลี่ยและไม่เดา**; จะอัปเดตยอดรวมจาก Employee Statistic โดยไม่สร้าง popup รายบิลปลอม
+- ลบ/ยกเลิกยังแสดง delta จาก Complete Employee Statistic ได้ แต่จะไม่ปลอมเป็นออเดอร์ใหม่
 
-## Complete snapshot only
+## ความถูกต้อง
 
-หน้า Live จะเปลี่ยนยอดก็ต่อเมื่อได้ผลครบทุก Store ที่ตั้งไว้เท่านั้น
+1. Complete Snapshot ทุก shop ก่อนเปลี่ยนยอด
+2. ร้านไม่มีขาย (`success:true`, `data:[]`, `summary:{}`) = ฿0
+3. timeout/permission ไม่ถูกนับเป็น ฿0
+4. Shop ID ซ้ำข้าม Account นับครั้งเดียว
+5. Per-order animation เป็นชั้นแสดงผลเท่านั้น ไม่สามารถเปลี่ยนยอดจริงได้
 
-- 52/52 = LIVE และเผยแพร่ยอดใหม่
-- 51/52 = HOLD และค้างยอดที่ยืนยันแล้วรอบก่อน
-- ร้าน timeout/permission error จะไม่ถูกแทนด้วย 0
-- `+ / -` คำนวณเฉพาะ Complete Snapshot → Complete Snapshot เท่านั้น
+## API ที่ใช้
 
-## Vercel timeout protection
-
-ระบบไม่ให้ Serverless Function ตัวเดียวรอครบทุก Store อีกแล้ว
-
-- แบ่งครั้งละ 6 Store
-- Browser เรียกพร้อมกันสูงสุด 3 batch
-- แต่ละ Store มี timeout + retry ของตัวเอง
-- Batch request มี client retry เพิ่มอีก 1 รอบ
-- ต่อให้ batch หนึ่งพัง batch อื่นยังตรวจต่อ เพื่อรายงานจำนวน Store ที่ขาดจริง
-
-## หลายเครื่องให้ยอดตรงกันมากขึ้น
-
-Live snapshot ใช้ cutoff 10 วินาทีร่วมกัน (มี safety lag 2 วินาที) เช่นทุกเครื่องในรอบเดียวกันจะถาม Pancake ด้วย `until` เดียวกัน ไม่ใช่เครื่อง A เวลา 16:30:04 และเครื่อง B เวลา 16:30:08
-
-Plan ID ถูกสร้างจาก shop set + time window จริง จึงเหมือนกันข้ามเครื่องเมื่ออยู่ snapshot เดียวกัน
-
-## Regression tests ที่มีใน v1.4.0
-
-- Response จริง `summary.price=75300` → `฿753`
-- Summary ชนะ employee rows
-- Empty sales `data:[] + summary:{}` → ฿0
-- Response คลุมเครือ → fail closed ไม่เดายอด
-- 52 unique shops / 3 accounts / 9 batches
-- ร้านหนึ่งยอด 0 แต่ snapshot ยัง complete
-- Shop ซ้ำข้าม Account ไม่ถูกบวกซ้ำ
-- Credential แรกไม่มีสิทธิ์ → fallback credential ถัดไป
-- Timeout ครั้งแรก → retry แล้วผ่าน
-- History batching
-- Partial snapshot ไม่ publish subtotal
-- Stable cutoff / deterministic planId ข้ามเครื่อง
-
-รันตรวจได้ด้วย:
-
-```bash
-npm test
-```
-
-ต้องได้:
-
-```text
-Syntax check: PASS
-Self-test: PASS
-```
+- `/analytics/sale` — authoritative total
+- `/orders` — animation evidence only, filter ด้วย `inserted_at` ระหว่าง Snapshot
 
 ## Deploy
 
-1. แตก ZIP
-2. เข้าโฟลเดอร์จนเห็น `api`, `lib`, `public`, `package.json`, `vercel.json`
-3. เลือกของข้างในทั้งหมดแล้ว Upload ทับใน GitHub repo เดิม
-4. Commit
-5. รอ Vercel เป็น Ready
-6. หน้า Live กด `Ctrl + Shift + R`
-
-Environment Variables เดิมใช้ต่อได้ ไม่ต้องสร้าง Database
+แตก ZIP แล้วอัปไฟล์ด้านในทั้งหมดไปที่ root ของ GitHub repo จากนั้นรอ Vercel Ready และ hard refresh (`Ctrl+Shift+R`).
