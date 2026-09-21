@@ -1,33 +1,67 @@
-# Pancake Live Sales Monitor v1.6.0
+# Pancake Live Sales Monitor v1.6.2
 
-## 100 Scenic Views · Full Clip Playback
+## WORLD TRAVEL Scenic Expansion
 
-รุ่นนี้เปลี่ยนระบบพื้นหลังจากการตัดคลิปตามเวลา เป็น playlist วิว 100 คลิปที่เล่นจนจบจริงก่อนเปลี่ยนคลิปถัดไป
+v1.6.2 keeps the verified Pancake sales logic, sequential per-order animation, multi-account setup and v1.6.1 security hardening unchanged.
 
-### Scenic behavior
-- 100 unique Pexels scenic videos
-- Full-clip playback: เปลี่ยนเมื่อ `ended` เท่านั้น
-- Shuffle แบบไม่ซ้ำภายในรอบ 100 คลิป
-- ครบ 100 คลิปแล้วค่อย shuffle รอบใหม่
-- ไม่ให้คลิปแรกของรอบใหม่ซ้ำคลิปสุดท้ายของรอบก่อนทันที
-- Preload แค่คลิปถัดไป 1 คลิป ไม่โหลด 100 คลิปพร้อมกัน
-- 2-layer crossfade ประมาณ 1.8 วินาที
-- ถ้าคลิป remote โหลดไม่ได้ จะข้ามคลิปนั้นโดยไม่ทำพื้นหลังดำ
-- ไม่มี CSS zoom เพิ่ม (`transform:none`) และไม่ blur ตัววิดีโอ
+The visual background playlist is expanded from 100 to **200 unique Pexels videos**.
 
-### View mix
-Morning / Sunrise / Forest light / River / Lake / Mountain / Tropical beach / Island / Waterfall / Golden hour / Sunset / Twilight / Night city / Winter / Clouds
+### New WORLD TRAVEL collection
+100 additional destination/travel clips were added, including:
+- Switzerland / Swiss Alps
+- Amalfi Coast
+- Venice
+- Iceland
+- Cappadocia
+- Paris
+- Shanghai
+- Singapore
+- Dubai
+- New York
+- Patagonia
+- Kyoto
+- Rome
+- Sydney
+- Hong Kong
+- Bali
+- Phuket
+- Bangkok
+- Maldives
+- Barcelona
+- Santorini
+- London
+- Tokyo
+- New Zealand
+- Banff
+- Norway
 
-### Sales system
-ระบบยอดขายยังเหมือนเดิม: Employee Statistic `summary.price / 100`, complete snapshot only, HOLD เมื่อข้อมูลไม่ครบ, verified per-order popup, scoreboard counter, unlimited account config via supported Vercel setup.
+The collection mixes bright daytime travel, blue-water destinations, mountain scenery, iconic landmarks, sunrise, golden hour, sunset and city-night views.
 
-### Files
-- `public/scenic-videos.js` — manifest 100 videos
-- `public/app.js` — full-clip playlist controller
-- `public/index.html` — video elements without `loop`
-- `VIDEO-SOURCES.txt` — list of all 100 Pexels video IDs/streams
+### Playback behavior
+- 200 unique videos total
+- Full clip playback — the clip changes only when the current video ends
+- Fisher-Yates shuffle
+- No repeat until the current 200-video cycle is exhausted
+- Two video elements only: current + one preloaded next clip
+- 1.8 second crossfade
+- Failed remote clips are skipped instead of producing a black screen
+- No artificial CSS zoom (`transform:none`)
+- Video background remains nearly unblurred
 
-Run tests:
+### Security preserved
+v1.6.1 server-side CSRF / same-origin / CSP / secure-cookie protections and the visible Inspect warning remain unchanged.
+
+### Sales logic preserved
+No change to:
+- Employee Statistic `summary.price / 100`
+- complete-snapshot-only totals
+- zero-sale shop handling
+- account add/remove
+- shop deduplication
+- verified individual-order popup animation
+- scoreboard count-up / count-down display
+
+### Run tests
 ```bash
 npm test
 ```

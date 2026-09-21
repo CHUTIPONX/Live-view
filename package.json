@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.6.0",
+  "version": "1.6.2",
   "private": true,
   "type": "module",
-  "description": "Pancake POS live sales monitor with verified per-order score animation and 100-video full-length scenic playlist",
+  "description": "Pancake POS live sales monitor with verified per-order score animation, hardened security, and a 200-video full-length scenic + world-travel playlist",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",

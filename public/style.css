@@ -131,3 +131,68 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 .shared-banner{margin:0 0 18px;padding:18px 20px;display:grid;gap:5px;border-radius:22px}
 .shared-banner b{font-size:15px;letter-spacing:-.01em}.shared-banner span{font-size:13px;opacity:.76}.shared-banner small{font-size:12px;opacity:.55}
 .connection input:disabled,.shop:disabled{cursor:default;opacity:.82}.shop:disabled.on{opacity:1}
+
+
+/* v1.6.1 security deterrence overlay — warning only; real protection is server-side. */
+.security-warning{
+  position:fixed;
+  inset:0;
+  z-index:2147483647;
+  display:grid;
+  place-items:center;
+  padding:clamp(18px,4vw,48px);
+  background:rgba(0,0,0,.90);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .16s ease,visibility 0s linear .18s;
+}
+.security-warning.show{
+  opacity:1;
+  visibility:visible;
+  transition:opacity .12s ease;
+}
+.security-warning-inner{
+  width:min(1100px,96vw);
+  text-align:center;
+  padding:clamp(26px,5vw,70px);
+  border:2px solid rgba(255,32,32,.75);
+  border-radius:28px;
+  background:rgba(18,0,0,.88);
+  box-shadow:0 0 0 1px rgba(255,0,0,.2) inset,0 0 80px rgba(255,0,0,.26);
+  backdrop-filter:blur(4px);
+}
+.security-warning-icon{
+  width:72px;
+  height:72px;
+  margin:0 auto 18px;
+  display:grid;
+  place-items:center;
+  border:3px solid #ff2525;
+  border-radius:999px;
+  color:#ff2525;
+  font:900 48px/1 system-ui,sans-serif;
+  box-shadow:0 0 38px rgba(255,0,0,.45);
+}
+.security-warning-title{
+  color:#ff2020;
+  font:1000 clamp(34px,7vw,92px)/1.02 system-ui,-apple-system,"Segoe UI",sans-serif;
+  letter-spacing:-.045em;
+  text-shadow:0 0 22px rgba(255,0,0,.46),0 3px 0 #520000;
+  overflow-wrap:anywhere;
+}
+.security-warning-sub{
+  margin-top:18px;
+  color:#ff8c8c;
+  font:900 clamp(13px,2vw,22px)/1.25 system-ui,sans-serif;
+  letter-spacing:.12em;
+}
+.security-warning-note{
+  margin:18px auto 0;
+  max-width:900px;
+  color:rgba(255,225,225,.82);
+  font:700 clamp(12px,1.45vw,17px)/1.5 system-ui,sans-serif;
+}
+@media (prefers-reduced-motion:reduce){
+  .security-warning{transition:none}
+}

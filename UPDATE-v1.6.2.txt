@@ -1,0 +1,18 @@
+Pancake Live Sales Monitor v1.6.2
+
+WORLD TRAVEL SCENIC EXPANSION
+
+CHANGED
+- Scenic playlist expanded from 100 to 200 unique Pexels video IDs.
+- Added 100 WORLD TRAVEL videos from destinations around Europe, Asia, North America,
+  South America and Oceania.
+- Dashboard badge now reads: 200 VIEWS · WORLD TRAVEL · FULL CLIP.
+- Playback still switches only when the current video naturally ends.
+- Shuffle still avoids repeats until the full playlist cycle is exhausted.
+- Current + one-next preload only; 200 videos are never loaded simultaneously.
+- Existing sales, security, multi-account and order-animation logic is unchanged.
+
+IMPORTANT
+- Remote Pexels media availability is controlled by Pexels.
+- If an individual remote clip becomes unavailable, runtime code skips it.
+- No video file is redistributed inside this ZIP.

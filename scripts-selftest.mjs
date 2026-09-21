@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
+import { isCsrfValid } from './lib/core.mjs';
+import { mutationGuard } from './lib/security.mjs';
 import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fetchVerifiedOrderEvents, fiveDays, listShops, parsePancakeSalesSummary, readEnvSettings } from './lib/core.mjs';
 
 const baseEnvKeys=[
@@ -107,9 +109,19 @@ try{
   assert.equal(parsePancakeSalesSummary(captured).revenue,753);
   delete process.env.PANCAKE_MONEY_DIVISOR;
 
-  const good=await login({body:{username:'Owner',password:'selftest-password'}});
+  const good=await login({headers:{'x-forwarded-for':'127.0.0.1'},body:{username:'Owner',password:'selftest-password'}});
   assert.equal(good.status,200);
-  const sessionCookie=good.headers['set-cookie'].split(';')[0];
+  const loginCookies=Array.isArray(good.headers['set-cookie'])?good.headers['set-cookie']:[good.headers['set-cookie']];
+  const sessionCookie=loginCookies.find(x=>String(x).startsWith('plsm_session='))?.split(';')[0];
+  const csrfCookiePair=loginCookies.find(x=>String(x).startsWith('plsm_csrf='))?.split(';')[0];
+  assert.ok(sessionCookie);
+  assert.ok(csrfCookiePair);
+  const csrfValue=decodeURIComponent(csrfCookiePair.split('=').slice(1).join('='));
+  const authedHeaders={cookie:`${sessionCookie}; ${csrfCookiePair}`,'x-csrf-token':csrfValue};
+  assert.equal(isCsrfValid(authedHeaders),true);
+  assert.equal(mutationGuard({...authedHeaders,origin:'https://example.com',host:'example.com'},isCsrfValid).ok,true);
+  assert.equal(mutationGuard({...authedHeaders,origin:'https://evil.example',host:'example.com'},isCsrfValid).ok,false);
+  assert.equal(mutationGuard({cookie:`${sessionCookie}; ${csrfCookiePair}`},isCsrfValid).ok,false);
 
   // v1.5.0 Vercel Private Blob shared configuration: add/delete many accounts
   // without changing environment variables or redeploying after the one-time setup.
@@ -127,7 +139,7 @@ try{
   const blobConnections=Array.from({length:11},(_,i)=>({
     id:`blob-${i+1}`,label:`Blob Account ${i+1}`,apiKey:`blob-secret-${i+1}`,shopIds:[String(70000+i)],autoAllShops:false
   }));
-  const blobSaved=await saveSettings({headers:{cookie:sessionCookie},body:{connections:blobConnections}});
+  const blobSaved=await saveSettings({headers:authedHeaders,body:{connections:blobConnections}});
   assert.equal(blobSaved.status,200);
   assert.equal(JSON.parse(blobSaved.body).count,11);
   assert.ok(blobBody.includes('payload'));
@@ -138,7 +150,7 @@ try{
   assert.equal(blobPublic.writable,true);
   assert.equal(blobPublic.configStore,'vercel-blob');
   assert.equal(blobGot.body.includes('blob-secret-1'),false);
-  const blobRemoved=await saveSettings({headers:{cookie:sessionCookie},body:{connections:blobConnections.slice(0,9).map(x=>({...x,apiKey:''}))}});
+  const blobRemoved=await saveSettings({headers:authedHeaders,body:{connections:blobConnections.slice(0,9).map(x=>({...x,apiKey:''}))}});
   assert.equal(JSON.parse(blobRemoved.body).count,9);
   blobGot=await getSettings({headers:{cookie:sessionCookie}});
   blobPublic=JSON.parse(blobGot.body);
@@ -146,7 +158,7 @@ try{
   delete process.env.PLSM_CONFIG_STORE;
   delete globalThis.__plsmBlobSdk;
 
-  const saved=await saveSettings({headers:{cookie:sessionCookie},body:{connections:[{id:'c1',label:'Main',apiKey:'secret-test-key',shopIds:['101','102']} ]}});
+  const saved=await saveSettings({headers:authedHeaders,body:{connections:[{id:'c1',label:'Main',apiKey:'secret-test-key',shopIds:['101','102']} ]}});
   assert.equal(saved.status,200);
   const settingsCookie=saved.headers['set-cookie'].split(';')[0];
   const got=await getSettings({headers:{cookie:`${sessionCookie}; ${settingsCookie}`}});

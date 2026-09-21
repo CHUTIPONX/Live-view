@@ -1,12 +1,14 @@
-Pancake Live Sales Monitor v1.6.0 — Scenic Video Sources
+Pancake Live Sales Monitor v1.6.2 — Scenic + WORLD TRAVEL Video Sources
 
 Playlist behavior:
-- 100 unique Pexels videos
+- 200 unique Pexels videos total
+- Original scenic set: 100 videos
+- WORLD TRAVEL expansion: 100 videos
 - Each clip plays to its natural end before switching
-- Fisher-Yates shuffle; no repeat until the current 100-video cycle is exhausted
+- Fisher-Yates shuffle; no repeat until the current 200-video cycle is exhausted
 - Two video layers: current clip + one preloaded next clip only
 - Crossfade between clips; no artificial CSS zoom
-- Pexels source is streamed remotely; files are not redistributed inside this ZIP
+- Remote source is streamed from Pexels; videos are not redistributed inside this ZIP
 
 License reference: https://www.pexels.com/license/
 
@@ -111,3 +113,103 @@ ID | CATEGORY | NAME | STREAM
 6904288 | WINTER | SNOW COVERED WOODS | https://www.pexels.com/download/video/6904288/
 10427238 | WINTER | WINTER PINES | https://www.pexels.com/download/video/10427238/
 5721851 | CLOUDS | CLOUDY MOUNTAIN PEAKS | https://www.pexels.com/download/video/5721851/
+13709224 | WORLD | SWISS ALPS TURQUOISE LAKE | https://www.pexels.com/download/video/13709224/
+32778738 | WORLD | AMALFI COAST AERIAL | https://www.pexels.com/download/video/32778738/
+32778734 | WORLD | AMALFI SUMMER COAST | https://www.pexels.com/download/video/32778734/
+32778735 | WORLD | AMALFI BLUE SEA | https://www.pexels.com/download/video/32778735/
+33958368 | WORLD | SWISS ALPINE LAKE | https://www.pexels.com/download/video/33958368/
+37139936 | WORLD | VENICE CANAL MORNING | https://www.pexels.com/download/video/37139936/
+32778732 | WORLD | AMALFI VILLAGE COAST | https://www.pexels.com/download/video/32778732/
+33617446 | WORLD | SWISS ALPS SUMMER LAKE | https://www.pexels.com/download/video/33617446/
+37139946 | WORLD | VENICE GRAND CANAL | https://www.pexels.com/download/video/37139946/
+29420362 | WORLD | AMALFI MEDITERRANEAN | https://www.pexels.com/download/video/29420362/
+33740447 | WORLD | SHANGHAI PUDONG SKYLINE | https://www.pexels.com/download/video/33740447/
+27954332 | WORLD | ICELAND WATERFALL | https://www.pexels.com/download/video/27954332/
+12765562 | WORLD | CAPPADOCIA BALLOON SUNRISE | https://www.pexels.com/download/video/12765562/
+37819446 | WORLD | VENICE GONDOLAS | https://www.pexels.com/download/video/37819446/
+11104920 | WORLD | CAPPADOCIA SKY BALLOONS | https://www.pexels.com/download/video/11104920/
+15912080 | WORLD | VENICE SAN MARCO | https://www.pexels.com/download/video/15912080/
+35207576 | WORLD | CAPPADOCIA MAGIC DAWN | https://www.pexels.com/download/video/35207576/
+38851700 | WORLD | VENICE SUNNY GRAND CANAL | https://www.pexels.com/download/video/38851700/
+10809835 | WORLD | CAPPADOCIA AERIAL BALLOONS | https://www.pexels.com/download/video/10809835/
+3381844 | WORLD | VENICE TWILIGHT CANAL | https://www.pexels.com/download/video/3381844/
+34656940 | WORLD | SWISS MOUNTAINS & LAKE | https://www.pexels.com/download/video/34656940/
+29332967 | WORLD | VENICE AERIAL OLD TOWN | https://www.pexels.com/download/video/29332967/
+36328564 | WORLD | VENICE HERITAGE CANAL | https://www.pexels.com/download/video/36328564/
+34221496 | WORLD | CAPPADOCIA SUNRISE AERIAL | https://www.pexels.com/download/video/34221496/
+35418762 | WORLD | AMALFI VIBRANT SEA | https://www.pexels.com/download/video/35418762/
+30448963 | WORLD | AMALFI COAST ROAD | https://www.pexels.com/download/video/30448963/
+27373143 | WORLD | CAPPADOCIA DAWN | https://www.pexels.com/download/video/27373143/
+17516668 | WORLD | CAPPADOCIA ROCK VALLEY | https://www.pexels.com/download/video/17516668/
+36086834 | WORLD | AMALFI ROAD TRIP | https://www.pexels.com/download/video/36086834/
+10745869 | WORLD | CAPPADOCIA FAIRY CHIMNEYS | https://www.pexels.com/download/video/10745869/
+856056 | WORLD | PARIS EIFFEL SUNNY DAY | https://www.pexels.com/download/video/856056/
+27380760 | WORLD | NEW YORK SUNSET SKYLINE | https://www.pexels.com/download/video/27380760/
+33702863 | WORLD | SINGAPORE MARINA BAY DAWN | https://www.pexels.com/download/video/33702863/
+27607374 | WORLD | DUBAI BURJ KHALIFA DAY | https://www.pexels.com/download/video/27607374/
+29346258 | WORLD | PATAGONIA LAKE DISTRICT | https://www.pexels.com/download/video/29346258/
+20225592 | WORLD | DUBAI MARINA SUNSET | https://www.pexels.com/download/video/20225592/
+33478831 | WORLD | PATAGONIA SNOW PEAKS | https://www.pexels.com/download/video/33478831/
+31222817 | WORLD | PARIS CLEAR SKY | https://www.pexels.com/download/video/31222817/
+34740345 | WORLD | SINGAPORE MARINA BAY | https://www.pexels.com/download/video/34740345/
+32801413 | WORLD | PARIS EIFFEL BLUE SKY | https://www.pexels.com/download/video/32801413/
+7171757 | WORLD | NEW YORK NIGHT SKYLINE | https://www.pexels.com/download/video/7171757/
+35175687 | WORLD | SINGAPORE MODERN SKYLINE | https://www.pexels.com/download/video/35175687/
+31943430 | WORLD | DUBAI COAST & BURJ AL ARAB | https://www.pexels.com/download/video/31943430/
+5101347 | WORLD | DUBAI BURJ AL ARAB SEA | https://www.pexels.com/download/video/5101347/
+32444380 | WORLD | SINGAPORE GARDENS BY THE BAY | https://www.pexels.com/download/video/32444380/
+5108272 | WORLD | DUBAI CITY BLUE SKY | https://www.pexels.com/download/video/5108272/
+36239787 | WORLD | DUBAI AERIAL SKYLINE | https://www.pexels.com/download/video/36239787/
+12687322 | WORLD | PARIS SEINE & EIFFEL | https://www.pexels.com/download/video/12687322/
+37767726 | WORLD | PARIS SUMMER DAY | https://www.pexels.com/download/video/37767726/
+32810064 | WORLD | SINGAPORE SUNNY PANORAMA | https://www.pexels.com/download/video/32810064/
+28283784 | WORLD | PARIS TWILIGHT EIFFEL | https://www.pexels.com/download/video/28283784/
+33479088 | WORLD | SINGAPORE AERIAL CITY | https://www.pexels.com/download/video/33479088/
+36594798 | WORLD | DUBAI BEACHFRONT SKYLINE | https://www.pexels.com/download/video/36594798/
+36758628 | WORLD | PATAGONIA EMERALD LAKE | https://www.pexels.com/download/video/36758628/
+36442151 | WORLD | PATAGONIA AERIAL WINTER | https://www.pexels.com/download/video/36442151/
+30772483 | WORLD | PATAGONIA MOUNTAIN LAKE | https://www.pexels.com/download/video/30772483/
+17433359 | WORLD | KYOTO HISTORIC TEMPLE | https://www.pexels.com/download/video/17433359/
+4003960 | WORLD | NEW YORK HUDSON SKYLINE | https://www.pexels.com/download/video/4003960/
+35205892 | WORLD | DUBAI CALM SEA SKYLINE | https://www.pexels.com/download/video/35205892/
+34092845 | WORLD | ICELAND VOLCANIC LANDSCAPE | https://www.pexels.com/download/video/34092845/
+32801414 | WORLD | PARIS ICONIC EIFFEL | https://www.pexels.com/download/video/32801414/
+36635835 | WORLD | ROME COLOSSEUM SUNNY DAY | https://www.pexels.com/download/video/36635835/
+37203092 | WORLD | SYDNEY OPERA HOUSE BLUE SKY | https://www.pexels.com/download/video/37203092/
+36924512 | WORLD | SYDNEY HARBOR VIEW | https://www.pexels.com/download/video/36924512/
+31553841 | WORLD | ROME COLOSSEUM TRAVEL | https://www.pexels.com/download/video/31553841/
+37203101 | WORLD | SYDNEY FERRY & OPERA HOUSE | https://www.pexels.com/download/video/37203101/
+37203091 | WORLD | SYDNEY ICONIC SAILS | https://www.pexels.com/download/video/37203091/
+37534300 | WORLD | SYDNEY SUNNY HARBOR | https://www.pexels.com/download/video/37534300/
+37203240 | WORLD | SYDNEY OPERA HOUSE AERIAL | https://www.pexels.com/download/video/37203240/
+26776484 | WORLD | SYDNEY FERRY PASSING | https://www.pexels.com/download/video/26776484/
+20186335 | WORLD | SYDNEY HARBOR BRIDGE | https://www.pexels.com/download/video/20186335/
+32077429 | WORLD | HONG KONG VICTORIA HARBOUR | https://www.pexels.com/download/video/32077429/
+3698046 | WORLD | SYDNEY WATERFRONT | https://www.pexels.com/download/video/3698046/
+36473814 | WORLD | BALI RICE TERRACES | https://www.pexels.com/download/video/36473814/
+36811501 | WORLD | ROME SUMMER TRAVEL | https://www.pexels.com/download/video/36811501/
+11685424 | WORLD | BALI GREEN RICE FIELDS | https://www.pexels.com/download/video/11685424/
+35338532 | WORLD | PHUKET KATA BEACH | https://www.pexels.com/download/video/35338532/
+29772957 | WORLD | BANGKOK WAT ARUN | https://www.pexels.com/download/video/29772957/
+36924503 | WORLD | SYDNEY HARBOR AERIAL 4K | https://www.pexels.com/download/video/36924503/
+36830406 | WORLD | ROME COLOSSEUM & GREENERY | https://www.pexels.com/download/video/36830406/
+36840752 | WORLD | ROME COLOSSEUM SUNSET | https://www.pexels.com/download/video/36840752/
+36097842 | WORLD | ROME ANCIENT AMPHITHEATER | https://www.pexels.com/download/video/36097842/
+5022977 | WORLD | ROME GOLDEN COLOSSEUM | https://www.pexels.com/download/video/5022977/
+852432 | WORLD | HONG KONG PEAK VIEW | https://www.pexels.com/download/video/852432/
+5087354 | WORLD | ROME COLOSSEUM EVENING | https://www.pexels.com/download/video/5087354/
+35215090 | WORLD | MALDIVES TURQUOISE BEACH | https://www.pexels.com/download/video/35215090/
+32192415 | WORLD | MALDIVES ATOLLS AERIAL | https://www.pexels.com/download/video/32192415/
+7817129 | WORLD | BANGKOK GOLDEN TEMPLE | https://www.pexels.com/download/video/7817129/
+37874756 | WORLD | BARCELONA PARK GUELL | https://www.pexels.com/download/video/37874756/
+33314972 | WORLD | BALI TERRACE PANORAMA | https://www.pexels.com/download/video/33314972/
+34049703 | WORLD | ROME COLOSSEUM SUNRISE | https://www.pexels.com/download/video/34049703/
+20606511 | WORLD | ROME COLOSSEUM SUNSET GLOW | https://www.pexels.com/download/video/20606511/
+6192602 | WORLD | SANTORINI BLUE & WHITE | https://www.pexels.com/download/video/6192602/
+12004398 | WORLD | NORWAY FLAM FJORD | https://www.pexels.com/download/video/12004398/
+13617821 | WORLD | LONDON BIG BEN | https://www.pexels.com/download/video/13617821/
+37593714 | WORLD | TOKYO NIGHT TRAIN SKYLINE | https://www.pexels.com/download/video/37593714/
+19793799 | WORLD | NEW ZEALAND LAKE TEKAPO | https://www.pexels.com/download/video/19793799/
+19424325 | WORLD | BANFF ROCKIES ROAD TRIP | https://www.pexels.com/download/video/19424325/
+32639846 | WORLD | SANTORINI AERIAL OIA | https://www.pexels.com/download/video/32639846/
+32687426 | WORLD | NORWAY SERENE FJORD | https://www.pexels.com/download/video/32687426/

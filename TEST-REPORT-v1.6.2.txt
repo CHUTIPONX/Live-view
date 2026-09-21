@@ -1,0 +1,39 @@
+Pancake Live Sales Monitor v1.6.2 — Test Report
+
+WORLD TRAVEL PLAYLIST
+PASS  200 total Pexels video IDs
+PASS  200/200 video IDs unique
+PASS  100 original scenic videos preserved
+PASS  100 new WORLD TRAVEL videos added
+PASS  Direct download URL ID matches pexelsId for every playlist row
+PASS  Dashboard label updated to 200 VIEWS · WORLD TRAVEL · FULL CLIP
+
+PLAYBACK REGRESSION
+PASS  Full clip playback; switching is bound to video ended event
+PASS  No timer-based 1-minute / 5-minute scenic rotation
+PASS  Fisher-Yates no-repeat cycle
+PASS  New cycle avoids immediate repeat of the previous clip
+PASS  Current + one-next preload only
+PASS  Dual-layer crossfade preserved
+PASS  Remote clip failure is skipped
+PASS  No artificial scenic CSS zoom
+
+SALES / SECURITY REGRESSION
+PASS  npm test
+PASS  scripts-check.mjs
+PASS  scripts-selftest.mjs
+PASS  v1.6.1 CSRF/same-origin/CSP/login-throttle checks
+PASS  verified individual-order animation checks
+PASS  complete-snapshot sales logic checks
+
+LOCAL HTTP SMOKE
+PASS  GET / -> HTTP 200
+PASS  Dashboard contains 200 VIEWS · WORLD TRAVEL · FULL CLIP
+PASS  /scenic-videos.js serves 200 pexelsId entries
+
+MEDIA NOTE
+The package does not redistribute the Pexels video files. The browser streams remote
+Pexels sources. Runtime skips a clip if that remote source is temporarily unavailable.
+Individual remote streams were not downloaded into this test container.
+
+Result: PASS
