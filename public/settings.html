@@ -43,6 +43,26 @@
       </footer>
     </section>
 
+    <section id="healthCard" class="settings-card health-card liquid-glass">
+      <div class="health-head">
+        <div>
+          <div class="micro-label">PAGE CONNECTION CHECK</div>
+          <h2>เช็กเพจที่เชื่อมต่อไม่ได้</h2>
+          <p>ทดสอบสิทธิ์อ่านยอดจริงของแต่ละร้านด้วย Employee Statistic endpoint เดียวกับหน้า Live</p>
+        </div>
+        <button id="checkHealthBtn" class="soft liquid-control">Check All Pages</button>
+      </div>
+      <div id="healthAlert" class="health-alert hidden"></div>
+      <div class="health-stats">
+        <div><span>KNOWN</span><b id="healthKnown">0</b><small>ร้านที่ระบบรู้จัก</small></div>
+        <div><span>CONNECTED</span><b id="healthOk">—</b><small>มี API ใช้งานได้</small></div>
+        <div><span>NEEDS ATTENTION</span><b id="healthBad">—</b><small>ไม่มี API ที่ผ่าน</small></div>
+        <div><span>CHECKED</span><b id="healthChecked">0</b><small>ผลล่าสุด</small></div>
+      </div>
+      <div id="healthProblems" class="health-problems"><div class="health-empty">กด <b>Check All Pages</b> เพื่อเช็กทุกเพจที่ระบบมองเห็น</div></div>
+      <p class="health-footnote">ถ้าเพจไม่เคยถูกคืนมาจาก API ใดเลย เว็บจะยังไม่รู้ชื่อเพจนั้น จนกว่า Pancake จะคืน Shop ID มาอย่างน้อยหนึ่งครั้ง</p>
+    </section>
+
     <section class="info-card">
       <div class="liquid-glass"><span class="info-dot"></span><b>Realtime</b><span>Verified batched refresh · complete snapshot only</span></div>
       <div class="liquid-glass"><span class="info-dot"></span><b>No 3-Account Limit</b><span>Vercel Private Blob lets you add/delete from this page; Environment entries can continue _4, _5, _6…</span></div>

@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { diagnostics, getSettings, history, login, logout, orderEvents, reportBatch, reportPlan, sales, saveSettings, securityToken, shops } from './lib/handlers.mjs';
+import { diagnostics, getSettings, history, login, logout, orderEvents, pageHealth, reportBatch, reportPlan, sales, saveSettings, securityToken, shops } from './lib/handlers.mjs';
 import { SECURITY_HEADERS } from './lib/security.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -15,6 +15,7 @@ const api = {
   '/api/settings:get':getSettings,
   '/api/settings:post':saveSettings,
   '/api/shops':shops,
+  '/api/page-health':pageHealth,
   '/api/sales':sales,
   '/api/history':history,
   '/api/diagnostics':diagnostics,

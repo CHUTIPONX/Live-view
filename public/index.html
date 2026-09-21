@@ -51,12 +51,26 @@
         <time id="miniClock">--:--:--</time>
       </div>
 
-      <div class="sales-caption">TODAY'S SALES <small>ยอดขายวันนี้</small></div>
-      <div id="mega" class="mega"><small>฿</small><span>0</span><div id="scoreHits" class="score-hits" aria-hidden="true"></div></div>
-      <div class="orders"><span id="orders">0</span> <small>ORDERS</small></div>
+      <div class="sales-layout">
+        <div class="sales-core">
+          <div class="sales-caption">TODAY'S SALES <small>ยอดขายวันนี้</small></div>
+          <div id="mega" class="mega"><small>฿</small><span>0</span><div id="scoreHits" class="score-hits" aria-hidden="true"></div></div>
+          <div class="orders"><span id="orders">0</span> <small>ORDERS</small></div>
 
-      <div class="history-label"><span>LAST 5 DAYS</span><small>5 วันล่าสุด</small></div>
-      <div id="history" class="history"></div>
+          <div class="history-label"><span>LAST 5 DAYS</span><small>5 วันล่าสุด</small></div>
+          <div id="history" class="history"></div>
+        </div>
+
+        <aside id="liveOrders" class="live-orders" aria-label="ออเดอร์จริงล่าสุด 5 รายการ">
+          <div class="live-orders-head">
+            <div><span>LIVE ORDERS</span><small>ออเดอร์จริงล่าสุด</small></div>
+            <b><i></i><span id="liveOrderCount">0</span>/5 VERIFIED</b>
+          </div>
+          <div id="liveOrderList" class="live-order-list">
+            <div class="live-order-empty">รอออเดอร์จริงที่ยืนยันกับยอดขาย…</div>
+          </div>
+        </aside>
+      </div>
 
       <div class="stage-foot">
         <div class="clock"><strong id="clock">--:--:--</strong><span id="date">—</span></div>

@@ -1,23 +1,19 @@
-HOW TO APPLY v1.7.2
+HOW TO APPLY v1.7.4
+===================
 
-FULL ZIP (recommended)
-1. Extract pancake-live-sales-monitor-v1.7.2.zip.
-2. Open the extracted project folder until api/, lib/, public/, package.json and vercel.json are directly visible.
-3. Select everything INSIDE that folder (Ctrl+A).
-4. GitHub Live-view -> Add file -> Upload files.
-5. Upload all selected files and commit to main.
-6. Wait for Vercel to show Ready.
-7. Hard refresh the dashboard with Ctrl+Shift+R.
-8. Click once anywhere on the dashboard to unlock browser audio, then leave the sound button enabled.
+FULL ZIP
+1. Extract pancake-live-sales-monitor-v1.7.4.zip.
+2. Open the extracted folder until api/, lib/, public/, package.json and vercel.json are directly visible.
+3. GitHub -> CHUTIPONX/Live-view -> main -> Add file -> Upload files.
+4. Ctrl+A the CONTENTS inside the extracted folder. Do NOT upload the ZIP itself.
+5. Commit changes.
+6. Wait for Vercel status Ready.
+7. Open the dashboard and press Ctrl+Shift+R.
 
-HOTFIX FROM v1.7.1
-Extract Live-view-v1.7.2-hotfix.zip and upload every included file into the matching repository paths.
+HOTFIX
+Use Live-view-v1.7.4-hotfix.zip only if the repository is already on v1.7.3.
+Extract it and upload every included file to the matching repository paths.
 
-IMPORTANT
-- Positive verified orders are green text only and fall from above onto the score.
-- Verified decreases rise from below in red.
-- Several real order values can overlap rapidly.
-- Individual amounts are never guessed; they appear only after real-order reconciliation.
-- All 12 seasonal backgrounds rotate every 60 seconds and contain atmosphere effects only.
-- Browser autoplay policy requires one user gesture before sound can play.
-- This release does not loosen or replace the Pancake sales-truth logic.
+After deploy:
+- Open Settings once. Each API card will show the Pancake account name if the /shops response exposes it; otherwise the configured API label is used.
+- The dashboard LIVE ORDERS panel fills only when new orders pass exact reconciliation.

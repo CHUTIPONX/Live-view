@@ -1,0 +1,25 @@
+Pancake Live Sales Monitor v1.7.4
+=================================
+
+NEW — VERIFIED LIVE ORDER FEED
+- Shows the latest 5 real reconciled orders.
+- Amount, shop name, Shop ID, order code and order time.
+- Product name + product code/SKU/barcode when Pancake provides them.
+- Product/variation IDs remain available as safe fallbacks.
+- Quantity is preserved from the real order item.
+- API account label is attached to every verified event.
+- Best-effort Pancake account display name is read from the /shops response.
+
+TRUTH / PRIVACY
+- Feed receives ONLY /orders events already reconciled against Employee Statistic.
+- Aggregate-only changes never create fake feed rows.
+- No customer name, phone, email or shipping address is exposed in feed metadata.
+- Missing product/account metadata is shown as missing/fallback; never guessed.
+
+UNCHANGED
+- /analytics/sale summary.price remains the source of the main total.
+- Complete-snapshot hold rules.
+- Page Connection Check.
+- Text-only falling sale hits and sound.
+- 60-second seasonal atmosphere rotation.
+- CSRF / same-origin / CSP / server-side security.

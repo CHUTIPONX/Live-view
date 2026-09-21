@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
 import { isCsrfValid } from './lib/core.mjs';
 import { mutationGuard } from './lib/security.mjs';
-import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fetchVerifiedOrderEvents, fiveDays, listShops, parsePancakeSalesSummary, readEnvSettings } from './lib/core.mjs';
+import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fetchVerifiedOrderEvents, fiveDays, listShops, listShopsWithMeta, parsePancakeSalesSummary, readEnvSettings } from './lib/core.mjs';
 
 const baseEnvKeys=[
   'PANCAKE_CONNECTIONS_JSON','PANCAKE_MONEY_DIVISOR','PLSM_CONFIG_STORE','PLSM_CONFIG_BLOB_PATH',
@@ -305,14 +305,24 @@ try{
     assert.equal(u.searchParams.get('updateStatus'),'inserted_at');
     assert.equal(u.searchParams.get('option_sort'),'inserted_at_asc');
     return response({success:true,data:[
-      {id:'o-1',total_price:19900,inserted_at:'2026-09-21T17:00:01'},
-      {id:'o-2',total_price:19900,inserted_at:'2026-09-21T17:00:05'}
+      {id:'o-1',display_id:501,total_price:19900,inserted_at:'2026-09-21T17:00:01',shop_name:'Shop Alpha',items:[
+        {product_id:'product-uuid-1',variation_id:'variation-uuid-1',quantity:2,variation_info:{name:'เสื้อทดสอบ',custom_id:'TSHIRT-BLK-M',barcode:'8850001'}}
+      ]},
+      {id:'o-2',display_id:502,total_price:19900,inserted_at:'2026-09-21T17:00:05',shop_name:'Shop Alpha',items:[
+        {product_id:'product-uuid-2',variation_id:'variation-uuid-2',quantity:1,variation_info:{name:'กางเกงทดสอบ',custom_id:'PANTS-01'}}
+      ]}
     ],page_number:1,page_size:100,total_entries:2,total_pages:1});
   };
   const eventResult=await fetchVerifiedOrderEvents({}, {token:eventPlan.token,previousObservedThrough,shopIds:['97501']});
   assert.equal(eventResult.complete,true);
   assert.deepEqual(eventResult.events.map(x=>x.amount),[199,199]);
   assert.equal(eventResult.events.reduce((n,x)=>n+x.amount,0),398);
+  assert.equal(eventResult.events[0].shopName,'Shop Alpha');
+  assert.equal(eventResult.events[0].orderCode,'501');
+  assert.equal(eventResult.events[0].apiLabel,'Order Events');
+  assert.equal(eventResult.events[0].items[0].name,'เสื้อทดสอบ');
+  assert.equal(eventResult.events[0].items[0].code,'TSHIRT-BLK-M');
+  assert.equal(eventResult.events[0].items[0].quantity,2);
   assert.equal(eventResult.events.every(x=>!('bill_phone_number' in x)&&!('customer' in x)),true);
 
   // Never pretend individual orders are known if the interval is too large to fit one page.
@@ -422,11 +432,14 @@ try{
     assert.equal(u.pathname.endsWith('/shops'),true);
     shopAttempts++;
     if(shopAttempts===1){const e=new Error('The operation was aborted due to timeout');e.name='TimeoutError';throw e;}
-    return response({success:true,data:[{id:'9001',name:'Recovered Shop'}]});
+    return response({success:true,account:{name:'Main Pancake Owner'},data:[{id:'9001',name:'Recovered Shop'}]});
   };
   const recoveredShops=await listShops('retry-key');
   assert.equal(shopAttempts,2);
   assert.deepEqual(recoveredShops,[{id:'9001',name:'Recovered Shop'}]);
+  const recoveredDirectory=await listShopsWithMeta('retry-key-2');
+  assert.equal(recoveredDirectory.accountName,'Main Pancake Owner');
+  assert.deepEqual(recoveredDirectory.shops,[{id:'9001',name:'Recovered Shop'}]);
 
   // Historical totals use Pancake grouped Employee Statistic rows (day + employee).
   clearPancakeEnv();

@@ -3,7 +3,11 @@ import { startSeasonAtmosphereEngine } from './season-atmosphere-engine.js';
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CACHE_KEY = 'plsm_verified_employee_snapshot_v172';
+const LATEST_ORDER_KEY = 'plsm_latest_verified_orders_v174';
+const ACCOUNT_NAME_KEY = 'plsm_pancake_account_names_v174';
+const KNOWN_SHOPS_KEY = 'plsm_known_shops_v173';
 
 let stop = false;
 let polling = false;
@@ -12,6 +16,7 @@ let totalShown = 0;
 let ordersShown = 0;
 let lastComplete = null;
 let historyDays = null;
+let latestVerifiedOrders = [];
 const stopSeasonAtmospheres = startSeasonAtmosphereEngine();
 
 let audioCtx = null;
@@ -247,6 +252,19 @@ async function burstVerifiedPrices(amounts){
   }
   return nodes;
 }
+async function burstVerifiedOrderEvents(events){
+  const verified=(events||[]).filter(e=>Number.isFinite(Number(e?.amount))&&Math.abs(Number(e.amount))>.001);
+  const nodes=[];
+  for(let i=0;i<verified.length;i++){
+    const event=verified[i];
+    const node=createScoreHit(event.amount,i,verified.length);
+    if(node)nodes.push(node);
+    playSaleSound(event.amount,i);
+    rememberVerifiedOrder(event);
+    if(i<verified.length-1)await sleep(78);
+  }
+  return nodes;
+}
 function deltaFx(delta,{rapid=false,score=false}={}){
   const node=createScoreHit(delta,0,1);
   if(!node)return;
@@ -290,6 +308,83 @@ function bangkokDate(offset=0){
   now.setUTCDate(now.getUTCDate()+offset);
   return now.toISOString().slice(0,10);
 }
+function readJsonStorage(key,fallback={}){
+  try{return JSON.parse(localStorage.getItem(key)||'')||fallback}catch{return fallback}
+}
+function knownShopName(event){
+  if(event?.shopName)return String(event.shopName);
+  const known=readJsonStorage(KNOWN_SHOPS_KEY,{});
+  const cid=String(event?.connectionId||'');
+  const sid=String(event?.shopId||'');
+  if(cid&&known?.[cid]?.[sid])return String(known[cid][sid]);
+  for(const bag of Object.values(known||{}))if(bag&&typeof bag==='object'&&bag[sid])return String(bag[sid]);
+  return sid?`Shop ${sid}`:'Unknown shop';
+}
+function apiAccountName(event){
+  if(event?.accountName)return String(event.accountName);
+  const names=readJsonStorage(ACCOUNT_NAME_KEY,{});
+  const cid=String(event?.connectionId||'');
+  const saved=cid?names?.[cid]:null;
+  return String(saved?.accountName||saved?.label||event?.apiLabel||'Pancake API');
+}
+function eventClock(value){
+  const raw=String(value||'');
+  if(!raw)return '--:--:--';
+  if(!/[zZ]|[+-]\d\d:?\d\d$/.test(raw)){
+    const m=raw.match(/T(\d{2}:\d{2}(?::\d{2})?)/);if(m)return m[1].length===5?`${m[1]}:00`:m[1];
+  }
+  const d=new Date(raw);if(Number.isNaN(d.getTime()))return raw.slice(11,19)||'--:--:--';
+  return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(d);
+}
+function normalizeFeedItem(raw){
+  const item=raw&&typeof raw==='object'?raw:{};
+  return {
+    name:String(item.name||''),code:String(item.code||''),productId:String(item.productId||''),variationId:String(item.variationId||''),
+    quantity:Math.max(1,Math.round(Number(item.quantity)||1))
+  };
+}
+function normalizeFeedEvent(event){
+  return {
+    id:String(event?.id||''),orderCode:String(event?.orderCode||event?.id||''),shopId:String(event?.shopId||''),
+    shopName:knownShopName(event),amount:Number(event?.amount)||0,insertedAt:String(event?.insertedAt||''),
+    apiLabel:String(event?.apiLabel||''),connectionId:String(event?.connectionId||''),accountName:apiAccountName(event),
+    items:(Array.isArray(event?.items)?event.items:[]).map(normalizeFeedItem).slice(0,12),
+    receivedDate:bangkokDate(0),receivedAt:new Date().toISOString()
+  };
+}
+function loadLatestVerifiedOrders(){
+  const rows=readJsonStorage(LATEST_ORDER_KEY,[]);
+  latestVerifiedOrders=(Array.isArray(rows)?rows:[]).filter(x=>x&&x.receivedDate===bangkokDate(0)).slice(0,5);
+  renderLiveOrders();
+}
+function productMainText(item){return item.name||item.code||item.productId||item.variationId||'สินค้า'}
+function productCodeText(item){
+  if(item.code)return `CODE ${item.code}`;
+  if(item.productId)return `PID ${item.productId}`;
+  if(item.variationId)return `VID ${item.variationId}`;
+  return '';
+}
+function renderLiveOrders(){
+  const list=$('#liveOrderList');if(!list)return;
+  const count=$('#liveOrderCount');if(count)count.textContent=String(latestVerifiedOrders.length);
+  if(!latestVerifiedOrders.length){
+    list.innerHTML='<div class="live-order-empty">รอออเดอร์จริงที่ยืนยันกับยอดขาย…</div>';
+    return;
+  }
+  list.innerHTML=latestVerifiedOrders.map((order,index)=>{
+    const items=Array.isArray(order.items)?order.items:[];
+    const productHtml=items.length?items.slice(0,3).map(item=>`<div class="live-product"><b>${esc(productMainText(item))}</b><span>${item.quantity>1?`×${item.quantity}`:''}${productCodeText(item)?`${item.quantity>1?' · ':''}${esc(productCodeText(item))}`:''}</span></div>`).join(''):'<div class="live-product no-meta"><b>ไม่มีรายละเอียดสินค้าใน Order API</b><span>แสดงยอดบิลจริงได้ตามปกติ</span></div>';
+    const more=items.length>3?`<div class="live-more">+${items.length-3} รายการ</div>`:'';
+    return `<article class="live-order${index===0?' newest':''}" data-order="${esc(order.shopId)}:${esc(order.id)}"><div class="live-order-top"><span class="live-time">${esc(eventClock(order.insertedAt||order.receivedAt))}</span><strong>+฿${nf.format(Math.abs(Number(order.amount)||0))}</strong></div><div class="live-shop"><b>${esc(order.shopName||`Shop ${order.shopId}`)}</b><span>Shop ${esc(order.shopId)}</span></div><div class="live-api"><span>API</span><b>${esc(order.accountName||order.apiLabel||'Pancake API')}</b></div><div class="live-products">${productHtml}${more}</div><div class="live-order-id">ORDER ${esc(order.orderCode||order.id)}</div></article>`;
+  }).join('');
+}
+function rememberVerifiedOrder(event){
+  const row=normalizeFeedEvent(event);if(!row.id||!row.shopId)return;
+  const key=`${row.shopId}:${row.id}`;
+  latestVerifiedOrders=[row,...latestVerifiedOrders.filter(x=>`${x.shopId}:${x.id}`!==key&&x.receivedDate===bangkokDate(0))].slice(0,5);
+  try{localStorage.setItem(LATEST_ORDER_KEY,JSON.stringify(latestVerifiedOrders))}catch{}
+  renderLiveOrders();
+}
 function mergeHistory(snapshot){
   const live={...snapshot};
   let hist=cleanDays(historyDays);
@@ -331,7 +426,7 @@ function comparableSnapshots(previous,current){
 
 async function playVerifiedOrderEvents(previous,current,events){
   const verified=(events||[]).map(e=>({...e,amount:Number(e.amount)||0})).filter(e=>Math.abs(e.amount)>.001);
-  const nodes=await burstVerifiedPrices(verified.map(e=>e.amount));
+  const nodes=await burstVerifiedOrderEvents(verified);
 
   // Let the real order values hit over the last digits while the main verified score
   // runs continuously to the new Employee Statistic total. No fake split is created.
@@ -408,6 +503,7 @@ async function readResponse(r){
   try{return{text,json:text?JSON.parse(text):{}}}catch{return{text,json:null}}
 }
 
+loadLatestVerifiedOrders();
 showSales();status('SYNCING');
 lastComplete=loadComplete();
 if(lastComplete){
@@ -573,8 +669,11 @@ async function reconcileIndividualOrderEvents(plan,previous,current){
   const {json}=await readResponse(r);
   if(!r.ok||json?.complete!==true||!Array.isArray(json.events))return [];
 
-  const events=json.events.map(x=>({id:String(x.id||''),shopId:String(x.shopId||''),amount:Number(x.amount),insertedAt:String(x.insertedAt||'')}))
-    .filter(x=>x.id&&x.shopId&&Number.isFinite(x.amount));
+  const events=json.events.map(x=>({
+    id:String(x.id||''),orderCode:String(x.orderCode||x.id||''),shopId:String(x.shopId||''),shopName:String(x.shopName||''),
+    amount:Number(x.amount),insertedAt:String(x.insertedAt||''),apiLabel:String(x.apiLabel||x.label||''),connectionId:String(x.connectionId||''),
+    accountName:String(x.accountName||''),items:(Array.isArray(x.items)?x.items:[]).map(normalizeFeedItem)
+  })).filter(x=>x.id&&x.shopId&&Number.isFinite(x.amount));
   const ids=new Set(events.map(x=>`${x.shopId}:${x.id}`));
   if(ids.size!==events.length||events.length!==orderDelta)return [];
 

@@ -1,28 +1,53 @@
-# Pancake Live Sales Monitor v1.7.2
+# Pancake Live Sales Monitor v1.7.4
 
-Live Pancake POS sales dashboard with complete verified Employee Statistic snapshots, real per-order hit animation, shared multi-account configuration, hardened server-side security and minute-rotating seasonal atmospheres.
+Live Pancake POS sales dashboard with complete verified Employee Statistic snapshots, real per-order animation, multi-account configuration, page connection checks, hardened server-side security and minute-rotating seasonal atmospheres.
 
-## v1.7.2 visual behavior
+## v1.7.4 — Verified Live Order Feed
 
-The background is atmosphere-only: no people, animals, cars, boats or decorative scene objects. Twelve global season/weather moods rotate every 60 seconds. Each season combines multiple subtle effects such as petals, leaves, rain, mist, snow, frost, aurora, stars, heat shimmer and light sparkle.
+The dashboard now keeps the **latest 5 individually verified real orders** beside the main sales score. Each feed row can show:
 
-Verified positive order values are shown as **green text only**. There is no popup card or background. A value such as `+199` falls from above and lands directly over the matching right-most digits of the main total. Several verified orders can arrive rapidly and overlap there. Verified decreases rise from below in red.
+- verified order amount
+- shop name + Shop ID
+- Pancake API account used for that shop
+- order code
+- product name
+- product code / SKU / barcode when Pancake returns it
+- product ID / variation ID as a fallback
+- quantity
+- order time
 
-The total remains a scoreboard: it moves quickly while far from the new value, then slows down and finishes the final digits one-by-one before stopping exactly on the verified Pancake total.
+Only events that already passed the existing reconciliation rules are inserted into the feed. The feed never creates orders from an aggregate delta and never becomes the source of the main total.
 
-Sale sound uses Web Audio and has two quiet stages: a short clear entry tone, then a softer glass-like landing chime. Browsers require one user gesture before audio can start; the sound button can mute/unmute it.
+Product metadata is normalized only from fields actually returned in the Pancake order object (`items`, `variation_info`, product/variation IDs, etc.). If the order endpoint does not return a product name/code, the UI says that product metadata is unavailable instead of inventing one.
+
+## API account identity
+
+Settings now shows **PANCAKE ACCOUNT** under each configured key. If the `/shops` response exposes an account/user/owner display name, that name is shown. If Pancake does not expose one, the dashboard uses the configured API label so the order can still be traced to the correct credential. No account identity is guessed.
+
+## Existing visual behavior
+
+- Green positive order amount: text only, falling onto the right-most digits of the main score.
+- Multiple verified orders can overlap rapidly.
+- Verified decreases rise from below in red.
+- The scoreboard moves quickly when far from the new total and slows down near the verified target.
+- Sale audio uses the existing synthesized two-stage chime.
+- Seasonal atmosphere graphics rotate every 60 seconds; no people/animals/vehicles/scene props.
 
 ## Sales truth rules
 
 - Live total comes from Pancake Employee Statistic `/analytics/sale`.
-- A total is committed only after a complete selected-shop snapshot.
+- A total is committed only after a complete configured-shop snapshot.
 - Timeout/permission/incomplete shops never become a fake decrease.
-- Individual order text is shown only when `/orders` reconciliation matches the Employee Statistic delta exactly.
+- Individual orders are shown only when `/orders` event count and revenue reconcile exactly with the Employee Statistic delta.
 - No average, guessed split or fabricated order amount is displayed.
-- Employee Statistic remains the final value even after all animation finishes.
+- Customer name, phone and shipping address are not copied into the live-order feed.
+
+## Page Connection Check
+
+Settings → **Check All Pages** checks known shops using `/analytics/sale` and pins inaccessible shops with the reason and Shop ID.
 
 ## Deploy
 
-Extract the ZIP and upload the **contents inside the project folder** to the GitHub repository root. Wait for Vercel to show Ready, then hard refresh the dashboard (`Ctrl + Shift + R`).
+Extract the ZIP and upload the **contents inside the project folder** to the GitHub repository root. Wait for Vercel to show Ready, then hard refresh (`Ctrl + Shift + R`).
 
 Keep `APP_SECRET` and Pancake credentials private. If shared runtime account editing is enabled, follow `VERCEL-SETUP.txt` for Vercel Blob setup.

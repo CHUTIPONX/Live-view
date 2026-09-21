@@ -137,7 +137,7 @@
   // This is deterrence only. Actual protection lives server-side: authenticated
   // API routes, CSRF validation, no raw secrets in public settings, CSP and no-store.
   Object.defineProperty(window, '__PLSM_SECURITY__', {
-    value: Object.freeze({ enabled:true, version:'1.7.2' }),
+    value: Object.freeze({ enabled:true, version:'1.7.4' }),
     writable:false,
     configurable:false,
     enumerable:false

@@ -1,0 +1,31 @@
+Pancake Live Sales Monitor v1.7.4 - Test Report
+================================================
+
+PASS  npm test
+PASS  Node syntax checks for server, API, lib and public JS files
+PASS  Existing Employee Statistic authoritative total contract
+PASS  Empty-sale zero handling
+PASS  Complete-snapshot / HOLD behavior
+PASS  Multi-account credential fallback
+PASS  Batched 52+ shop architecture tests
+PASS  Verified /orders reconciliation tests
+PASS  Two real 199 orders remain two individual 199 events
+PASS  Product metadata normalization from order.items + variation_info
+PASS  Product name: real value preserved
+PASS  Product code/custom_id: real value preserved
+PASS  Product quantity: real value preserved
+PASS  Shop name/order code metadata preserved when Pancake returns them
+PASS  API configured label attached to verified order event
+PASS  Best-effort Pancake account display-name parser from /shops response
+PASS  Customer PII excluded from returned verified-event objects
+PASS  Latest-5 live-order UI static integration
+PASS  Page Connection Check static integration
+PASS  Seasonal atmosphere / score-hit / sale sound checks
+PASS  CSRF / same-origin / CSP / inspect-warning checks
+PASS  Local HTTP smoke: /, /settings and /app.js returned HTTP 200
+
+Important behavior:
+- LIVE ORDERS is evidence/UI only. It never computes the main sales total.
+- If individual order reconciliation fails, no order row is invented.
+- If Pancake does not return product metadata, the row states that metadata is unavailable.
+- If Pancake does not expose an account owner/display name, the configured API label is used.

@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 const files=[
   'server.mjs','lib/core.mjs','lib/handlers.mjs','lib/vercel.mjs','lib/security.mjs','scripts-selftest.mjs',
   'public/app.js','public/security.js','public/season-atmospheres.js','public/season-atmosphere-engine.js','public/settings.js','public/login.js',
-  'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
+  'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/page-health.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
 ];
 let fail=false;
 for(const f of files){
@@ -24,6 +24,7 @@ const security=fs.readFileSync('public/security.js','utf8');
 const handlers=fs.readFileSync('lib/handlers.mjs','utf8');
 const securityServer=fs.readFileSync('lib/security.mjs','utf8');
 const settingsHtml=fs.readFileSync('public/settings.html','utf8');
+const settingsJs=fs.readFileSync('public/settings.js','utf8');
 const loginHtml=fs.readFileSync('public/login.html','utf8');
 const vercel=fs.readFileSync('vercel.json','utf8');
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -69,10 +70,16 @@ if(!handlers.includes('csrfOr403')||!handlers.includes('mutationGuard')||!handle
 if(!securityServer.includes("frame-ancestors 'none'")||!securityServer.includes("object-src 'none'"))throw new Error('Server CSP hardening is missing');
 if(!vercel.includes('Content-Security-Policy')||!vercel.includes('Permissions-Policy')||!vercel.includes('Strict-Transport-Security'))throw new Error('Vercel security headers are missing');
 if(!css.includes('IBM Plex Sans Thai')||!index.includes('fonts.googleapis.com/css2'))throw new Error('Refined Thai UI font styling is missing');
-if(pkg.version!=='1.7.2'||lock.version!=='1.7.2'||lock.packages?.['']?.version!=='1.7.2')throw new Error('Package version is not v1.7.2');
+if(!core.includes('checkPageHealth')||!handlers.includes('pageHealth')||!settingsHtml.includes('id="healthCard"')||!settingsJs.includes('/api/page-health')||!css.includes('.health-alert.bad'))throw new Error('Page Connection Check integration is missing');
+if(!index.includes('id="liveOrders"')||!index.includes('id="liveOrderList"')||!app.includes('rememberVerifiedOrder')||!app.includes('LATEST_ORDER_KEY')||!css.includes('.live-order-list'))throw new Error('Latest 5 verified live order feed is missing');
+if(!core.includes('orderItemsFromRow')||!core.includes('variation_info')||!core.includes('orderCode:firstText')||!core.includes('apiLabel:r.value.credential.label'))throw new Error('Verified order product/shop/API metadata normalization is missing');
+if(!core.includes('listShopsWithMeta')||!core.includes('pancakeAccountName')||!handlers.includes('accountName:directory.accountName')||!settingsJs.includes('ACCOUNT_KEY')||!settingsJs.includes('PANCAKE ACCOUNT'))throw new Error('Pancake API account-name discovery/fallback display is missing');
+if(pkg.version!=='1.7.4'||lock.version!=='1.7.4'||lock.packages?.['']?.version!=='1.7.4')throw new Error('Package version is not v1.7.4');
 
 console.log('Season checks: 12 atmospheres · 60s rotation · layered ambient FX · no people/animal/object graphics: PASS');
 console.log('Verified score-hit checks: real orders · text-only drop/rise overlay · slow final count · two-stage sale chime: PASS');
 console.log('Security checks: CSRF · same-origin · CSP · inspect warning: PASS');
+console.log('Page connection checks: batched access test · failed-page pinning · known-shop memory: PASS');
+console.log('Live order feed checks: latest 5 · shop · order amount · product name/code · API account: PASS');
 console.log('Static integration checks: PASS');
 console.log('Syntax check: PASS');
