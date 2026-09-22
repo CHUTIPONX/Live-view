@@ -82,12 +82,15 @@ if(!core.includes('feedEvents')||!app.includes('snapshot.feedEvents')||!app.incl
 
 if(!core.includes('orderItemsFromRow')||!core.includes('variation_info')||!core.includes('orderCode:firstText')||!core.includes('apiLabel:used.label')||!core.includes('shopName:ev.shopName||r.value.value?.resolvedShopName||job.shopName'))throw new Error('Verified order product/page/API metadata normalization is missing');
 if(!core.includes('listShopsWithMeta')||!core.includes('pancakeAccountName')||!handlers.includes('accountName:directory.accountName')||!settingsJs.includes('ACCOUNT_KEY')||!settingsJs.includes('PANCAKE ACCOUNT'))throw new Error('Pancake API account-name discovery/fallback display is missing');
-if(pkg.version!=='1.7.8'||lock.version!=='1.7.8'||lock.packages?.['']?.version!=='1.7.8')throw new Error('Package version is not v1.7.8');
+if(!core.includes('mergeConnectionSources')||!core.includes("'env-json+env'")||!core.includes('shopDirectoryRows')||!core.includes('page_number')||!core.includes('total_price_after_sub_discount'))throw new Error('v1.7.9 account merge / paginated discovery / discount-aware order logic is missing');
+if(!settingsJs.includes('accountContribution')||!settingsJs.includes('unique POS shops'))throw new Error('v1.7.9 per-account unique-shop discovery UI is missing');
+if(pkg.version!=='1.7.9'||lock.version!=='1.7.9'||lock.packages?.['']?.version!=='1.7.9')throw new Error('Package version is not v1.7.9');
 
 console.log('Season checks: 12 atmospheres · 60s rotation · layered ambient FX · no people/animal/object graphics: PASS');
 console.log('Verified score-hit checks: real orders · text-only drop/rise overlay · slow final count · two-stage sale chime: PASS');
 console.log('Security checks: CSRF · same-origin · CSP · inspect warning: PASS');
 console.log('Page connection checks: batched access test · all-page list · search/filter · failed-page pinning · known-shop memory: PASS');
-console.log('Live order feed checks: same-hit update · resilient lookback · page name · product name · code · price · large type: PASS');
+console.log('Live order feed checks: same-hit update · resilient lookback · page/product/code · discount-aware net order amount: PASS');
+console.log('Account discovery checks: JSON + numbered env merge · paginated /shops scan · per-account unique contribution: PASS');
 console.log('Static integration checks: PASS');
 console.log('Syntax check: PASS');

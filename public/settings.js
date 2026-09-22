@@ -61,7 +61,7 @@ function knownFor(x){
 function updateBanner(){
   if(!shared){sharedBanner?.classList.add('hidden');return}
   sharedBanner?.classList.remove('hidden');
-  if(configStore==='vercel-blob'){
+  if(configStore==='vercel-blob'||configStore==='vercel-blob+env'){
     if(sharedBannerTitle)sharedBannerTitle.textContent='Vercel Private Blob · Shared & Editable';
     if(sharedBannerText)sharedBannerText.textContent='เพิ่ม/ลบ Pancake Account จากหน้านี้ได้เลย ทุกเครื่องใช้รายการเดียวกันทันที';
     if(sharedBannerHelp)sharedBannerHelp.textContent='ข้อมูล API Key ถูกเก็บใน Private Blob และเข้ารหัสด้วย APP_SECRET';
@@ -79,7 +79,7 @@ async function load(){
   const r=await ensureAuth(await fetch('/api/settings',{cache:'no-store'}));
   const j=await r.json();
   shared=!!j.shared;writable=j.writable!==false;configStore=j.configStore||j.source||'none';
-  items=(j.connections||[]).map(x=>({...x,apiKey:'',shops:[],loading:false,loadError:'',accountName:readAccountNames()?.[x.id]?.accountName||''}));
+  items=(j.connections||[]).map(x=>({...x,apiKey:'',shops:[],loading:false,loadError:'',accountName:readAccountNames()?.[x.id]?.accountName||'',pagesFetched:0,paginated:false}));
   healthMap.clear();accountHealthErrors.clear();
   updateBanner();
   addBtn.classList.toggle('hidden',isReadonly());
@@ -87,13 +87,13 @@ async function load(){
   render();
   await Promise.allSettled(items.map(x=>loadShops(x,true)));
   renderHealthPanel();
-  if(configStore==='vercel-blob')setNotice(`Shared Vercel config · ${items.length} account(s) · เพิ่ม/ลบได้จากหน้านี้`,'ok');
+  if(configStore==='vercel-blob'||configStore==='vercel-blob+env')setNotice(`Loaded ${items.length} API account(s) · ${allUniqueShopCount()} unique POS shops · เพิ่ม/ลบได้จากหน้านี้`,'ok');
   else if(configStore==='vercel-blob-bootstrap')setNotice('พร้อมย้าย Account เดิมเข้า Vercel Private Blob · กด Save Settings 1 ครั้ง','ok');
-  else if(shared)setNotice(`Vercel Environment active · ${items.length} account(s) · read-only until redeploy`,'ok');
+  else if(shared)setNotice(`Vercel Environment active · ${items.length} API account(s) · ${allUniqueShopCount()} unique POS shops · read-only until redeploy`,'ok');
 }
 function add(){
   if(isReadonly())return;
-  items.push({id:id(),label:`Pancake API ${items.length+1}`,apiKey:'',apiKeyMasked:'',hasApiKey:false,shopIds:[],autoAllShops:true,shops:[],loading:false,loadError:'',accountName:''});
+  items.push({id:id(),label:`Pancake API ${items.length+1}`,apiKey:'',apiKeyMasked:'',hasApiKey:false,shopIds:[],autoAllShops:true,shops:[],loading:false,loadError:'',accountName:'',pagesFetched:0,paginated:false});
   render();
   setTimeout(()=>wrap.lastElementChild?.scrollIntoView({behavior:'smooth',block:'center'}),40);
 }
@@ -104,6 +104,17 @@ function shopHealthMarkup(x,s){
   if(h.ok)return '<em class="shop-health ok">OK</em>';
   return `<em class="shop-health bad">${esc(h.label||'FAILED')}</em>`;
 }
+function accountContribution(x){
+  const own=new Set((x.shops||[]).map(s=>String(s.id)));
+  const other=new Set();
+  for(const y of items)if(y!==x)for(const s of y.shops||[])other.add(String(s.id));
+  let unique=0;for(const id of own)if(!other.has(id))unique++;
+  return {total:own.size,unique,overlap:Math.max(0,own.size-unique)};
+}
+function allUniqueShopCount(){
+  const ids=new Set();for(const x of items)for(const s of x.shops||[])ids.add(String(s.id));return ids.size;
+}
+
 function render(){
   const readonly=isReadonly();
   wrap.innerHTML='';
@@ -112,7 +123,8 @@ function render(){
     const selected=x.autoAllShops&&x.shops.length?x.shops.map(s=>String(s.id)):x.shopIds;
     const el=document.createElement('article');
     el.className=`connection${x.loadError?' connection-error':''}`;
-    el.innerHTML=`<div class="conn-head"><em>${String(idx+1).padStart(2,'0')}</em><input class="label" value="${esc(x.label)}" aria-label="label" ${readonly?'disabled':''}><button class="trash ${readonly?'hidden':''}" title="Remove">×</button></div><div class="account-identity"><span>PANCAKE ACCOUNT</span><b>${esc(x.accountName||x.label||`API ${idx+1}`)}</b><small>${x.accountName?'ชื่อที่ Pancake ส่งกลับมา':'ใช้ชื่อ API ที่ตั้งไว้เป็นตัวระบุ'}</small></div><div class="api-row"><label>POS API Key<input class="key" type="password" value="${esc(x.apiKey)}" placeholder="${esc(x.apiKeyMasked||'Paste API Key')}" ${readonly?'disabled':''}></label><button class="test soft">${x.loading?'Connecting...':'Test & Load Stores'}</button></div>${x.loadError?`<div class="connection-error-text">STORE LIST FAILED · ${esc(x.loadError)}</div>`:''}<div class="shops ${x.shops.length?'':'hidden'}"><div class="shops-head"><span>Stores included in total <small>${readonly&&x.autoAllShops?'ALL stores from this Vercel account':'เลือกร้านที่ต้องการรวมยอด'}</small></span><div class="shop-actions"><button class="selectall ${readonly?'hidden':''}">Select All</button><button class="clearall ${readonly?'hidden':''}">Auto All</button></div></div><div class="shop-grid">${x.shops.map(s=>{const h=healthMap.get(healthKey(x.id,s.id));return `<button class="shop ${selected.includes(String(s.id))?'on':''} ${h?.ok?'health-ok':h&&!h.checking?'health-bad':h?.checking?'health-checking':''}" data-id="${esc(s.id)}" ${readonly?'disabled':''}><i class="check">${selected.includes(String(s.id))?'<span></span>':''}</i><span class="shop-copy"><b>${esc(s.name)}</b><small>${esc(s.id)}</small></span>${shopHealthMarkup(x,s)}</button>`}).join('')}</div></div>`;
+    const contribution=accountContribution(x);
+    el.innerHTML=`<div class="conn-head"><em>${String(idx+1).padStart(2,'0')}</em><input class="label" value="${esc(x.label)}" aria-label="label" ${readonly?'disabled':''}><button class="trash ${readonly?'hidden':''}" title="Remove">×</button></div><div class="account-identity"><span>PANCAKE ACCOUNT</span><b>${esc(x.accountName||x.label||`API ${idx+1}`)}</b><small>${contribution.total?`${contribution.total} POS shops · +${contribution.unique} unique · ${contribution.overlap} overlap${x.pagesFetched>1?` · ${x.pagesFetched} pages scanned`:''}`:(x.accountName?'ชื่อที่ Pancake ส่งกลับมา':'ใช้ชื่อ API ที่ตั้งไว้เป็นตัวระบุ')}</small></div><div class="api-row"><label>POS API Key<input class="key" type="password" value="${esc(x.apiKey)}" placeholder="${esc(x.apiKeyMasked||'Paste API Key')}" ${readonly?'disabled':''}></label><button class="test soft">${x.loading?'Connecting...':'Test & Load Stores'}</button></div>${x.loadError?`<div class="connection-error-text">STORE LIST FAILED · ${esc(x.loadError)}</div>`:''}<div class="shops ${x.shops.length?'':'hidden'}"><div class="shops-head"><span>Stores included in total <small>${readonly&&x.autoAllShops?'ALL stores from this Vercel account':'เลือกร้านที่ต้องการรวมยอด'}</small></span><div class="shop-actions"><button class="selectall ${readonly?'hidden':''}">Select All</button><button class="clearall ${readonly?'hidden':''}">Auto All</button></div></div><div class="shop-grid">${x.shops.map(s=>{const h=healthMap.get(healthKey(x.id,s.id));return `<button class="shop ${selected.includes(String(s.id))?'on':''} ${h?.ok?'health-ok':h&&!h.checking?'health-bad':h?.checking?'health-checking':''}" data-id="${esc(s.id)}" ${readonly?'disabled':''}><i class="check">${selected.includes(String(s.id))?'<span></span>':''}</i><span class="shop-copy"><b>${esc(s.name)}</b><small>${esc(s.id)}</small></span>${shopHealthMarkup(x,s)}</button>`}).join('')}</div></div>`;
     wrap.appendChild(el);
     if(!readonly){
       el.querySelector('.label').oninput=e=>x.label=e.target.value;
@@ -131,9 +143,9 @@ async function loadShops(x,silent=false){
   try{
     const r=await ensureAuth(await fetch('/api/shops',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:x.apiKey||'',connectionId:x.id})}));
     const j=await r.json();if(!r.ok)throw new Error(j.error||'Connection failed');
-    x.shops=j.shops||[];x.accountName=String(j.accountName||'');x.loadError='';rememberShops(x.id,x.shops);rememberAccountName(x.id,x.accountName,x.label);
+    x.shops=j.shops||[];x.accountName=String(j.accountName||'');x.pagesFetched=Number(j.pagesFetched)||1;x.paginated=!!j.paginated;x.loadError='';rememberShops(x.id,x.shops);rememberAccountName(x.id,x.accountName,x.label);
     if(!isReadonly()&&!x.shopIds.length&&x.autoAllShops!==false)x.autoAllShops=true;
-    if(!silent)setNotice(`Connected · ${x.shops.length} stores found`,'ok');
+    if(!silent){const c=accountContribution(x);setNotice(`Connected · ${x.shops.length} POS shops · +${c.unique} unique · รวมระบบ ${allUniqueShopCount()} unique shops`,'ok');}
   }catch(e){x.loadError=e?.message||'Connection failed';accountHealthErrors.set(x.id,x.loadError);if(!silent)setNotice(x.loadError,'bad')}
   finally{x.loading=false;render()}
 }

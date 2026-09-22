@@ -65,6 +65,15 @@ try{
   unlimited=readEnvSettings();
   assert.equal(unlimited.connections.length,15);
   assert.equal(unlimited.source,'env-json');
+
+  // v1.7.9: numbered env keys added later must not be ignored when JSON already exists.
+  process.env.PANCAKE_POS_API_KEY_16='numbered-added-after-json';
+  process.env.PANCAKE_SHOP_IDS_16='61999';
+  process.env.PANCAKE_LABEL_16='Added Later';
+  unlimited=readEnvSettings();
+  assert.equal(unlimited.connections.length,16);
+  assert.equal(unlimited.source,'env-json+env');
+  assert.ok(unlimited.connections.some(x=>x.label==='Added Later'&&x.shopIds.includes('61999')));
   clearPancakeEnv();
 
   // Real Employee Statistic response contract supplied from Pancake UI.
@@ -154,6 +163,16 @@ try{
   assert.equal(blobPublic.writable,true);
   assert.equal(blobPublic.configStore,'vercel-blob');
   assert.equal(blobGot.body.includes('blob-secret-1'),false);
+
+  // v1.7.9: an API later added through Vercel env must also join existing Blob config.
+  process.env.PANCAKE_POS_API_KEY_99='env-added-next-to-blob';
+  process.env.PANCAKE_SHOP_IDS_99='70999';
+  process.env.PANCAKE_LABEL_99='Env beside Blob';
+  blobGot=await getSettings({headers:{cookie:sessionCookie}});
+  blobPublic=JSON.parse(blobGot.body);
+  assert.equal(blobPublic.connections.length,12);
+  assert.equal(blobPublic.configStore,'vercel-blob+env');
+  delete process.env.PANCAKE_POS_API_KEY_99;delete process.env.PANCAKE_SHOP_IDS_99;delete process.env.PANCAKE_LABEL_99;
   const blobRemoved=await saveSettings({headers:authedHeaders,body:{connections:blobConnections.slice(0,9).map(x=>({...x,apiKey:''}))}});
   assert.equal(JSON.parse(blobRemoved.body).count,9);
   blobGot=await getSettings({headers:{cookie:sessionCookie}});
@@ -320,7 +339,7 @@ try{
     assert.equal(u.searchParams.get('updateStatus'),'inserted_at');
     assert.equal(u.searchParams.get('option_sort'),'inserted_at_asc');
     return response({success:true,data:[
-      {id:'o-1',display_id:501,total_price:19900,inserted_at:new Date(Date.parse(eventPlan.until)-8000).toISOString(),shop_name:'Shop Alpha',items:[
+      {id:'o-1',display_id:501,total_price:24900,total_price_after_sub_discount:19900,total_discount:5000,inserted_at:new Date(Date.parse(eventPlan.until)-8000).toISOString(),shop_name:'Shop Alpha',items:[
         {product_id:'product-uuid-1',variation_id:'variation-uuid-1',quantity:2,variation_info:{name:'เสื้อทดสอบ',custom_id:'TSHIRT-BLK-M',barcode:'8850001'}}
       ]},
       {id:'o-2',display_id:502,total_price:19900,inserted_at:new Date(Date.parse(eventPlan.until)-4000).toISOString(),shop_name:'Shop Alpha',items:[
@@ -332,6 +351,9 @@ try{
   assert.equal(eventResult.complete,true);
   assert.deepEqual(eventResult.events.map(x=>x.amount),[199,199]);
   assert.equal(eventResult.events.reduce((n,x)=>n+x.amount,0),398);
+  assert.equal(eventResult.events[0].amountSource,'total_price_after_sub_discount');
+  assert.equal(eventResult.events[0].totalDiscount,50);
+  assert.equal(eventResult.events[1].amountSource,'total_price');
   assert.equal(eventResult.events[0].shopName,'Shop Alpha');
   assert.equal(eventResult.events[0].orderCode,'501');
   assert.equal(eventResult.events[0].apiLabel,'Order Events');
@@ -440,6 +462,22 @@ try{
   assert.equal(attempts.get('55101'),1);
   assert.equal(attempts.get('55201'),2);
   assert.equal(attempts.get('55301'),2);
+
+  // v1.7.9: a large /shops response is probed with pagination and de-duplicated.
+  const directoryCalls=[];
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));directoryCalls.push(u);
+    const page=Number(u.searchParams.get('page_number')||0);
+    if(!page)return response({success:true,data:Array.from({length:52},(_,i)=>({id:String(1000+i),name:`Initial ${i}`}))});
+    if(page===1)return response({success:true,data:Array.from({length:50},(_,i)=>({id:String(1000+i),name:`Page1 ${i}`})),page_number:1,page_size:50,total_entries:75,total_pages:2});
+    if(page===2)return response({success:true,data:Array.from({length:25},(_,i)=>({id:String(1050+i),name:`Page2 ${i}`})),page_number:2,page_size:50,total_entries:75,total_pages:2});
+    return response({success:true,data:[]});
+  };
+  const pagedDirectory=await listShopsWithMeta('paged-directory-key');
+  assert.equal(pagedDirectory.shops.length,75);
+  assert.equal(pagedDirectory.paginated,true);
+  assert.ok(pagedDirectory.pagesFetched>=3);
+  assert.ok(directoryCalls.some(u=>u.searchParams.get('page_number')==='2'));
 
   // Store discovery also retries a one-off timeout.
   let shopAttempts=0;
