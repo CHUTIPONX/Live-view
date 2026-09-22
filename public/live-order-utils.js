@@ -1,4 +1,4 @@
-// v1.7.6 — pure helpers for Pancake live-order timing and compact feed metadata.
+// v1.7.8 — pure helpers for Pancake live-order timing and compact feed metadata.
 // Pancake order timestamps may arrive without a timezone suffix. In observed POS
 // responses these can be UTC wall-clock values, while some gateways may expose local
 // wall-clock values. Because verified order events are always near the current live
@@ -37,6 +37,24 @@ export function uniqueProductCodes(items, limit = 6) {
     if (!code || seen.has(code)) continue;
     seen.add(code);
     out.push(code);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+export function feedItemName(item) {
+  const x = item && typeof item === 'object' ? item : {};
+  return String(x.name || '').trim();
+}
+
+export function uniqueProductNames(items, limit = 4) {
+  const out = [];
+  const seen = new Set();
+  for (const item of Array.isArray(items) ? items : []) {
+    const name = feedItemName(item);
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    out.push(name);
     if (out.length >= limit) break;
   }
   return out;

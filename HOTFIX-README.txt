@@ -1,14 +1,13 @@
-v1.7.6 HOTFIX
-Use this only if the repository is already on v1.7.5.
+Pancake Live Sales Monitor v1.7.8 HOTFIX
 
-Upload EVERYTHING INSIDE this folder to the root of the GitHub repository.
-Do not upload the ZIP file itself.
+For v1.7.7 users:
+1. Extract this ZIP.
+2. Upload ALL files/folders inside it to the GitHub repository root.
+3. Replace matching files.
+4. Commit and wait for Vercel Ready.
+5. Hard refresh with Ctrl+Shift+R.
 
-Runtime changes:
-- public/index.html
-- public/app.js
-- public/style.css
-- public/live-order-utils.js (NEW)
-- lib/core.mjs
-
-Package/test metadata is included too.
+Main fix:
+- Latest 5 updates on the same beat as the sale popup.
+- Shows page/shop name + product name + product code + real order price.
+- Uses a real-order display lookback without changing the verified Employee Statistic total.

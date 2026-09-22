@@ -342,3 +342,20 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 @media(min-width:1181px){.sales-layout{grid-template-columns:minmax(0,1fr) 340px;gap:25px}.stage-foot{padding-right:365px}.live-order-list{height:478px;grid-template-rows:repeat(5,minmax(0,1fr))}.live-order.live-order-simple{min-height:0}}
 @media(max-width:1180px){.live-orders{width:min(780px,100%);max-height:205px}.live-order-list{max-height:145px}.live-order.live-order-simple{flex:0 0 260px;min-height:112px}.live-shop-name{font-size:13px}.live-order-price{font-size:21px}}
 @media(max-width:700px){.live-orders{padding:13px}.live-order.live-order-simple{flex-basis:245px;padding:11px 12px}.live-shop-name{font-size:12px}.live-product-code{font-size:10.5px}.live-order-price{font-size:19px}.live-orders-head small{font-size:9px}}
+
+
+/* =========================================================
+   v1.7.8 — HIT-SYNCHRONIZED ORDER CARDS
+   Page name + product name + product code + real order price.
+   ========================================================= */
+.live-order.live-order-simple{min-height:84px;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+.live-order-copy{display:grid;grid-template-columns:1fr;align-content:center;gap:4px}
+.live-page-row{min-width:0;display:flex;align-items:center;gap:6px}.live-page-row>span,.live-code-row>span{flex:0 0 auto;font-family:"IBM Plex Sans Thai",var(--font);font-size:9px;font-weight:650;color:rgba(240,244,250,.48)}
+.live-shop-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:"IBM Plex Sans Thai",var(--font);font-size:14px;line-height:1.2;font-weight:750;color:#fff;letter-spacing:-.014em}
+.live-product-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:"IBM Plex Sans Thai",var(--font);font-size:12.5px;line-height:1.22;font-weight:650;color:rgba(249,250,253,.88);letter-spacing:-.006em}
+.live-code-row{min-width:0;display:flex;align-items:baseline;gap:6px}.live-product-code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:"Manrope","IBM Plex Sans Thai",var(--font);font-size:10.5px;line-height:1.2;font-weight:800;color:rgba(232,236,245,.72);letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.live-order-price{font-size:24px}
+.live-order.live-order-simple.newest{animation:liveOrderHitV178 .55s cubic-bezier(.16,.9,.2,1) both}
+@keyframes liveOrderHitV178{0%{opacity:.22;transform:translateY(-9px) scale(.975);box-shadow:0 0 0 rgba(121,255,193,0)}42%{opacity:1;transform:translateY(0) scale(1.016);box-shadow:0 0 34px rgba(121,255,193,.13)}100%{opacity:1;transform:none}}
+@media(max-width:1180px){.live-order.live-order-simple{flex-basis:285px}.live-product-name{font-size:12px}}
+@media(max-width:700px){.live-shop-name{font-size:12.5px}.live-product-name{font-size:11px}.live-product-code{font-size:9.5px}.live-order-price{font-size:20px}}

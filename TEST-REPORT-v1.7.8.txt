@@ -1,0 +1,32 @@
+Pancake Live Sales Monitor v1.7.8 — TEST REPORT
+
+RESULT: PASS
+
+Automated test suite
+- npm test: PASS
+- Node syntax checks: PASS
+- Self-test: PASS
+
+Live-order feed checks
+- Current animated real order is pinned to the top of Latest 5: PASS (static/runtime logic check)
+- Feed refresh occurs on the same score-hit beat for aggregate fallback: PASS
+- Product name is preserved from Pancake item metadata: PASS
+- Product code/SKU fallback remains present: PASS
+- Page/shop name is carried in report plan for auto-discovered shops: PASS
+- Manually configured Shop ID name is lazily resolved during changed-shop order lookup when needed: PASS
+- 20-second /orders display lookback is isolated from strict reconciliation: PASS
+- Strict individual score events still use exact interval only: PASS
+- No customer phone/name/address/email is added to the feed: PASS
+
+Sales integrity
+- Main total source remains Pancake Employee Statistic summary.price / 100: PASS
+- No guessed per-order split introduced: PASS
+- Complete snapshot / HOLD behavior retained: PASS
+
+HTTP smoke test
+- GET /: 200 PASS
+- GET /app.js: 200 PASS
+- GET /style.css: 200 PASS
+- live-product-name runtime asset present: PASS
+
+Build date: 2026-09-22

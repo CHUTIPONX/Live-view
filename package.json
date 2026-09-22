@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.7.6",
+  "version": "1.7.8",
   "private": true,
   "type": "module",
-  "description": "Pancake POS live sales monitor with synchronized latest-order feed, clear shop/product-code/price cards, verified score hits, page checks, sale chimes, security, and seasonal atmospheres",
+  "description": "Pancake POS live sales monitor with hit-synchronized Latest 5 feed, page/product/code/price metadata, resilient order lookup, verified score hits, page checks, sale chimes, security, and seasonal atmospheres",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",

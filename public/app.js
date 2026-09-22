@@ -1,12 +1,12 @@
 import { startSeasonAtmosphereEngine } from './season-atmosphere-engine.js';
-import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes } from './live-order-utils.js';
+import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes, uniqueProductNames } from './live-order-utils.js';
 
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CACHE_KEY = 'plsm_verified_employee_snapshot_v172';
-const LATEST_ORDER_KEY = 'plsm_latest_verified_orders_v176';
+const LATEST_ORDER_KEY = 'plsm_latest_order_feed_v178';
 const ACCOUNT_NAME_KEY = 'plsm_pancake_account_names_v174';
 const KNOWN_SHOPS_KEY = 'plsm_known_shops_v173';
 
@@ -337,7 +337,7 @@ function apiAccountName(event){
 function normalizeFeedItem(raw){
   const item=raw&&typeof raw==='object'?raw:{};
   return {
-    code:String(item.code||''),productId:String(item.productId||''),variationId:String(item.variationId||''),
+    name:String(item.name||''),code:String(item.code||''),productId:String(item.productId||''),variationId:String(item.variationId||''),
     quantity:Math.max(1,Math.round(Number(item.quantity)||1))
   };
 }
@@ -369,6 +369,11 @@ function compactProductCodes(order){
   if(!codes.length)return 'ไม่พบรหัสสินค้า';
   return codes.join(' · ');
 }
+function compactProductNames(order){
+  const names=uniqueProductNames(order?.items,4);
+  if(!names.length)return 'ไม่พบชื่อสินค้า';
+  return names.join(' · ');
+}
 function renderLiveOrders(){
   const list=$('#liveOrderList');if(!list)return;
   const count=$('#liveOrderCount');if(count)count.textContent=String(latestVerifiedOrders.length);
@@ -376,17 +381,24 @@ function renderLiveOrders(){
     list.innerHTML='<div class="live-order-empty">รอยอดจริงเด้งเข้ามา…</div>';
     return;
   }
-  list.innerHTML=latestVerifiedOrders.map((order,index)=>`<article class="live-order live-order-simple${index===0?' newest':''}" data-order="${esc(order.shopId)}:${esc(order.id)}"><div class="live-order-copy"><b class="live-shop-name">${esc(order.shopName||`Shop ${order.shopId}`)}</b><span class="live-code-label">รหัสสินค้า</span><strong class="live-product-code">${esc(compactProductCodes(order))}</strong></div><div class="live-order-price">฿${nf.format(Math.abs(Number(order.amount)||0))}</div></article>`).join('');
+  list.innerHTML=latestVerifiedOrders.map((order,index)=>`<article class="live-order live-order-simple${index===0?' newest':''}" data-order="${esc(order.shopId)}:${esc(order.id)}"><div class="live-order-copy"><div class="live-page-row"><span>เพจ</span><b class="live-shop-name">${esc(order.shopName||`Shop ${order.shopId}`)}</b></div><strong class="live-product-name">${esc(compactProductNames(order))}</strong><div class="live-code-row"><span>รหัส</span><b class="live-product-code">${esc(compactProductCodes(order))}</b></div></div><div class="live-order-price">฿${nf.format(Math.abs(Number(order.amount)||0))}</div></article>`).join('');
 }
-function rememberVerifiedOrder(event){
+function rememberVerifiedOrder(event,{render=true,pinTop=true}={}){
   const row=normalizeFeedEvent(event);if(!row.id||!row.shopId)return;
   const key=`${row.shopId}:${row.id}`;
   const today=bangkokDate(0);
-  latestVerifiedOrders=[row,...latestVerifiedOrders.filter(x=>`${x.shopId}:${x.id}`!==key&&String(x.eventDate||'')===today)]
-    .sort((a,b)=>(Number(b.eventMs)||0)-(Number(a.eventMs)||0))
-    .slice(0,5);
+  const others=latestVerifiedOrders.filter(x=>`${x.shopId}:${x.id}`!==key&&String(x.eventDate||'')===today);
+  latestVerifiedOrders=(pinTop?[row,...others]:[row,...others].sort((a,b)=>(Number(b.eventMs)||0)-(Number(a.eventMs)||0))).slice(0,5);
   try{localStorage.setItem(LATEST_ORDER_KEY,JSON.stringify(latestVerifiedOrders))}catch{}
-  renderLiveOrders();
+  if(render)renderLiveOrders();
+}
+function rememberFeedBatch(events){
+  const rows=(Array.isArray(events)?events:[])
+    .filter(e=>e&&e.id&&e.shopId&&Number.isFinite(Number(e.amount)))
+    .map(e=>({...e,__ms:Number.isFinite(Number(e.insertedAtMs))?Number(e.insertedAtMs):pancakeEventTimeMs(e.insertedAt,Date.now())}))
+    .sort((a,b)=>(Number(a.__ms)||0)-(Number(b.__ms)||0));
+  for(const event of rows)rememberVerifiedOrder(event,{render:false,pinTop:true});
+  if(rows.length)renderLiveOrders();
 }
 function mergeHistory(snapshot){
   const live={...snapshot};
@@ -446,10 +458,14 @@ async function playVerifiedOrderEvents(previous,current,events){
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
-async function playVerifiedAggregateDelta(previous,current,delta){
+async function playVerifiedAggregateDelta(previous,current,delta,feedEvents=[]){
   if(Math.abs(delta)>.001){
-    const nodes=await burstVerifiedPrices([delta]);
-    nodes.forEach(node=>removeScoreHit(node,900));
+    // The score movement and the Latest 5 refresh happen on the same visual beat.
+    // feedEvents are real Pancake /orders rows only; they never split or alter the verified total.
+    const node=createScoreHit(delta,0,1);
+    if(feedEvents.length)rememberFeedBatch(feedEvents);
+    playSaleSound(delta,0);
+    removeScoreHit(node,900);
     await sleep(120);
   }
   await Promise.all([
@@ -466,15 +482,16 @@ async function renderComplete(d){
   const comparable=isNew&&comparableSnapshots(previous,d);
   const delta=comparable?Number(d.total)-Number(previous.total):0;
   const verifiedEvents=Array.isArray(d.verifiedEvents)?d.verifiedEvents:[];
+  const feedEvents=Array.isArray(d.feedEvents)?d.feedEvents:[];
 
   status('LIVE');
   if(isNew){
     if(comparable&&delta>0&&verifiedEvents.length){
       await playVerifiedOrderEvents(previous,d,verifiedEvents);
     }else if(comparable&&Math.abs(delta)>.001){
-      // If individual order reconciliation is unavailable, show the exact verified
-      // snapshot movement as one popup. Never invent a per-order split.
-      await playVerifiedAggregateDelta(previous,d,delta);
+      // When strict splitting is unavailable, the popup remains the exact Employee Statistic
+      // delta. Any real order rows found for the changed shops refresh the feed on that same hit.
+      await playVerifiedAggregateDelta(previous,d,delta,delta>0?feedEvents:[]);
     }else{
       drawNumbers(d,{animate:!!previous,showDelta:false,delta});
     }
@@ -626,7 +643,7 @@ function snapshotFromLiveResults(plan,results){
     errors:[],
     source:plan.source,
     moneyUnit:'baht',
-    shopResults:results.map(x=>({shopId:String(x.shopId),revenue:Number(x.revenue)||0,orders:Number(x.orders)||0,products:Number(x.products)||0,zeroSales:!!x.zeroSales}))
+    shopResults:results.map(x=>({shopId:String(x.shopId),shopName:String(x.shopName||''),revenue:Number(x.revenue)||0,orders:Number(x.orders)||0,products:Number(x.products)||0,zeroSales:!!x.zeroSales}))
   };
 }
 
@@ -643,42 +660,59 @@ function shopMap(snapshot){
 }
 
 async function reconcileIndividualOrderEvents(plan,previous,current){
-  if(!comparableSnapshots(previous,current))return [];
+  const empty={verifiedEvents:[],feedEvents:[]};
+  if(!comparableSnapshots(previous,current))return empty;
   const totalDelta=Number(current.total)-Number(previous.total);
   const orderDelta=Math.round(Number(current.orders)-Number(previous.orders));
-  if(!(totalDelta>0)||!(orderDelta>0))return [];
+  if(!(totalDelta>0)||!(orderDelta>0))return empty;
 
   const prev=shopMap(previous),cur=shopMap(current);
-  if(!prev.size||prev.size!==cur.size)return [];
+  if(!prev.size||prev.size!==cur.size)return empty;
+
+  // Feed discovery is deliberately more permissive than score reconciliation.
+  // Any shop with a positive order/revenue movement is queried for ACTUAL inserted orders.
+  // Those real order rows may populate LATEST 5 even when their sum cannot safely be used
+  // to split the Employee Statistic delta into individual score animations.
   const changed=[];
+  let strictPossible=true;
   let positiveOrderDeltas=0;
   for(const [shopId,c] of cur){
-    const p=prev.get(shopId); if(!p)return [];
+    const p=prev.get(shopId); if(!p)return empty;
     const dOrders=Math.round(Number(c.orders||0)-Number(p.orders||0));
     const dRevenue=Number(c.revenue||0)-Number(p.revenue||0);
-    if(dOrders<0)return []; // cancellation/edit mixed into the same interval: do not guess.
-    if(dOrders===0){if(Math.abs(dRevenue)>.009)return [];continue}
-    if(dRevenue<-.009)return [];
-    positiveOrderDeltas+=dOrders;
-    changed.push({shopId,dOrders,dRevenue});
+    if(dOrders>0||dRevenue>.009)changed.push({shopId,dOrders,dRevenue});
+    if(dOrders<0||dRevenue<-.009)strictPossible=false;
+    if(dOrders===0&&Math.abs(dRevenue)>.009)strictPossible=false;
+    if(dOrders>0)positiveOrderDeltas+=dOrders;
   }
-  if(positiveOrderDeltas!==orderDelta||!changed.length)return [];
+  if(!changed.length)return empty;
+  if(positiveOrderDeltas!==orderDelta)strictPossible=false;
 
   const r=await fetch('/api/order-events',{
     method:'POST',cache:'no-store',headers:{'content-type':'application/json'},
     body:JSON.stringify({token:plan.token,previousObservedThrough:previous.observedThrough,shopIds:changed.map(x=>x.shopId)})
   });
-  if(r.status===401){location.href='/login';return []}
+  if(r.status===401){location.href='/login';return empty}
   const {json}=await readResponse(r);
-  if(!r.ok||json?.complete!==true||!Array.isArray(json.events))return [];
+  if(!r.ok||!json)return empty;
 
-  const events=json.events.map(x=>({
-    id:String(x.id||''),orderCode:String(x.orderCode||x.id||''),shopId:String(x.shopId||''),shopName:String(x.shopName||''),
-    amount:Number(x.amount),insertedAt:String(x.insertedAt||''),apiLabel:String(x.apiLabel||x.label||''),connectionId:String(x.connectionId||''),
-    accountName:String(x.accountName||''),items:(Array.isArray(x.items)?x.items:[]).map(normalizeFeedItem)
-  })).filter(x=>x.id&&x.shopId&&Number.isFinite(x.amount));
+  const normalizeEvent=x=>({
+    id:String(x?.id||''),orderCode:String(x?.orderCode||x?.id||''),shopId:String(x?.shopId||''),shopName:String(x?.shopName||''),
+    amount:Number(x?.amount),insertedAt:String(x?.insertedAt||''),insertedAtMs:Number(x?.insertedAtMs),apiLabel:String(x?.apiLabel||x?.label||''),
+    connectionId:String(x?.connectionId||''),accountName:String(x?.accountName||''),items:(Array.isArray(x?.items)?x.items:[]).map(normalizeFeedItem)
+  });
+  const feedSource=Array.isArray(json.feedEvents)?json.feedEvents:(Array.isArray(json.events)?json.events:[]);
+  const feedEvents=feedSource.map(normalizeEvent).filter(x=>x.id&&x.shopId&&Number.isFinite(x.amount));
+  const seen=new Set();
+  const uniqueFeed=feedEvents.filter(x=>{const k=`${x.shopId}:${x.id}`;if(seen.has(k))return false;seen.add(k);return true});
+
+  // Strict score splitting keeps the old safety contract: only exact reconciliation
+  // can make individual +199/+99 hits. Otherwise the main score uses one verified delta,
+  // while LATEST 5 can still show the real order rows observed from Pancake.
+  if(!strictPossible||json.complete!==true||!Array.isArray(json.events))return {verifiedEvents:[],feedEvents:uniqueFeed};
+  const events=json.events.map(normalizeEvent).filter(x=>x.id&&x.shopId&&Number.isFinite(x.amount));
   const ids=new Set(events.map(x=>`${x.shopId}:${x.id}`));
-  if(ids.size!==events.length||events.length!==orderDelta)return [];
+  if(ids.size!==events.length||events.length!==orderDelta)return {verifiedEvents:[],feedEvents:uniqueFeed};
 
   const byShop=new Map();
   for(const e of events){
@@ -686,11 +720,11 @@ async function reconcileIndividualOrderEvents(plan,previous,current){
   }
   for(const c of changed){
     const x=byShop.get(c.shopId)||{count:0,sum:0};
-    if(x.count!==c.dOrders||Math.abs(x.sum-c.dRevenue)>.009)return [];
+    if(x.count!==c.dOrders||Math.abs(x.sum-c.dRevenue)>.009)return {verifiedEvents:[],feedEvents:uniqueFeed};
   }
   const sum=events.reduce((a,x)=>a+x.amount,0);
-  if(Math.abs(sum-totalDelta)>.009)return [];
-  return events;
+  if(Math.abs(sum-totalDelta)>.009)return {verifiedEvents:[],feedEvents:uniqueFeed};
+  return {verifiedEvents:events,feedEvents:uniqueFeed};
 }
 
 async function runLiveCycle(){
@@ -714,7 +748,11 @@ async function runLiveCycle(){
       renderSyncProgress(plan,done);
     });
     const snapshot=snapshotFromLiveResults(plan,results);
-    try{snapshot.verifiedEvents=await reconcileIndividualOrderEvents(plan,lastComplete,snapshot)}catch{snapshot.verifiedEvents=[]}
+    try{
+      const evidence=await reconcileIndividualOrderEvents(plan,lastComplete,snapshot);
+      snapshot.verifiedEvents=evidence.verifiedEvents||[];
+      snapshot.feedEvents=evidence.feedEvents||[];
+    }catch{snapshot.verifiedEvents=[];snapshot.feedEvents=[]}
     await renderComplete(snapshot);
     retryDelay=7000;
   }catch(e){

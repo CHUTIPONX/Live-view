@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes } from './public/live-order-utils.js';
+import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes, uniqueProductNames } from './public/live-order-utils.js';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
 import { isCsrfValid } from './lib/core.mjs';
 import { mutationGuard } from './lib/security.mjs';
@@ -12,6 +12,9 @@ const baseEnvKeys=[
 const originalEnv={...process.env};
 const originalFetch=global.fetch;
 const originalBlobSdk=globalThis.__plsmBlobSdk;
+
+assert.deepEqual(uniqueProductNames([{name:'เสื้อดำ'},{name:'เสื้อดำ'},{name:'กางเกง'}]),['เสื้อดำ','กางเกง']);
+assert.deepEqual(uniqueProductCodes([{code:'A1'},{code:'A1'},{productId:'P2'}]),['A1','P2']);
 function restore(){
   for(const k of Object.keys(process.env)) delete process.env[k];
   Object.assign(process.env,originalEnv);
@@ -317,10 +320,10 @@ try{
     assert.equal(u.searchParams.get('updateStatus'),'inserted_at');
     assert.equal(u.searchParams.get('option_sort'),'inserted_at_asc');
     return response({success:true,data:[
-      {id:'o-1',display_id:501,total_price:19900,inserted_at:'2026-09-21T17:00:01',shop_name:'Shop Alpha',items:[
+      {id:'o-1',display_id:501,total_price:19900,inserted_at:new Date(Date.parse(eventPlan.until)-8000).toISOString(),shop_name:'Shop Alpha',items:[
         {product_id:'product-uuid-1',variation_id:'variation-uuid-1',quantity:2,variation_info:{name:'เสื้อทดสอบ',custom_id:'TSHIRT-BLK-M',barcode:'8850001'}}
       ]},
-      {id:'o-2',display_id:502,total_price:19900,inserted_at:'2026-09-21T17:00:05',shop_name:'Shop Alpha',items:[
+      {id:'o-2',display_id:502,total_price:19900,inserted_at:new Date(Date.parse(eventPlan.until)-4000).toISOString(),shop_name:'Shop Alpha',items:[
         {product_id:'product-uuid-2',variation_id:'variation-uuid-2',quantity:1,variation_info:{name:'กางเกงทดสอบ',custom_id:'PANTS-01'}}
       ]}
     ],page_number:1,page_size:100,total_entries:2,total_pages:1});
