@@ -3,7 +3,7 @@ import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes, uniqueProduc
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
 import { isCsrfValid } from './lib/core.mjs';
 import { mutationGuard } from './lib/security.mjs';
-import { aggregateHistory, aggregateSales, createReportPlan, fetchReportBatch, fetchVerifiedOrderEvents, fiveDays, listShops, listShopsWithMeta, parsePancakeSalesSummary, readEnvSettings } from './lib/core.mjs';
+import { aggregateHistory, aggregateSales, createReportPlan, discoverFacebookPages, fetchReportBatch, fetchVerifiedOrderEvents, fiveDays, listShops, listShopsWithMeta, parsePancakeSalesSummary, readEnvSettings } from './lib/core.mjs';
 
 const baseEnvKeys=[
   'PANCAKE_CONNECTIONS_JSON','PANCAKE_MONEY_DIVISOR','PLSM_CONFIG_STORE','PLSM_CONFIG_BLOB_PATH',
@@ -74,6 +74,43 @@ try{
   assert.equal(unlimited.connections.length,16);
   assert.equal(unlimited.source,'env-json+env');
   assert.ok(unlimited.connections.some(x=>x.label==='Added Later'&&x.shopIds.includes('61999')));
+  clearPancakeEnv();
+
+  // v1.8.0: Facebook Page discovery is separate from POS Shop discovery.
+  // Two Pancake User Access Tokens may see overlapping Page IDs; duplicates are collapsed,
+  // disabled/expired buckets are filtered, and raw access tokens never leave the server result.
+  process.env.PANCAKE_USER_ACCESS_TOKEN='user-token-A-secret';
+  process.env.PANCAKE_USER_LABEL='Facebook Account A';
+  process.env.PANCAKE_USER_ACCESS_TOKEN_2='user-token-B-secret';
+  process.env.PANCAKE_USER_LABEL_2='Facebook Account B';
+  global.fetch=async raw=>{
+    const u=new URL(String(raw));
+    assert.equal(u.origin,'https://pages.fm');
+    assert.equal(u.pathname,'/api/v1/pages');
+    const token=u.searchParams.get('access_token');
+    if(token==='user-token-A-secret')return response({success:true,categorized:{active:[
+      {id:'fb-101',name:'Page One',active:true},
+      {id:'fb-102',name:'Page Two',active:true}
+    ],disabled:[{id:'fb-999',name:'Disabled Page',active:false}]}});
+    if(token==='user-token-B-secret')return response({success:true,categorized:{active:[
+      {id:'fb-102',name:'Page Two Duplicate',active:true},
+      {id:'fb-103',name:'Page Three',active:true}
+    ],expired:[{id:'fb-998',name:'Expired Page'}]}});
+    throw new Error('Unexpected user access token');
+  };
+  const fbDiscovery=await discoverFacebookPages();
+  assert.equal(fbDiscovery.configured,true);
+  assert.equal(fbDiscovery.accessTokens,2);
+  assert.equal(fbDiscovery.visibleBeforeDedupe,6);
+  assert.equal(fbDiscovery.activeBeforeDedupe,4);
+  assert.equal(fbDiscovery.activeUniquePages,3);
+  assert.equal(fbDiscovery.duplicatesCollapsed,1);
+  assert.equal(fbDiscovery.filteredPages,2);
+  assert.deepEqual(fbDiscovery.pages.map(x=>x.id).sort(),['fb-101','fb-102','fb-103']);
+  assert.deepEqual(fbDiscovery.pages.find(x=>x.id==='fb-102').accounts.sort(),['Facebook Account A','Facebook Account B']);
+  assert.equal(JSON.stringify(fbDiscovery).includes('user-token-A-secret'),false);
+  assert.equal(JSON.stringify(fbDiscovery).includes('user-token-B-secret'),false);
+  global.fetch=originalFetch;
   clearPancakeEnv();
 
   // Real Employee Statistic response contract supplied from Pancake UI.

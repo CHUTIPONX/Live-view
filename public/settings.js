@@ -20,6 +20,17 @@ const healthFilterOk=document.querySelector('#healthFilterOk');
 const healthFilterBad=document.querySelector('#healthFilterBad');
 const healthListMeta=document.querySelector('#healthListMeta');
 const healthFilterButtons=[...document.querySelectorAll('[data-health-filter]')];
+const loadFbPagesBtn=document.querySelector('#loadFbPagesBtn');
+const fbPagesAlert=document.querySelector('#fbPagesAlert');
+const fbTokenCount=document.querySelector('#fbTokenCount');
+const fbActiveCount=document.querySelector('#fbActiveCount');
+const fbDuplicateCount=document.querySelector('#fbDuplicateCount');
+const fbFilteredCount=document.querySelector('#fbFilteredCount');
+const fbPagesMeta=document.querySelector('#fbPagesMeta');
+const fbPagesList=document.querySelector('#fbPagesList');
+const runSalesAuditBtn=document.querySelector('#runSalesAuditBtn');
+const salesAuditAlert=document.querySelector('#salesAuditAlert');
+const salesAuditList=document.querySelector('#salesAuditList');
 const KNOWN_KEY='plsm_known_shops_v173';
 const ACCOUNT_KEY='plsm_pancake_account_names_v174';
 const HEALTH_BATCH=6;
@@ -114,6 +125,8 @@ function accountContribution(x){
 function allUniqueShopCount(){
   const ids=new Set();for(const x of items)for(const s of x.shops||[])ids.add(String(s.id));return ids.size;
 }
+function rawShopMembershipCount(){return items.reduce((n,x)=>n+(x.shops||[]).length,0)}
+function overlapShopMembershipCount(){return Math.max(0,rawShopMembershipCount()-allUniqueShopCount())}
 
 function render(){
   const readonly=isReadonly();
@@ -203,15 +216,15 @@ function renderHealthRows(summary){
   if(!healthProblems)return;
   const hasResults=summary.checked>0||summary.checking>0;
   if(!hasResults){
-    healthProblems.innerHTML='<div class="health-empty">กด <b>Check All Pages</b> แล้วระบบจะลิสต์ทุกเพจที่ API มองเห็นลงมาตรงนี้</div>';
-    if(healthListMeta)healthListMeta.textContent=`API พบ ${summary.known} เพจ · ยังไม่ได้ตรวจ`;
+    healthProblems.innerHTML='<div class="health-empty">กด <b>Check All Shops</b> แล้วระบบจะลิสต์ทุก POS Shop ที่ API มองเห็นลงมาตรงนี้</div>';
+    if(healthListMeta)healthListMeta.textContent=`API พบ ${summary.known} POS Shop · ยังไม่ได้ตรวจ`;
     return;
   }
 
   const visible=summary.pages.filter(healthRowMatches);
-  if(healthListMeta)healthListMeta.textContent=`แสดง ${visible.length} จาก ${summary.known} เพจที่ API ส่งกลับมา`;
+  if(healthListMeta)healthListMeta.textContent=`แสดง ${visible.length} จาก ${summary.known} POS Shop ที่ API ส่งกลับมา`;
   if(!visible.length){
-    healthProblems.innerHTML='<div class="health-empty">ไม่พบเพจที่ตรงกับตัวกรอง/คำค้นหา</div>';
+    healthProblems.innerHTML='<div class="health-empty">ไม่พบ POS Shop ที่ตรงกับตัวกรอง/คำค้นหา</div>';
     return;
   }
 
@@ -243,18 +256,18 @@ function renderHealthPanel(){
   if(healthFilterAll)healthFilterAll.textContent=String(summary.known);
   if(healthFilterOk)healthFilterOk.textContent=String(summary.connected);
   if(healthFilterBad)healthFilterBad.textContent=String(summary.failed);
-  if(checkHealthBtn){checkHealthBtn.disabled=healthRunning;checkHealthBtn.textContent=healthRunning?'Checking…':'Check All Pages'}
+  if(checkHealthBtn){checkHealthBtn.disabled=healthRunning;checkHealthBtn.textContent=healthRunning?'Checking…':'Check All Shops'}
   for(const b of healthFilterButtons)b.classList.toggle('active',b.dataset.healthFilter===healthFilter);
 
   const accountProblems=items.filter(x=>x.loadError).map(x=>({label:x.label,error:x.loadError}));
   if(summary.failed||accountProblems.length){
     healthAlert.classList.remove('hidden');
     healthAlert.className='health-alert bad';
-    healthAlert.innerHTML=`<b>${summary.failed+accountProblems.length} CONNECTION ISSUE${summary.failed+accountProblems.length===1?'':'S'}</b><span>${summary.failed} เพจไม่มี API ที่ผ่าน${accountProblems.length?` · ${accountProblems.length} Account โหลดรายชื่อเพจไม่ได้`:''}</span>`;
+    healthAlert.innerHTML=`<b>${summary.failed+accountProblems.length} CONNECTION ISSUE${summary.failed+accountProblems.length===1?'':'S'}</b><span>${summary.failed} POS Shop ไม่มี API ที่ผ่าน${accountProblems.length?` · ${accountProblems.length} Account โหลดรายชื่อ POS Shop ไม่ได้`:''}</span>`;
   }else if(summary.checked&&!healthRunning){
     healthAlert.classList.remove('hidden');
     healthAlert.className='health-alert ok';
-    healthAlert.innerHTML=`<b>ALL CHECKED PAGES CONNECTED</b><span>${summary.connected} เพจที่ Pancake API ส่งกลับมาอ่านยอดได้ครบ</span>`;
+    healthAlert.innerHTML=`<b>ALL CHECKED POS SHOPS CONNECTED</b><span>${items.length} API Account · ${rawShopMembershipCount()} memberships · ${summary.connected} unique POS Shops · ${overlapShopMembershipCount()} overlap</span>`;
   }else if(healthRunning){
     healthAlert.classList.remove('hidden');
     healthAlert.className='health-alert checking';
@@ -302,9 +315,61 @@ async function checkAllPages(){
     await Promise.all(Array.from({length:Math.min(2,jobs.length||1)},()=>worker()));
   }finally{healthRunning=false;render();}
 }
+async function loadFacebookPages(showNotice=true){
+  if(!loadFbPagesBtn)return;
+  loadFbPagesBtn.disabled=true;loadFbPagesBtn.textContent='Loading…';
+  if(fbPagesAlert)fbPagesAlert.classList.add('hidden');
+  try{
+    const r=await ensureAuth(await fetch(`/api/facebook-pages?_=${Date.now()}`,{cache:'no-store'}));
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);
+    if(fbTokenCount)fbTokenCount.textContent=String(j.accessTokens||0);
+    if(fbActiveCount)fbActiveCount.textContent=j.configured?String(j.activeUniquePages||0):'—';
+    if(fbDuplicateCount)fbDuplicateCount.textContent=j.configured?String(j.duplicatesCollapsed||0):'—';
+    if(fbFilteredCount)fbFilteredCount.textContent=j.configured?String(j.filteredPages||0):'—';
+    if(!j.configured){
+      if(fbPagesMeta)fbPagesMeta.textContent='ยังไม่มี Pancake User Access Token ใน Vercel';
+      if(fbPagesList)fbPagesList.innerHTML='<div class="health-empty">เพิ่ม <b>PANCAKE_USER_ACCESS_TOKEN</b> แล้ว Redeploy จากนั้นกด Load FB Pages</div>';
+      if(fbPagesAlert){fbPagesAlert.classList.remove('hidden');fbPagesAlert.className='health-alert checking';fbPagesAlert.innerHTML='<b>POS API ≠ FACEBOOK PAGE TOKEN</b><span>52 ที่เห็นด้านบนคือ POS Shop ไม่ใช่ Facebook Page จริง</span>';}
+      return;
+    }
+    const errors=Array.isArray(j.errors)?j.errors:[];
+    if(fbPagesMeta)fbPagesMeta.textContent=`พบ ${j.activeUniquePages||0} Facebook Page ไม่ซ้ำ จาก ${j.accessTokens||0} User Access Token`;
+    if(fbPagesList){
+      const pages=Array.isArray(j.pages)?j.pages:[];
+      fbPagesList.innerHTML=pages.length?pages.map((p,index)=>`<article class="health-page-row ok"><div class="health-page-index">${String(index+1).padStart(2,'0')}</div><i class="health-page-dot"></i><div class="health-page-copy"><b>${esc(p.name||`Page ${p.id}`)}</b><span>Page ID ${esc(p.id)}</span><small>User Token · ${esc((p.accounts||[]).join(' · ')||'Pancake')}</small><em>ACTIVE FACEBOOK PAGE</em></div><strong>PAGE</strong></article>`).join(''):'<div class="health-empty">Token ใช้งานได้ แต่ไม่พบ Active Facebook Page</div>';
+    }
+    if(fbPagesAlert){fbPagesAlert.classList.remove('hidden');fbPagesAlert.className=errors.length?'health-alert bad':'health-alert ok';fbPagesAlert.innerHTML=errors.length?`<b>${errors.length} TOKEN ISSUE</b><span>ยังนับได้ ${j.activeUniquePages||0} เพจจาก Token ที่เหลือ</span>`:`<b>FACEBOOK PAGES DISCOVERED</b><span>${j.activeUniquePages||0} active unique · ${j.duplicatesCollapsed||0} duplicate collapsed</span>`;}
+    if(showNotice)setNotice(`Facebook Pages · ${j.activeUniquePages||0} unique · แยกจาก ${allUniqueShopCount()} POS Shops`,'ok');
+  }catch(e){
+    if(fbPagesAlert){fbPagesAlert.classList.remove('hidden');fbPagesAlert.className='health-alert bad';fbPagesAlert.innerHTML=`<b>FACEBOOK PAGE LOAD FAILED</b><span>${esc(e?.message||String(e))}</span>`;}
+  }finally{loadFbPagesBtn.disabled=false;loadFbPagesBtn.textContent='Load FB Pages';}
+}
+
+function fmtAuditMoney(v){const n=Number(v);return Number.isFinite(n)?`฿${n.toLocaleString('th-TH',{maximumFractionDigits:2})}`:'—'}
+async function runSalesAudit(){
+  if(!runSalesAuditBtn)return;
+  runSalesAuditBtn.disabled=true;runSalesAuditBtn.textContent='Auditing…';
+  if(salesAuditAlert)salesAuditAlert.classList.add('hidden');
+  try{
+    const r=await ensureAuth(await fetch(`/api/diagnostics?_=${Date.now()}`,{cache:'no-store'}));
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);
+    const samples=Array.isArray(j.samples)?j.samples:[];
+    if(salesAuditList)salesAuditList.innerHTML=samples.length?samples.map((x,index)=>{
+      const ev=x.discountEvidence||{};const guess=ev.bahtGuess||{};const entries=Object.entries(guess);
+      const discountText=entries.length?entries.map(([k,v])=>`${k}=${fmtAuditMoney(v)}`).join(' · '):'ไม่พบ field ชื่อ discount/coupon/voucher/net ใน summary ตัวอย่างนี้';
+      const parsed=x.parsed||{};
+      return `<article class="health-page-row ${x.ok?'ok':'bad'}"><div class="health-page-index">${String(index+1).padStart(2,'0')}</div><i class="health-page-dot"></i><div class="health-page-copy"><b>Shop ID ${esc(x.shopId||'-')} · ${esc(x.label||'Pancake')}</b><span>${x.ok?`summary.price → ${fmtAuditMoney(parsed.revenue)} · ${Number(parsed.orders||0)} orders`:`อ่านไม่ได้ · ${esc(x.error||'unknown')}`}</span><small>${esc(discountText)}</small><em>${esc((x.summaryKeys||[]).join(', ')||x.shape||'')}</em></div><strong>${x.ok?'AUDITED':'FAILED'}</strong></article>`;
+    }).join(''):'<div class="health-empty">ไม่มี Shop ตัวอย่างให้ตรวจ</div>';
+    if(salesAuditAlert){salesAuditAlert.classList.remove('hidden');salesAuditAlert.className='health-alert ok';salesAuditAlert.innerHTML='<b>NO BLIND DISCOUNT SUBTRACTION</b><span>ดู field จริงด้านล่างก่อนตัดสินใจแก้สูตรยอด เพื่อไม่หักส่วนลดซ้ำ</span>';}
+  }catch(e){if(salesAuditAlert){salesAuditAlert.classList.remove('hidden');salesAuditAlert.className='health-alert bad';salesAuditAlert.innerHTML=`<b>AUDIT FAILED</b><span>${esc(e?.message||String(e))}</span>`;}}
+  finally{runSalesAuditBtn.disabled=false;runSalesAuditBtn.textContent='Audit Sales Metric';}
+}
+
 function setNotice(t,type){notice.textContent=t;notice.className=type}
 addBtn.onclick=add;empty.onclick=add;
 if(checkHealthBtn)checkHealthBtn.onclick=()=>checkAllPages();
+if(loadFbPagesBtn)loadFbPagesBtn.onclick=()=>loadFacebookPages(true);
+if(runSalesAuditBtn)runSalesAuditBtn.onclick=()=>runSalesAudit();
 if(healthSearch)healthSearch.addEventListener('input',e=>{healthQuery=e.target.value||'';renderHealthPanel()});
 for(const b of healthFilterButtons)b.addEventListener('click',()=>{healthFilter=b.dataset.healthFilter||'all';renderHealthPanel()});
 saveBtn.onclick=async()=>{
@@ -319,4 +384,4 @@ saveBtn.onclick=async()=>{
   finally{saveBtn.disabled=false}
 };
 document.querySelector('#logoutBtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.href='/login'};
-load().catch(e=>setNotice(e?.message||'Unable to load settings','bad'));
+load().then(()=>loadFacebookPages(false).catch(()=>{})).catch(e=>setNotice(e?.message||'Unable to load settings','bad'));

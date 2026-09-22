@@ -1,9 +1,9 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.7.9",
+  "version": "1.8.0",
   "private": true,
   "type": "module",
-  "description": "Pancake POS live sales monitor with multi-account shop discovery audit, paginated store discovery, discount-aware verified order amounts, synchronized Latest 5 feed, page checks, sale chimes, security, and seasonal atmospheres",
+  "description": "Pancake POS live sales monitor with separate Facebook Page discovery, multi-account POS Shop auditing, paginated store discovery, discount-aware verified order amounts, sales-metric diagnostics, synchronized Latest 5 feed, security, and seasonal atmospheres",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",

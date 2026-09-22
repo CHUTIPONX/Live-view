@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 const files=[
   'server.mjs','lib/core.mjs','lib/handlers.mjs','lib/vercel.mjs','lib/security.mjs','scripts-selftest.mjs',
   'public/app.js','public/live-order-utils.js','public/security.js','public/season-atmospheres.js','public/season-atmosphere-engine.js','public/settings.js','public/login.js',
-  'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/page-health.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
+  'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/page-health.js','api/facebook-pages.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
 ];
 let fail=false;
 for(const f of files){
@@ -84,7 +84,9 @@ if(!core.includes('orderItemsFromRow')||!core.includes('variation_info')||!core.
 if(!core.includes('listShopsWithMeta')||!core.includes('pancakeAccountName')||!handlers.includes('accountName:directory.accountName')||!settingsJs.includes('ACCOUNT_KEY')||!settingsJs.includes('PANCAKE ACCOUNT'))throw new Error('Pancake API account-name discovery/fallback display is missing');
 if(!core.includes('mergeConnectionSources')||!core.includes("'env-json+env'")||!core.includes('shopDirectoryRows')||!core.includes('page_number')||!core.includes('total_price_after_sub_discount'))throw new Error('v1.7.9 account merge / paginated discovery / discount-aware order logic is missing');
 if(!settingsJs.includes('accountContribution')||!settingsJs.includes('unique POS shops'))throw new Error('v1.7.9 per-account unique-shop discovery UI is missing');
-if(pkg.version!=='1.7.9'||lock.version!=='1.7.9'||lock.packages?.['']?.version!=='1.7.9')throw new Error('Package version is not v1.7.9');
+if(!core.includes('discoverFacebookPages')||!handlers.includes('facebookPages')||!settingsHtml.includes('FACEBOOK PAGE DISCOVERY')||!settingsJs.includes('/api/facebook-pages'))throw new Error('v1.8.0 Facebook Page discovery integration is missing');
+if(!core.includes('summaryDiscountEvidence')||!settingsHtml.includes('SALES METRIC AUDIT')||!settingsJs.includes('runSalesAudit'))throw new Error('v1.8.0 sales metric audit integration is missing');
+if(pkg.version!=='1.8.0'||lock.version!=='1.8.0'||lock.packages?.['']?.version!=='1.8.0')throw new Error('Package version is not v1.8.0');
 
 console.log('Season checks: 12 atmospheres · 60s rotation · layered ambient FX · no people/animal/object graphics: PASS');
 console.log('Verified score-hit checks: real orders · text-only drop/rise overlay · slow final count · two-stage sale chime: PASS');
@@ -92,5 +94,7 @@ console.log('Security checks: CSRF · same-origin · CSP · inspect warning: PAS
 console.log('Page connection checks: batched access test · all-page list · search/filter · failed-page pinning · known-shop memory: PASS');
 console.log('Live order feed checks: same-hit update · resilient lookback · page/product/code · discount-aware net order amount: PASS');
 console.log('Account discovery checks: JSON + numbered env merge · paginated /shops scan · per-account unique contribution: PASS');
+console.log('Facebook Page discovery checks: User Access Tokens · Page-ID de-duplication · inactive filtering: PASS');
+console.log('Sales metric audit checks: summary.price preserved · discount-like raw fields exposed without blind subtraction: PASS');
 console.log('Static integration checks: PASS');
 console.log('Syntax check: PASS');

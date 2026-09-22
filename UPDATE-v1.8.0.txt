@@ -1,0 +1,50 @@
+Pancake Live Sales Monitor v1.8.0
+=================================
+
+WHY THE COUNT CAN STAY AT 52
+----------------------------
+The old Settings card mixed the words "Page" and "Shop" even though the POS API /shops endpoint
+returns POS Shop IDs. A newly-added POS API account can load successfully and still add +0 unique
+Shop IDs when every Shop ID it sees is already exposed by another API account.
+
+v1.8.0 fixes the confusing UI:
+- "Page Connection Check" is now "POS Shop Access Check".
+- The main count is explicitly "UNIQUE POS SHOPS".
+- Every API account still shows: total POS shops / +unique / overlap.
+- The success banner also shows API accounts, raw shop memberships, unique POS Shops and overlaps.
+
+REAL FACEBOOK PAGE DISCOVERY
+----------------------------
+Added a separate server-side Facebook Page discovery path using Pancake User Access Token(s):
+- PANCAKE_USER_ACCESS_TOKEN
+- PANCAKE_USER_ACCESS_TOKEN_2, _3, ...
+- PANCAKE_USER_TOKENS_JSON / PANCAKE_USER_ACCESS_TOKENS_JSON
+
+Settings -> FACEBOOK PAGE DISCOVERY calls Pancake /api/v1/pages on the server, filters clearly
+inactive/disabled/expired/revoked rows, and de-duplicates by Facebook Page ID. Raw access tokens are
+not returned to the browser. This count is intentionally separate from POS Shop IDs and is never
+added into sales totals.
+
+SALES / DISCOUNT SAFETY
+-----------------------
+The authoritative dashboard total is still Pancake Employee Statistic summary.price / 100.
+Verified individual order cards already prefer total_price_after_sub_discount when Pancake sends it.
+
+v1.8.0 adds Settings -> SALES METRIC AUDIT. It samples real Employee Statistic responses and shows:
+- summary.price parsed revenue
+- order count
+- summary field names
+- discount/coupon/voucher/net/shipping/COD-like numeric fields in raw units converted by /100
+
+The patch deliberately does NOT blindly subtract total_discount from summary.price. Doing that before
+verifying the real summary contract can double-discount the dashboard and make the total even more
+wrong. Use the audit output from the live account to identify the exact Pancake field before changing
+the authoritative metric.
+
+DEPLOY
+------
+Upload the v1.8.0 project contents and redeploy Vercel.
+If you change Vercel Environment Variables, redeploy again.
+
+For actual Facebook Page counting, configure the same Pancake User Access Token(s) used by the old
+page-discovery project, then open Settings -> FACEBOOK PAGE DISCOVERY -> Load FB Pages.

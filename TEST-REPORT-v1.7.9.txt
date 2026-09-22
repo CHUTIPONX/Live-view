@@ -1,0 +1,26 @@
+Pancake Live Sales Monitor v1.7.9 — Test Report
+
+PASS npm test
+PASS syntax checks for server/lib/public/api files
+PASS self-test
+PASS local HTTP smoke test: GET / -> 200
+PASS JSON + numbered Vercel env account merge
+PASS Blob config + newly-added env account merge
+PASS duplicate API-key de-duplication
+PASS paginated /shops discovery: 52-row initial response -> 75 unique shops across pages
+PASS page directory de-duplication
+PASS 60-second shop discovery cache
+PASS discount-aware order amount: total_price_after_sub_discount preferred over pre-discount total_price
+PASS legacy fallback: total_price used when post-discount field is absent
+PASS authoritative dashboard total remains Employee Statistic summary.price / 100
+PASS existing complete-snapshot / batch / zero-sales / fallback credential tests
+PASS verified order event reconciliation
+PASS Latest 5 page/product/code/price feed checks
+PASS page health checker / search / filter checks
+PASS CSRF / same-origin / CSP / session hardening checks
+PASS seasonal atmosphere / score-hit / sound checks
+
+Important behavior:
+- Settings counts unique Pancake POS Shop IDs, not raw Facebook Page count.
+- A new API with only overlapping Shop IDs can correctly contribute +0 unique shops.
+- Vercel Environment changes require a new deployment before the running deployment sees the new key.

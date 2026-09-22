@@ -1,0 +1,21 @@
+Pancake Live Sales Monitor v1.7.7 — Test Report
+
+Regression fixed
+- A verified aggregate sales popup could appear while LATEST 5 stayed unchanged because the old UI only stored strictly reconciled per-order animation events.
+
+New behavior
+- /api/order-events returns feedEvents containing actual Pancake /orders rows from successful changed-shop reads.
+- Strict events remain separate and are still required for per-order +price score animation.
+- If strict reconciliation fails but real order rows were found, LATEST 5 still refreshes.
+- feedEvents never change, split, estimate, or override the Employee Statistic total.
+- Feed display remains: shop name + product code + order price only.
+
+Validation
+PASS npm test
+PASS syntax checks
+PASS self-test
+PASS v1.7.7 feedEvents static regression guard
+PASS local HTTP GET / = 200
+PASS unauthenticated report endpoint = 401
+PASS main total source remains Employee Statistic summary.price / 100
+PASS individual score hits still require exact order count + per-shop sum + global sum reconciliation

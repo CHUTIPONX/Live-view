@@ -1,4 +1,4 @@
-Pancake Live Sales Monitor v1.7.0 — Vercel Setup
+Pancake Live Sales Monitor v1.8.0 — Vercel Setup
 ================================================
 
 RECOMMENDED: ADD / DELETE PANCAKE ACCOUNTS FROM THE WEB APP
@@ -27,7 +27,7 @@ BOOTSTRAP EXISTING VERCEL ENV ACCOUNTS
 If you already have PANCAKE_POS_API_KEY_1, _2, _3, etc., keep them during the first deploy.
 With PLSM_CONFIG_STORE=blob and an empty Blob, /settings shows them as bootstrap accounts.
 Press Save Settings once to copy them into the encrypted shared Blob config.
-After verifying it works, you may remove the old PANCAKE_* account variables from Vercel.
+After verifying it works, you may remove the old PANCAKE_POS_API_KEY_* / PANCAKE_LABEL_* / PANCAKE_SHOP_IDS_* bootstrap variables from Vercel.
 APP_USER / APP_PASSWORD / APP_SECRET / PLSM_CONFIG_STORE must remain.
 
 ENV-ONLY MODE (NO BLOB)
@@ -70,3 +70,33 @@ Timeout / permission / malformed response does NOT become zero; the dashboard ho
 complete verified total instead.
 
 Authenticated diagnostics: /api/diagnostics
+
+
+FACEBOOK PAGE DISCOVERY (SEPARATE FROM POS SHOP COUNT)
+------------------------------------------------------
+The POS /shops endpoint returns POS Shop IDs. It is NOT the same thing as the Facebook Page list.
+If you want Settings to show the actual Facebook Page count, add the Pancake User Access Token(s)
+used by the old page-discovery project:
+
+PANCAKE_USER_ACCESS_TOKEN=...
+PANCAKE_USER_LABEL=Main Facebook Account
+PANCAKE_USER_ACCESS_TOKEN_2=...
+PANCAKE_USER_LABEL_2=Second Facebook Account
+PANCAKE_USER_ACCESS_TOKEN_3=...
+PANCAKE_USER_LABEL_3=Third Facebook Account
+
+Or use PANCAKE_USER_TOKENS_JSON. Redeploy after changing Vercel Environment Variables.
+Then open Settings -> FACEBOOK PAGE DISCOVERY -> Load FB Pages. The app calls /api/v1/pages
+server-side, filters unusable entries, and de-duplicates by Facebook Page ID. User Access Tokens are
+never returned to the browser.
+
+A POS API account that exposes only Shop IDs already seen by another POS API account correctly adds
++0 unique POS Shops. This does not mean the API key failed.
+
+SALES METRIC AUDIT
+------------------
+The main dashboard still uses Pancake Employee Statistic summary.price / 100 as the authoritative
+complete-snapshot metric. Verified order cards prefer total_price_after_sub_discount when Pancake
+returns it. Settings -> SALES METRIC AUDIT shows the real discount/coupon/voucher/net-like fields
+from sample Employee Statistic responses. Do not subtract discounts twice unless the live payload
+proves summary.price is a pre-discount metric for your account/report configuration.
