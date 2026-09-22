@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes } from './public/live-order-utils.js';
 import { getSettings, login, saveSettings } from './lib/handlers.mjs';
 import { isCsrfValid } from './lib/core.mjs';
 import { mutationGuard } from './lib/security.mjs';
@@ -291,6 +292,17 @@ try{
   }finally{Date.now=realDateNow}
 
 
+  // v1.7.6: Pancake can return inserted_at with no zone. Pick the interpretation
+  // nearest the live snapshot so 05:21 UTC renders/queues as 12:21 Bangkok, while
+  // an actually-local 12:21 value still resolves to the same instant.
+  const feedRef=Date.parse('2026-09-22T05:24:00Z');
+  const naiveUtc=pancakeEventTimeMs('2026-09-22T05:21:00',feedRef);
+  const naiveLocal=pancakeEventTimeMs('2026-09-22T12:21:00',feedRef);
+  assert.equal(new Date(naiveUtc).toISOString(),'2026-09-22T05:21:00.000Z');
+  assert.equal(new Date(naiveLocal).toISOString(),'2026-09-22T05:21:00.000Z');
+  assert.equal(bangkokDateFromMs(naiveUtc),'2026-09-22');
+  assert.deepEqual(uniqueProductCodes([{code:'SKU-199'},{code:'SKU-199'},{productId:'PID-2'}]),['SKU-199','PID-2']);
+
   // v1.5.1: positive deltas can be decomposed into REAL individual order amounts.
   // This endpoint is animation evidence only; it never replaces Employee Statistic totals.
   clearPancakeEnv();
@@ -320,6 +332,7 @@ try{
   assert.equal(eventResult.events[0].shopName,'Shop Alpha');
   assert.equal(eventResult.events[0].orderCode,'501');
   assert.equal(eventResult.events[0].apiLabel,'Order Events');
+  assert.equal(Number.isFinite(eventResult.events[0].insertedAtMs),true);
   assert.equal(eventResult.events[0].items[0].name,'เสื้อทดสอบ');
   assert.equal(eventResult.events[0].items[0].code,'TSHIRT-BLK-M');
   assert.equal(eventResult.events[0].items[0].quantity,2);

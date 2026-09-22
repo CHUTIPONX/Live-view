@@ -1,4 +1,4 @@
-# Pancake Live Sales Monitor v1.7.5
+# Pancake Live Sales Monitor v1.7.6
 
 Live Pancake POS sales dashboard with complete verified Employee Statistic snapshots, real per-order animation, multi-account configuration, page connection checks, hardened server-side security and minute-rotating seasonal atmospheres.
 
@@ -67,3 +67,12 @@ Settings → **Check All Pages** checks known shops using `/analytics/sale` and 
 Extract the ZIP and upload the **contents inside the project folder** to the GitHub repository root. Wait for Vercel to show Ready, then hard refresh (`Ctrl + Shift + R`).
 
 Keep `APP_SECRET` and Pancake credentials private. If shared runtime account editing is enabled, follow `VERCEL-SETUP.txt` for Vercel Blob setup.
+
+
+## v1.7.6 — Live Orders readability + timing fix
+- LIVE ORDERS updates on the same frame as each verified +price hit.
+- Pancake timestamps without timezone are normalized against the live snapshot, fixing the common 7-hour display/order mismatch.
+- Latest 5 are sorted by normalized event time.
+- Feed cards now show only: shop name, product code(s), verified order price.
+- Larger Thai/Latin typography for TV/desktop viewing.
+- New storage key starts a clean feed so stale v1.7.4 cards do not remain after upgrading.

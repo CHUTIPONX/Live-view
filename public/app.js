@@ -1,11 +1,12 @@
 import { startSeasonAtmosphereEngine } from './season-atmosphere-engine.js';
+import { pancakeEventTimeMs, bangkokDateFromMs, uniqueProductCodes } from './live-order-utils.js';
 
 const $ = s => document.querySelector(s);
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const scoreFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CACHE_KEY = 'plsm_verified_employee_snapshot_v172';
-const LATEST_ORDER_KEY = 'plsm_latest_verified_orders_v174';
+const LATEST_ORDER_KEY = 'plsm_latest_verified_orders_v176';
 const ACCOUNT_NAME_KEY = 'plsm_pancake_account_names_v174';
 const KNOWN_SHOPS_KEY = 'plsm_known_shops_v173';
 
@@ -253,14 +254,20 @@ async function burstVerifiedPrices(amounts){
   return nodes;
 }
 async function burstVerifiedOrderEvents(events){
-  const verified=(events||[]).filter(e=>Number.isFinite(Number(e?.amount))&&Math.abs(Number(e.amount))>.001);
+  const reference=Date.now();
+  const verified=(events||[])
+    .filter(e=>Number.isFinite(Number(e?.amount))&&Math.abs(Number(e.amount))>.001)
+    .map((e,i)=>({...e,__feedIndex:i,__eventMs:Number.isFinite(Number(e?.insertedAtMs))?Number(e.insertedAtMs):pancakeEventTimeMs(e?.insertedAt,reference)}))
+    .sort((a,b)=>((Number.isFinite(a.__eventMs)?a.__eventMs:reference)-(Number.isFinite(b.__eventMs)?b.__eventMs:reference))||(a.__feedIndex-b.__feedIndex));
   const nodes=[];
   for(let i=0;i<verified.length;i++){
     const event=verified[i];
     const node=createScoreHit(event.amount,i,verified.length);
     if(node)nodes.push(node);
-    playSaleSound(event.amount,i);
+    // Update LATEST 5 on the same hit frame: the card on top always belongs to
+    // the amount currently dropping over the main score.
     rememberVerifiedOrder(event);
+    playSaleSound(event.amount,i);
     if(i<verified.length-1)await sleep(78);
   }
   return nodes;
@@ -327,61 +334,57 @@ function apiAccountName(event){
   const saved=cid?names?.[cid]:null;
   return String(saved?.accountName||saved?.label||event?.apiLabel||'Pancake API');
 }
-function eventClock(value){
-  const raw=String(value||'');
-  if(!raw)return '--:--:--';
-  if(!/[zZ]|[+-]\d\d:?\d\d$/.test(raw)){
-    const m=raw.match(/T(\d{2}:\d{2}(?::\d{2})?)/);if(m)return m[1].length===5?`${m[1]}:00`:m[1];
-  }
-  const d=new Date(raw);if(Number.isNaN(d.getTime()))return raw.slice(11,19)||'--:--:--';
-  return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(d);
-}
 function normalizeFeedItem(raw){
   const item=raw&&typeof raw==='object'?raw:{};
   return {
-    name:String(item.name||''),code:String(item.code||''),productId:String(item.productId||''),variationId:String(item.variationId||''),
+    code:String(item.code||''),productId:String(item.productId||''),variationId:String(item.variationId||''),
     quantity:Math.max(1,Math.round(Number(item.quantity)||1))
   };
 }
 function normalizeFeedEvent(event){
+  const receivedMs=Date.now();
+  const eventMs=Number.isFinite(Number(event?.insertedAtMs))
+    ? Number(event.insertedAtMs)
+    : pancakeEventTimeMs(event?.insertedAt,receivedMs);
   return {
-    id:String(event?.id||''),orderCode:String(event?.orderCode||event?.id||''),shopId:String(event?.shopId||''),
-    shopName:knownShopName(event),amount:Number(event?.amount)||0,insertedAt:String(event?.insertedAt||''),
-    apiLabel:String(event?.apiLabel||''),connectionId:String(event?.connectionId||''),accountName:apiAccountName(event),
+    id:String(event?.id||''),shopId:String(event?.shopId||''),shopName:knownShopName(event),
+    amount:Number(event?.amount)||0,insertedAt:String(event?.insertedAt||''),
+    eventMs:Number.isFinite(eventMs)?eventMs:receivedMs,
+    eventDate:bangkokDateFromMs(Number.isFinite(eventMs)?eventMs:receivedMs)||bangkokDate(0),
     items:(Array.isArray(event?.items)?event.items:[]).map(normalizeFeedItem).slice(0,12),
-    receivedDate:bangkokDate(0),receivedAt:new Date().toISOString()
+    receivedAt:new Date(receivedMs).toISOString()
   };
 }
 function loadLatestVerifiedOrders(){
+  const today=bangkokDate(0);
   const rows=readJsonStorage(LATEST_ORDER_KEY,[]);
-  latestVerifiedOrders=(Array.isArray(rows)?rows:[]).filter(x=>x&&x.receivedDate===bangkokDate(0)).slice(0,5);
+  latestVerifiedOrders=(Array.isArray(rows)?rows:[])
+    .filter(x=>x&&String(x.eventDate||'')===today)
+    .sort((a,b)=>(Number(b.eventMs)||0)-(Number(a.eventMs)||0))
+    .slice(0,5);
   renderLiveOrders();
 }
-function productMainText(item){return item.name||item.code||item.productId||item.variationId||'สินค้า'}
-function productCodeText(item){
-  if(item.code)return `CODE ${item.code}`;
-  if(item.productId)return `PID ${item.productId}`;
-  if(item.variationId)return `VID ${item.variationId}`;
-  return '';
+function compactProductCodes(order){
+  const codes=uniqueProductCodes(order?.items,6);
+  if(!codes.length)return 'ไม่พบรหัสสินค้า';
+  return codes.join(' · ');
 }
 function renderLiveOrders(){
   const list=$('#liveOrderList');if(!list)return;
   const count=$('#liveOrderCount');if(count)count.textContent=String(latestVerifiedOrders.length);
   if(!latestVerifiedOrders.length){
-    list.innerHTML='<div class="live-order-empty">รอออเดอร์จริงที่ยืนยันกับยอดขาย…</div>';
+    list.innerHTML='<div class="live-order-empty">รอยอดจริงเด้งเข้ามา…</div>';
     return;
   }
-  list.innerHTML=latestVerifiedOrders.map((order,index)=>{
-    const items=Array.isArray(order.items)?order.items:[];
-    const productHtml=items.length?items.slice(0,3).map(item=>`<div class="live-product"><b>${esc(productMainText(item))}</b><span>${item.quantity>1?`×${item.quantity}`:''}${productCodeText(item)?`${item.quantity>1?' · ':''}${esc(productCodeText(item))}`:''}</span></div>`).join(''):'<div class="live-product no-meta"><b>ไม่มีรายละเอียดสินค้าใน Order API</b><span>แสดงยอดบิลจริงได้ตามปกติ</span></div>';
-    const more=items.length>3?`<div class="live-more">+${items.length-3} รายการ</div>`:'';
-    return `<article class="live-order${index===0?' newest':''}" data-order="${esc(order.shopId)}:${esc(order.id)}"><div class="live-order-top"><span class="live-time">${esc(eventClock(order.insertedAt||order.receivedAt))}</span><strong>+฿${nf.format(Math.abs(Number(order.amount)||0))}</strong></div><div class="live-shop"><b>${esc(order.shopName||`Shop ${order.shopId}`)}</b><span>Shop ${esc(order.shopId)}</span></div><div class="live-api"><span>API</span><b>${esc(order.accountName||order.apiLabel||'Pancake API')}</b></div><div class="live-products">${productHtml}${more}</div><div class="live-order-id">ORDER ${esc(order.orderCode||order.id)}</div></article>`;
-  }).join('');
+  list.innerHTML=latestVerifiedOrders.map((order,index)=>`<article class="live-order live-order-simple${index===0?' newest':''}" data-order="${esc(order.shopId)}:${esc(order.id)}"><div class="live-order-copy"><b class="live-shop-name">${esc(order.shopName||`Shop ${order.shopId}`)}</b><span class="live-code-label">รหัสสินค้า</span><strong class="live-product-code">${esc(compactProductCodes(order))}</strong></div><div class="live-order-price">฿${nf.format(Math.abs(Number(order.amount)||0))}</div></article>`).join('');
 }
 function rememberVerifiedOrder(event){
   const row=normalizeFeedEvent(event);if(!row.id||!row.shopId)return;
   const key=`${row.shopId}:${row.id}`;
-  latestVerifiedOrders=[row,...latestVerifiedOrders.filter(x=>`${x.shopId}:${x.id}`!==key&&x.receivedDate===bangkokDate(0))].slice(0,5);
+  const today=bangkokDate(0);
+  latestVerifiedOrders=[row,...latestVerifiedOrders.filter(x=>`${x.shopId}:${x.id}`!==key&&String(x.eventDate||'')===today)]
+    .sort((a,b)=>(Number(b.eventMs)||0)-(Number(a.eventMs)||0))
+    .slice(0,5);
   try{localStorage.setItem(LATEST_ORDER_KEY,JSON.stringify(latestVerifiedOrders))}catch{}
   renderLiveOrders();
 }

@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 
 const files=[
   'server.mjs','lib/core.mjs','lib/handlers.mjs','lib/vercel.mjs','lib/security.mjs','scripts-selftest.mjs',
-  'public/app.js','public/security.js','public/season-atmospheres.js','public/season-atmosphere-engine.js','public/settings.js','public/login.js',
+  'public/app.js','public/live-order-utils.js','public/security.js','public/season-atmospheres.js','public/season-atmosphere-engine.js','public/settings.js','public/login.js',
   'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/page-health.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
 ];
 let fail=false;
@@ -15,6 +15,7 @@ for(const f of files){
 if(fail)process.exit(1);
 
 const app=fs.readFileSync('public/app.js','utf8');
+const liveOrderUtils=fs.readFileSync('public/live-order-utils.js','utf8');
 const atmos=fs.readFileSync('public/season-atmospheres.js','utf8');
 const engine=fs.readFileSync('public/season-atmosphere-engine.js','utf8');
 const index=fs.readFileSync('public/index.html','utf8');
@@ -74,14 +75,17 @@ if(!core.includes('checkPageHealth')||!handlers.includes('pageHealth')||!setting
 
 if(!settingsHtml.includes('id="healthSearch"')||!settingsHtml.includes('data-health-filter="all"')||!settingsJs.includes('healthFilter')||!settingsJs.includes('renderHealthRows')||!css.includes('.health-toolbar')||!css.includes('.health-page-row'))throw new Error('All-page connection result list/search/filter UI is missing');
 if(!index.includes('id="liveOrders"')||!index.includes('id="liveOrderList"')||!app.includes('rememberVerifiedOrder')||!app.includes('LATEST_ORDER_KEY')||!css.includes('.live-order-list'))throw new Error('Latest 5 verified live order feed is missing');
+if(!liveOrderUtils.includes('pancakeEventTimeMs')||!app.includes('insertedAtMs')||!core.includes('pancakeOrderTimestampMs'))throw new Error('Pancake order timestamp normalization is missing');
+if(!app.includes('compactProductCodes')||!css.includes('.live-shop-name')||!css.includes('.live-product-code')||!css.includes('.live-order-price'))throw new Error('Simplified shop/code/price live feed is missing');
+if(app.includes('class="live-api"')||app.includes('class="live-time"')||app.includes('class="live-order-id"'))throw new Error('Live feed still renders old time/API/order-id clutter');
 if(!core.includes('orderItemsFromRow')||!core.includes('variation_info')||!core.includes('orderCode:firstText')||!core.includes('apiLabel:r.value.credential.label'))throw new Error('Verified order product/shop/API metadata normalization is missing');
 if(!core.includes('listShopsWithMeta')||!core.includes('pancakeAccountName')||!handlers.includes('accountName:directory.accountName')||!settingsJs.includes('ACCOUNT_KEY')||!settingsJs.includes('PANCAKE ACCOUNT'))throw new Error('Pancake API account-name discovery/fallback display is missing');
-if(pkg.version!=='1.7.5'||lock.version!=='1.7.5'||lock.packages?.['']?.version!=='1.7.5')throw new Error('Package version is not v1.7.5');
+if(pkg.version!=='1.7.6'||lock.version!=='1.7.6'||lock.packages?.['']?.version!=='1.7.6')throw new Error('Package version is not v1.7.6');
 
 console.log('Season checks: 12 atmospheres · 60s rotation · layered ambient FX · no people/animal/object graphics: PASS');
 console.log('Verified score-hit checks: real orders · text-only drop/rise overlay · slow final count · two-stage sale chime: PASS');
 console.log('Security checks: CSRF · same-origin · CSP · inspect warning: PASS');
 console.log('Page connection checks: batched access test · all-page list · search/filter · failed-page pinning · known-shop memory: PASS');
-console.log('Live order feed checks: latest 5 · shop · order amount · product name/code · API account: PASS');
+console.log('Live order feed checks: exact-hit update · timezone normalization · shop · product code · price only · large type: PASS');
 console.log('Static integration checks: PASS');
 console.log('Syntax check: PASS');
