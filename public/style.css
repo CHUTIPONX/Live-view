@@ -285,3 +285,43 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
   .live-order-list{height:485px;grid-template-rows:repeat(5,minmax(0,1fr))}
   .live-order{min-height:0}.live-products{max-height:27px;overflow:hidden}
 }
+
+/* v1.7.5 — list every page returned by Pancake after Page Connection Check */
+.health-alert.checking{background:rgba(154,144,255,.08);border-color:rgba(180,171,255,.18);color:#d6d0ff}
+.health-toolbar{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.health-search{height:42px;min-width:min(360px,100%);flex:1;display:flex;align-items:center;gap:9px;padding:0 13px;border-radius:14px;border:1px solid rgba(255,255,255,.085);background:rgba(5,8,15,.25)}
+.health-search svg{width:16px;height:16px;fill:none;stroke:rgba(238,241,248,.38);stroke-width:1.8;stroke-linecap:round}
+.health-search input{width:100%;border:0;outline:0;background:transparent;color:#f2f4fa;font-family:var(--ui-font);font-size:10px}
+.health-search input::placeholder{color:rgba(238,241,248,.28)}
+.health-filters{display:flex;gap:6px;align-items:center}
+.health-filters button{height:38px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.025);color:rgba(238,241,248,.52);font-family:var(--ui-font);font-size:9px;font-weight:600;cursor:pointer;transition:.2s ease}
+.health-filters button b{margin-left:5px;font-family:var(--display-font);font-size:8px;color:rgba(238,241,248,.33)}
+.health-filters button:hover{border-color:rgba(255,255,255,.14);color:#f0f2f8}
+.health-filters button.active{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.15);color:#fff}
+.health-filters button.active b{color:#a8f1ca}
+.health-list-head{margin:14px 2px 7px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:rgba(238,241,248,.5)}
+.health-list-head span{font-size:9px;font-weight:600}
+.health-list-head small{font-size:8px;color:rgba(238,241,248,.28)}
+.health-problems{display:grid;gap:7px;margin-top:0;max-height:620px;overflow:auto;padding:2px 4px 4px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.health-problems::-webkit-scrollbar{width:7px}.health-problems::-webkit-scrollbar-track{background:transparent}.health-problems::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
+.health-page-row{min-height:78px;padding:12px 13px;border-radius:16px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.024);display:grid;grid-template-columns:34px 10px minmax(0,1fr) auto;align-items:center;gap:11px;transition:.18s ease}
+.health-page-row:hover{background:rgba(255,255,255,.038);border-color:rgba(255,255,255,.11)}
+.health-page-index{font-family:var(--display-font);font-size:9px;letter-spacing:.08em;color:rgba(238,241,248,.25);text-align:center}
+.health-page-dot{width:9px;height:9px;border-radius:50%;background:rgba(238,241,248,.22);box-shadow:0 0 0 rgba(0,0,0,0)}
+.health-page-copy{min-width:0}.health-page-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700;color:#f4f6fb}
+.health-page-copy span{display:block;margin-top:3px;font-family:var(--display-font);font-size:8px;letter-spacing:.025em;color:rgba(238,241,248,.43)}
+.health-page-copy small{display:block;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px;color:rgba(185,194,213,.52)}
+.health-page-copy em{display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal;font-size:8px;color:rgba(238,241,248,.31)}
+.health-page-row>strong{justify-self:end;font-family:var(--display-font);font-size:7px;letter-spacing:.08em;font-weight:700;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);color:rgba(238,241,248,.48);white-space:nowrap}
+.health-page-row.ok{border-color:rgba(104,245,171,.12);background:rgba(91,238,158,.025)}
+.health-page-row.ok .health-page-dot{background:#78e8aa;box-shadow:0 0 16px rgba(84,235,153,.35)}
+.health-page-row.ok>strong{color:#94efbd;border-color:rgba(105,245,171,.17);background:rgba(91,238,158,.055)}
+.health-page-row.bad{border-color:rgba(255,94,116,.19);background:rgba(255,77,102,.035)}
+.health-page-row.bad .health-page-dot{background:#ff7186;box-shadow:0 0 17px rgba(255,86,111,.4)}
+.health-page-row.bad>strong{color:#ff9aaa;border-color:rgba(255,105,126,.19);background:rgba(255,82,105,.07)}
+.health-page-row.bad .health-page-copy em{color:rgba(255,169,181,.68)}
+.health-page-row.checking{border-color:rgba(182,173,255,.14);opacity:.82}
+.health-page-row.checking .health-page-dot{background:#aaa0ff;box-shadow:0 0 16px rgba(170,160,255,.35);animation:healthPulse 1.15s ease-in-out infinite alternate}
+.health-page-row.checking>strong{color:#d3cdff;border-color:rgba(188,179,255,.16);background:rgba(170,159,255,.055)}
+.health-page-row.unchecked{opacity:.68}
+@media(max-width:700px){.health-toolbar{align-items:stretch;flex-direction:column}.health-search{min-width:100%}.health-filters{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}.health-filters button{padding:0 7px}.health-list-head small{display:none}.health-problems{max-height:560px}.health-page-row{grid-template-columns:26px 9px minmax(0,1fr);gap:8px}.health-page-row>strong{grid-column:3;justify-self:start}.health-page-copy small,.health-page-copy em{white-space:normal}}

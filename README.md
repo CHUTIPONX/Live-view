@@ -1,6 +1,22 @@
-# Pancake Live Sales Monitor v1.7.4
+# Pancake Live Sales Monitor v1.7.5
 
 Live Pancake POS sales dashboard with complete verified Employee Statistic snapshots, real per-order animation, multi-account configuration, page connection checks, hardened server-side security and minute-rotating seasonal atmospheres.
+
+## v1.7.5 — All Page Connection List
+
+Settings → **Check All Pages** now lists **every unique Shop ID that the configured Pancake API accounts actually return**, not only the failed pages. The list updates while checks are running and shows:
+
+- page/shop name
+- Shop ID
+- Pancake API Account label(s) that know the shop
+- `CONNECTED`, `NEEDS ATTENTION`, `CHECKING`, or `NOT CHECKED`
+- per-account failure reason when access fails
+- search by page name / Shop ID / API Account
+- filters for **ทั้งหมด / ต่อได้ / มีปัญหา**
+
+The list is deduplicated by Shop ID when the same shop exists under multiple API accounts. Failed pages are sorted first so permission problems are easy to spot.
+
+**Important:** the monitor cannot invent or discover a page that Pancake never returns to any configured API key. If the Facebook/Pancake account really owns 100+ pages but `/shops` currently returns 52, the checker can list and test those 52; the remaining page names/Shop IDs become available only after Pancake/API permissions expose them. Previously remembered Shop IDs are retained in the browser and can still be re-tested if they disappear from the newest `/shops` response.
 
 ## v1.7.4 — Verified Live Order Feed
 

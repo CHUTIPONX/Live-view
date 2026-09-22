@@ -1,6 +1,6 @@
 {
   "name": "pancake-live-sales-monitor",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "private": true,
   "type": "module",
   "description": "Pancake POS live sales monitor with verified live order feed, shop/product/API metadata, page connection checks, text-only score hits, sale chimes, security, and seasonal atmospheres",

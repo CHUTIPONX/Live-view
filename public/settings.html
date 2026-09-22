@@ -47,20 +47,32 @@
       <div class="health-head">
         <div>
           <div class="micro-label">PAGE CONNECTION CHECK</div>
-          <h2>เช็กเพจที่เชื่อมต่อไม่ได้</h2>
-          <p>ทดสอบสิทธิ์อ่านยอดจริงของแต่ละร้านด้วย Employee Statistic endpoint เดียวกับหน้า Live</p>
+          <h2>เช็กและลิสต์ทุกเพจ</h2>
+          <p>กดครั้งเดียวเพื่อเช็กทุกเพจที่ API มองเห็น พร้อมลิสต์ชื่อเพจ Shop ID และ API Account ลงมาด้านล่าง</p>
         </div>
         <button id="checkHealthBtn" class="soft liquid-control">Check All Pages</button>
       </div>
       <div id="healthAlert" class="health-alert hidden"></div>
       <div class="health-stats">
-        <div><span>KNOWN</span><b id="healthKnown">0</b><small>ร้านที่ระบบรู้จัก</small></div>
-        <div><span>CONNECTED</span><b id="healthOk">—</b><small>มี API ใช้งานได้</small></div>
+        <div><span>DISCOVERED</span><b id="healthKnown">0</b><small>เพจที่ API ส่งกลับมา</small></div>
+        <div><span>CONNECTED</span><b id="healthOk">—</b><small>มี API อ่านยอดได้</small></div>
         <div><span>NEEDS ATTENTION</span><b id="healthBad">—</b><small>ไม่มี API ที่ผ่าน</small></div>
         <div><span>CHECKED</span><b id="healthChecked">0</b><small>ผลล่าสุด</small></div>
       </div>
-      <div id="healthProblems" class="health-problems"><div class="health-empty">กด <b>Check All Pages</b> เพื่อเช็กทุกเพจที่ระบบมองเห็น</div></div>
-      <p class="health-footnote">ถ้าเพจไม่เคยถูกคืนมาจาก API ใดเลย เว็บจะยังไม่รู้ชื่อเพจนั้น จนกว่า Pancake จะคืน Shop ID มาอย่างน้อยหนึ่งครั้ง</p>
+      <div class="health-toolbar">
+        <label class="health-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg>
+          <input id="healthSearch" type="search" placeholder="ค้นหาชื่อเพจ / Shop ID / API Account" autocomplete="off">
+        </label>
+        <div class="health-filters" role="group" aria-label="Page connection filter">
+          <button class="active" data-health-filter="all">ทั้งหมด <b id="healthFilterAll">0</b></button>
+          <button data-health-filter="ok">ต่อได้ <b id="healthFilterOk">0</b></button>
+          <button data-health-filter="bad">มีปัญหา <b id="healthFilterBad">0</b></button>
+        </div>
+      </div>
+      <div class="health-list-head"><span id="healthListMeta">ยังไม่ได้ตรวจ</span><small>เรียงเพจที่มีปัญหาก่อน แล้วตามด้วยเพจที่เชื่อมต่อได้</small></div>
+      <div id="healthProblems" class="health-problems"><div class="health-empty">กด <b>Check All Pages</b> แล้วระบบจะลิสต์ทุกเพจที่ API มองเห็นลงมาตรงนี้</div></div>
+      <p class="health-footnote">รายการนี้แสดงทุก Shop ID ที่ Pancake API ส่งกลับมาจาก API Account ที่ตั้งไว้ หากจริง ๆ มี 100+ เพจแต่ Pancake คืนมา 52 เพจ ระบบจะลิสต์ได้ 52 เพจเท่านั้น จนกว่าสิทธิ์ของ API จะมองเห็นเพจที่เหลือ</p>
     </section>
 
     <section class="info-card">

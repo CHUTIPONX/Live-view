@@ -14,11 +14,19 @@ const healthKnown=document.querySelector('#healthKnown');
 const healthOk=document.querySelector('#healthOk');
 const healthBad=document.querySelector('#healthBad');
 const healthChecked=document.querySelector('#healthChecked');
+const healthSearch=document.querySelector('#healthSearch');
+const healthFilterAll=document.querySelector('#healthFilterAll');
+const healthFilterOk=document.querySelector('#healthFilterOk');
+const healthFilterBad=document.querySelector('#healthFilterBad');
+const healthListMeta=document.querySelector('#healthListMeta');
+const healthFilterButtons=[...document.querySelectorAll('[data-health-filter]')];
 const KNOWN_KEY='plsm_known_shops_v173';
 const ACCOUNT_KEY='plsm_pancake_account_names_v174';
 const HEALTH_BATCH=6;
 let items=[],shared=false,writable=true,configStore='none';
 let healthRunning=false;
+let healthFilter='all';
+let healthQuery='';
 const healthMap=new Map();
 const accountHealthErrors=new Map();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -138,19 +146,80 @@ function summarizeHealth(){
   const knownRows=knownShopRows();
   const byShop=new Map();
   for(const row of knownRows){
-    const sid=String(row.id);if(!byShop.has(sid))byShop.set(sid,{id:sid,name:row.name,attempts:[]});
+    const sid=String(row.id);
+    if(!byShop.has(sid))byShop.set(sid,{id:sid,name:row.name||`Shop ${sid}`,sources:[],attempts:[],checking:false});
+    const shop=byShop.get(sid);
+    if((!shop.name||shop.name===`Shop ${sid}`)&&row.name)shop.name=row.name;
+    const source={connectionId:row.connectionId,connectionLabel:row.connectionLabel,missingFromList:!!row.missingFromList};
+    shop.sources.push(source);
     const h=healthMap.get(healthKey(row.connectionId,sid));
-    if(h&&!h.checking)byShop.get(sid).attempts.push({...h,connectionLabel:row.connectionLabel,missingFromList:row.missingFromList});
+    if(h?.checking)shop.checking=true;
+    else if(h)shop.attempts.push({...h,...source});
   }
-  let connected=0,failed=0,checked=0;
-  const problems=[];
+
+  let connected=0,failed=0,checked=0,checking=0;
+  const pages=[];
   for(const shop of byShop.values()){
-    if(!shop.attempts.length)continue;
-    checked++;
-    if(shop.attempts.some(x=>x.ok))connected++;
-    else{failed++;problems.push(shop)}
+    const okAttempts=shop.attempts.filter(x=>x.ok);
+    const badAttempts=shop.attempts.filter(x=>!x.ok);
+    let state='unchecked';
+    if(okAttempts.length){state='ok';connected++;checked++}
+    else if(shop.checking){state='checking';checking++}
+    else if(badAttempts.length){state='bad';failed++;checked++}
+    const accountNames=[...new Set(shop.sources.map(x=>x.connectionLabel).filter(Boolean))];
+    pages.push({...shop,state,okAttempts,badAttempts,accountNames});
   }
-  return {known:byShop.size,connected,failed,checked,problems};
+  pages.sort((a,b)=>{
+    const rank={bad:0,checking:1,ok:2,unchecked:3};
+    return (rank[a.state]-rank[b.state])||String(a.name).localeCompare(String(b.name),'th');
+  });
+  return {known:byShop.size,connected,failed,checked,checking,pages};
+}
+function healthRowMatches(page){
+  if(healthFilter==='ok'&&page.state!=='ok')return false;
+  if(healthFilter==='bad'&&page.state!=='bad')return false;
+  const q=healthQuery.trim().toLowerCase();
+  if(!q)return true;
+  const hay=[page.name,page.id,...page.accountNames,...page.attempts.map(a=>a.label),...page.attempts.map(a=>a.message)].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+function healthAttemptLabel(a){
+  if(a.ok)return `${a.connectionLabel}: CONNECTED`;
+  return `${a.connectionLabel}: ${a.label||a.code||'FAILED'}${a.message?` · ${a.message}`:''}`;
+}
+function renderHealthRows(summary){
+  if(!healthProblems)return;
+  const hasResults=summary.checked>0||summary.checking>0;
+  if(!hasResults){
+    healthProblems.innerHTML='<div class="health-empty">กด <b>Check All Pages</b> แล้วระบบจะลิสต์ทุกเพจที่ API มองเห็นลงมาตรงนี้</div>';
+    if(healthListMeta)healthListMeta.textContent=`API พบ ${summary.known} เพจ · ยังไม่ได้ตรวจ`;
+    return;
+  }
+
+  const visible=summary.pages.filter(healthRowMatches);
+  if(healthListMeta)healthListMeta.textContent=`แสดง ${visible.length} จาก ${summary.known} เพจที่ API ส่งกลับมา`;
+  if(!visible.length){
+    healthProblems.innerHTML='<div class="health-empty">ไม่พบเพจที่ตรงกับตัวกรอง/คำค้นหา</div>';
+    return;
+  }
+
+  healthProblems.innerHTML=visible.map((p,index)=>{
+    const sourceText=p.accountNames.length?p.accountNames.join(' · '):'ไม่ทราบ API Account';
+    const detail=p.attempts.length?p.attempts.map(healthAttemptLabel).join(' | '):p.checking?'กำลังตรวจสิทธิ์อ่านยอด…':'ยังไม่ได้ตรวจ';
+    const missing=p.sources.some(a=>a.missingFromList);
+    const badge=p.state==='ok'?'CONNECTED':p.state==='bad'?'NEEDS ATTENTION':p.state==='checking'?'CHECKING':'NOT CHECKED';
+    return `<article class="health-page-row ${p.state}">
+      <div class="health-page-index">${String(index+1).padStart(2,'0')}</div>
+      <i class="health-page-dot"></i>
+      <div class="health-page-copy">
+        <b>${esc(p.name||`Shop ${p.id}`)}</b>
+        <span>Shop ID ${esc(p.id)}${missing?' · ไม่อยู่ใน Store List ล่าสุด':''}</span>
+        <small>API · ${esc(sourceText)}</small>
+        <em>${esc(detail)}</em>
+      </div>
+      <strong>${badge}</strong>
+    </article>`;
+  }).join('');
 }
 function renderHealthPanel(){
   if(!healthProblems)return;
@@ -159,30 +228,28 @@ function renderHealthPanel(){
   if(healthOk)healthOk.textContent=healthRunning?`${summary.connected}`:(summary.checked?String(summary.connected):'—');
   if(healthBad)healthBad.textContent=healthRunning?`${summary.failed}`:(summary.checked?String(summary.failed):'—');
   if(healthChecked)healthChecked.textContent=String(summary.checked);
+  if(healthFilterAll)healthFilterAll.textContent=String(summary.known);
+  if(healthFilterOk)healthFilterOk.textContent=String(summary.connected);
+  if(healthFilterBad)healthFilterBad.textContent=String(summary.failed);
   if(checkHealthBtn){checkHealthBtn.disabled=healthRunning;checkHealthBtn.textContent=healthRunning?'Checking…':'Check All Pages'}
+  for(const b of healthFilterButtons)b.classList.toggle('active',b.dataset.healthFilter===healthFilter);
 
   const accountProblems=items.filter(x=>x.loadError).map(x=>({label:x.label,error:x.loadError}));
   if(summary.failed||accountProblems.length){
     healthAlert.classList.remove('hidden');
     healthAlert.className='health-alert bad';
-    healthAlert.innerHTML=`<b>${summary.failed+accountProblems.length} CONNECTION ISSUE${summary.failed+accountProblems.length===1?'':'S'}</b><span>${summary.failed} ร้านไม่มี API ที่ผ่าน${accountProblems.length?` · ${accountProblems.length} Account โหลดรายชื่อร้านไม่ได้`:''}</span>`;
+    healthAlert.innerHTML=`<b>${summary.failed+accountProblems.length} CONNECTION ISSUE${summary.failed+accountProblems.length===1?'':'S'}</b><span>${summary.failed} เพจไม่มี API ที่ผ่าน${accountProblems.length?` · ${accountProblems.length} Account โหลดรายชื่อเพจไม่ได้`:''}</span>`;
   }else if(summary.checked&&!healthRunning){
     healthAlert.classList.remove('hidden');
     healthAlert.className='health-alert ok';
-    healthAlert.innerHTML=`<b>ALL CHECKED PAGES CONNECTED</b><span>${summary.connected} ร้านมีอย่างน้อย 1 API ที่อ่านยอดได้</span>`;
+    healthAlert.innerHTML=`<b>ALL CHECKED PAGES CONNECTED</b><span>${summary.connected} เพจที่ Pancake API ส่งกลับมาอ่านยอดได้ครบ</span>`;
+  }else if(healthRunning){
+    healthAlert.classList.remove('hidden');
+    healthAlert.className='health-alert checking';
+    healthAlert.innerHTML=`<b>CHECKING ${summary.checked}/${summary.known}</b><span>ผลจะถูกเติมลงรายการแบบเรียลไทม์ทีละชุด</span>`;
   }else healthAlert.classList.add('hidden');
 
-  const blocks=[];
-  for(const x of accountProblems)blocks.push(`<article class="health-row account-fail"><i></i><div><b>${esc(x.label)}</b><span>โหลดรายชื่อร้านไม่ได้</span><small>${esc(x.error)}</small></div><em>ACCOUNT</em></article>`);
-  for(const p of summary.problems){
-    const reasons=p.attempts.map(a=>`${a.connectionLabel}: ${a.label||a.code}${a.message?` · ${a.message}`:''}`).join(' | ');
-    const missing=p.attempts.some(a=>a.missingFromList);
-    blocks.push(`<article class="health-row page-fail"><i></i><div><b>${esc(p.name||`Shop ${p.id}`)}</b><span>Shop ID ${esc(p.id)}${missing?' · ไม่อยู่ใน Store List ล่าสุด':''}</span><small>${esc(reasons)}</small></div><em>NO ACCESS</em></article>`);
-  }
-  if(blocks.length)healthProblems.innerHTML=blocks.join('');
-  else if(healthRunning)healthProblems.innerHTML='<div class="health-empty health-loading">กำลังเช็กสิทธิ์อ่านยอดของแต่ละเพจ…</div>';
-  else if(summary.checked)healthProblems.innerHTML='<div class="health-empty health-good">ไม่พบเพจที่เชื่อมต่อไม่ได้ในรายการที่ระบบรู้จัก</div>';
-  else healthProblems.innerHTML='<div class="health-empty">กด <b>Check All Pages</b> เพื่อเช็กทุกเพจที่ระบบมองเห็น</div>';
+  renderHealthRows(summary);
 }
 async function postHealthBatch(x,shopIds){
   const r=await ensureAuth(await fetch('/api/page-health',{method:'POST',cache:'no-store',headers:{'content-type':'application/json'},body:JSON.stringify({connectionId:x.id,apiKey:x.apiKey||'',label:x.label,shopIds})}));
@@ -226,6 +293,8 @@ async function checkAllPages(){
 function setNotice(t,type){notice.textContent=t;notice.className=type}
 addBtn.onclick=add;empty.onclick=add;
 if(checkHealthBtn)checkHealthBtn.onclick=()=>checkAllPages();
+if(healthSearch)healthSearch.addEventListener('input',e=>{healthQuery=e.target.value||'';renderHealthPanel()});
+for(const b of healthFilterButtons)b.addEventListener('click',()=>{healthFilter=b.dataset.healthFilter||'all';renderHealthPanel()});
 saveBtn.onclick=async()=>{
   if(isReadonly())return;
   saveBtn.disabled=true;setNotice('Saving shared settings...','');
