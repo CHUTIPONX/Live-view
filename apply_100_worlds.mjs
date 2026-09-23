@@ -40,8 +40,10 @@ for (const p of required) must(fs.existsSync(p), `Missing ${p}. Upload the 100 W
 {
   const p = 'public/index.html';
   let s = read(p);
-  s = s.replace('<span id="seasonName">SEASONS</span>', '<span id="seasonName">100 WORLDS</span>');
-  s = s.replace('<span id="seasonMeta">1 MIN · ATMOSPHERE</span>', '<span id="seasonMeta">SMART SHUFFLE · 1 MIN</span>');
+  s = s.replace('<span id="seasonName">SEASONS</span>', '<span id="seasonName">SEASONS 100</span>');
+  s = s.replace('<span id="seasonName">100 WORLDS</span>', '<span id="seasonName">SEASONS 100</span>');
+  s = s.replace('<span id="seasonMeta">1 MIN · ATMOSPHERE</span>', '<span id="seasonMeta">SEASON TIME · 1 MIN</span>');
+  s = s.replace('<span id="seasonMeta">SMART SHUFFLE · 1 MIN</span>', '<span id="seasonMeta">SEASON TIME · 1 MIN</span>');
   write(p, s);
 }
 
@@ -202,9 +204,9 @@ for (const p of required) must(fs.existsSync(p), `Missing ${p}. Upload the 100 W
   must(new Set(ids).size === 100, 'Duplicate 100 Worlds scene IDs detected');
 
   const categories = [...atmos.matchAll(/\bcategory:(['"])(.*?)\1/g)].map(x => x[2]);
-  const counts = Object.fromEntries(['nature','cyber','space','fantasy','future','abstract'].map(k => [k, categories.filter(x => x === k).length]));
-  const expected = { nature:25, cyber:20, space:20, fantasy:15, future:10, abstract:10 };
-  must(JSON.stringify(counts) === JSON.stringify(expected), `Category counts wrong: ${JSON.stringify(counts)}`);
+  const counts = Object.fromEntries(['spring','summer','monsoon','tropical','autumn','winter','polar'].map(k => [k, categories.filter(x => x === k).length]));
+  const expected = { spring:14, summer:14, monsoon:14, tropical:14, autumn:14, winter:14, polar:16 };
+  must(JSON.stringify(counts) === JSON.stringify(expected), `Season category counts wrong: ${JSON.stringify(counts)}`);
 }
 
-console.log('100 WORLDS APPLY: PASS · Windows CRLF safe · Hobby <=12 functions');
+console.log('SEASONS 100 APPLY: PASS · 7 seasonal groups · Windows CRLF safe · Hobby <=12 functions');
