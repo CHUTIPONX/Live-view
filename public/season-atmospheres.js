@@ -1,57 +1,111 @@
 export const SEASON_DURATION_MS = 60_000;
+export const SMART_SHUFFLE_RECENT = 10;
 
-// Atmosphere-only backgrounds: no people, animals, vehicles, buildings or scene props.
-// Every one-minute season has multiple ambient effects so the background stays alive
-// without competing with the verified sales score.
+// v1.9.0 — 100 Worlds
+// 25 nature + 20 cyber + 20 space + 15 fantasy + 10 future/AI + 10 abstract.
+// Procedural atmosphere only: no external images/videos and no sales/data logic changes.
 export const seasonAtmospheres = [
-  {
-    id:'spring-bloom', name:'SPRING · BLOOM', meta:'ฤดูใบไม้ผลิ · แสงเช้า', fx:['petals','mist','sparkle'],
-    sky1:'#8fcfff', sky2:'#e4efff', glow:'#ffd4e5', ground:'#668f72', accent:'#ffabc7'
-  },
-  {
-    id:'summer-clear', name:'SUMMER · CLEAR', meta:'ฤดูร้อน · ฟ้าใส', fx:['heat','cloud-glow','sparkle'],
-    sky1:'#52bfff', sky2:'#c8efff', glow:'#ffe49a', ground:'#548e68', accent:'#ffe078'
-  },
-  {
-    id:'summer-golden', name:'SUMMER · GOLDEN', meta:'ฤดูร้อน · แสงเย็น', fx:['sunset','heat','sparkle'],
-    sky1:'#547fc4', sky2:'#f0a060', glow:'#ffc068', ground:'#68715b', accent:'#ffb75e'
-  },
-  {
-    id:'monsoon', name:'MONSOON · RAIN', meta:'มรสุม · ฝน', fx:['rain','mist','cloud-glow'],
-    sky1:'#293e53', sky2:'#647d91', glow:'#a3c7db', ground:'#304c59', accent:'#9fdcff'
-  },
-  {
-    id:'tropical-rain', name:'TROPICAL · RAIN', meta:'ฤดูฝนเขตร้อน', fx:['rain-soft','mist','sparkle'],
-    sky1:'#315865', sky2:'#7fa49f', glow:'#b6ddd2', ground:'#396651', accent:'#93e4cd'
-  },
-  {
-    id:'tropical-dry', name:'TROPICAL · DRY', meta:'ฤดูแล้งเขตร้อน', fx:['dry','cloud-glow','sparkle'],
-    sky1:'#65add6', sky2:'#efbf87', glow:'#ffd18b', ground:'#827254', accent:'#ffca78'
-  },
-  {
-    id:'autumn-gold', name:'AUTUMN · GOLD', meta:'ฤดูใบไม้ร่วง · สีทอง', fx:['leaves','sunset','mist'],
-    sky1:'#7089a5', sky2:'#dc9958', glow:'#ffc16a', ground:'#775033', accent:'#e79442'
-  },
-  {
-    id:'autumn-rain', name:'AUTUMN · RAIN', meta:'ปลายฤดูใบไม้ร่วง · ฝนบาง', fx:['rain-soft','mist','leaves'],
-    sky1:'#4c6072', sky2:'#8c9295', glow:'#c3baad', ground:'#50473f', accent:'#c7a375'
-  },
-  {
-    id:'winter-first', name:'WINTER · FIRST SNOW', meta:'ต้นฤดูหนาว · หิมะแรก', fx:['snow-soft','mist','frost'],
-    sky1:'#87a7c0', sky2:'#d8e5ed', glow:'#e5f6ff', ground:'#a0b5c0', accent:'#d4f2ff'
-  },
-  {
-    id:'winter-deep', name:'WINTER · DEEP', meta:'ฤดูหนาว · หิมะ', fx:['snow','frost','cloud-glow'],
-    sky1:'#506c84', sky2:'#b5cad8', glow:'#d9f1ff', ground:'#829aa7', accent:'#d2f0ff'
-  },
-  {
-    id:'frost-dawn', name:'FROST · DAWN', meta:'รุ่งเช้าเยือกแข็ง', fx:['frost','mist','sparkle'],
-    sky1:'#4a6288', sky2:'#d2a39c', glow:'#ffe2cb', ground:'#8494a7', accent:'#f3d0c2'
-  },
-  {
-    id:'polar-twilight', name:'POLAR · TWILIGHT', meta:'ฤดูหนาวขั้วโลก · แสงเหนือ', fx:['aurora','stars','snow-soft'],
-    sky1:'#09162e', sky2:'#213657', glow:'#68dfbd', ground:'#21333f', accent:'#75efca'
-  }
+  {id:"spring-bloom",name:"SPRING · BLOOM",meta:"ฤดูใบไม้ผลิ · แสงเช้า",category:"nature",fx:["petals","mist","sparkle"],sky1:"#8fcfff",sky2:"#e4efff",glow:"#ffd4e5",ground:"#668f72",accent:"#ffabc7"},
+  {id:"summer-clear",name:"SUMMER · CLEAR",meta:"ฤดูร้อน · ฟ้าใส",category:"nature",fx:["heat","cloud-glow","sparkle"],sky1:"#52bfff",sky2:"#c8efff",glow:"#ffe49a",ground:"#548e68",accent:"#ffe078"},
+  {id:"summer-golden",name:"SUMMER · GOLDEN",meta:"ฤดูร้อน · แสงเย็น",category:"nature",fx:["sunset","heat","sparkle"],sky1:"#547fc4",sky2:"#f0a060",glow:"#ffc068",ground:"#68715b",accent:"#ffb75e"},
+  {id:"monsoon",name:"MONSOON · RAIN",meta:"มรสุม · ฝน",category:"nature",fx:["rain","mist","cloud-glow"],sky1:"#293e53",sky2:"#647d91",glow:"#a3c7db",ground:"#304c59",accent:"#9fdcff"},
+  {id:"tropical-rain",name:"TROPICAL · RAIN",meta:"ฤดูฝนเขตร้อน",category:"nature",fx:["rain-soft","mist","sparkle"],sky1:"#315865",sky2:"#7fa49f",glow:"#b6ddd2",ground:"#396651",accent:"#93e4cd"},
+  {id:"tropical-dry",name:"TROPICAL · DRY",meta:"ฤดูแล้งเขตร้อน",category:"nature",fx:["dry","cloud-glow","sparkle"],sky1:"#65add6",sky2:"#efbf87",glow:"#ffd18b",ground:"#827254",accent:"#ffca78"},
+  {id:"autumn-gold",name:"AUTUMN · GOLD",meta:"ฤดูใบไม้ร่วง · สีทอง",category:"nature",fx:["leaves","sunset","mist"],sky1:"#7089a5",sky2:"#dc9958",glow:"#ffc16a",ground:"#775033",accent:"#e79442"},
+  {id:"autumn-rain",name:"AUTUMN · RAIN",meta:"ปลายฤดูใบไม้ร่วง · ฝนบาง",category:"nature",fx:["rain-soft","mist","leaves"],sky1:"#4c6072",sky2:"#8c9295",glow:"#c3baad",ground:"#50473f",accent:"#c7a375"},
+  {id:"winter-first",name:"WINTER · FIRST SNOW",meta:"ต้นฤดูหนาว · หิมะแรก",category:"nature",fx:["snow-soft","mist","frost"],sky1:"#87a7c0",sky2:"#d8e5ed",glow:"#e5f6ff",ground:"#a0b5c0",accent:"#d4f2ff"},
+  {id:"winter-deep",name:"WINTER · DEEP",meta:"ฤดูหนาว · หิมะ",category:"nature",fx:["snow","frost","cloud-glow"],sky1:"#506c84",sky2:"#b5cad8",glow:"#d9f1ff",ground:"#829aa7",accent:"#d2f0ff"},
+  {id:"frost-dawn",name:"FROST · DAWN",meta:"รุ่งเช้าเยือกแข็ง",category:"nature",fx:["frost","mist","sparkle"],sky1:"#4a6288",sky2:"#d2a39c",glow:"#ffe2cb",ground:"#8494a7",accent:"#f3d0c2"},
+  {id:"polar-twilight",name:"POLAR · TWILIGHT",meta:"ฤดูหนาวขั้วโลก · แสงเหนือ",category:"nature",fx:["aurora","stars","snow-soft"],sky1:"#09162e",sky2:"#213657",glow:"#68dfbd",ground:"#21333f",accent:"#75efca"},
+  {id:"cherry-storm",name:"SAKURA · WIND STORM",meta:"ซากุระ · ลมแรง",category:"nature",fx:["petals","wind-lines","cloud-glow"],sky1:"#6f9ccc",sky2:"#e8bed0",glow:"#ffd7e8",ground:"#4f7160",accent:"#ff8fbc"},
+  {id:"thunder-rain",name:"THUNDER · NIGHT RAIN",meta:"พายุฝน · กลางคืน",category:"nature",fx:["rain","lightning","mist"],sky1:"#0c1629",sky2:"#263d5b",glow:"#9cc9ff",ground:"#111a27",accent:"#8acbff"},
+  {id:"ocean-dawn",name:"OCEAN · BLUE DAWN",meta:"ทะเล · รุ่งเช้า",category:"nature",fx:["water-shimmer","mist","sparkle"],sky1:"#559acb",sky2:"#b9dce8",glow:"#ffd9af",ground:"#1e5c72",accent:"#8cecff"},
+  {id:"sunset-clouds",name:"SUNSET · CLOUD SEA",meta:"ทะเลเมฆ · พระอาทิตย์ตก",category:"nature",fx:["sunset","cloud-glow","light-beams"],sky1:"#4e5f91",sky2:"#e88c73",glow:"#ffd17f",ground:"#465269",accent:"#ffcf87"},
+  {id:"forest-fireflies",name:"FOREST · FIREFLIES",meta:"ป่ายามค่ำ · หิ่งห้อย",category:"nature",fx:["mist","fireflies","stars"],sky1:"#071b21",sky2:"#123a35",glow:"#69d4a0",ground:"#0b241d",accent:"#a3ffb8"},
+  {id:"desert-heat",name:"DESERT · HEAT HAZE",meta:"ทะเลทราย · คลื่นความร้อน",category:"nature",fx:["heat","dust","sunset"],sky1:"#5f88ae",sky2:"#e6ae72",glow:"#ffd284",ground:"#8c623f",accent:"#ffcc6e"},
+  {id:"mountain-mist",name:"MOUNTAIN · MORNING MIST",meta:"ภูเขา · หมอกเช้า",category:"nature",fx:["mist","cloud-glow","light-beams"],sky1:"#6e94ad",sky2:"#c9d8db",glow:"#e8e1cb",ground:"#4b6265",accent:"#caeaff"},
+  {id:"storm-shelf",name:"STORM · SHELF CLOUD",meta:"เมฆพายุ · ก่อนฝน",category:"nature",fx:["cloud-glow","lightning","wind-lines"],sky1:"#111b2e",sky2:"#364459",glow:"#98a8c0",ground:"#202834",accent:"#b2c7ff"},
+  {id:"snow-night",name:"SNOW · STAR NIGHT",meta:"หิมะ · ดาวเต็มฟ้า",category:"nature",fx:["snow-soft","stars","aurora"],sky1:"#061326",sky2:"#182b48",glow:"#76d8ca",ground:"#101b28",accent:"#c7f4ff"},
+  {id:"golden-meadow",name:"MEADOW · GOLDEN HOUR",meta:"ทุ่งหญ้า · แสงทอง",category:"nature",fx:["sparkle","bokeh","wind-lines"],sky1:"#77add0",sky2:"#f0bc78",glow:"#ffd581",ground:"#6f7449",accent:"#ffe49e"},
+  {id:"rainbow-mist",name:"RAINBOW · AFTER RAIN",meta:"หลังฝน · หมอกสีรุ้ง",category:"nature",fx:["mist","prism","sparkle"],sky1:"#607ea4",sky2:"#bbc7d5",glow:"#f2c9df",ground:"#536a6d",accent:"#9ff4ff"},
+  {id:"moon-clouds",name:"MOON · SILVER CLOUDS",meta:"คืนพระจันทร์ · เมฆเงิน",category:"nature",fx:["moon-glow","cloud-glow","stars"],sky1:"#071020",sky2:"#172b4a",glow:"#dfeaff",ground:"#111b2b",accent:"#b8d8ff"},
+  {id:"northern-lights",name:"AURORA · ICE SKY",meta:"แสงเหนือ · ท้องฟ้าน้ำแข็ง",category:"nature",fx:["aurora","stars","frost"],sky1:"#050c20",sky2:"#173557",glow:"#62f2c2",ground:"#182634",accent:"#83ffd2"},
+  {id:"cyber-tokyo",name:"CYBER TOKYO · 2099",meta:"ไซเบอร์พังก์ · โตเกียว 2099",category:"cyber",fx:["neon-grid","digital-rain","holo-lines","scanlines"],sky1:"#050617",sky2:"#171040",glow:"#ff3ed1",ground:"#070a1c",accent:"#48e7ff"},
+  {id:"neon-megacity",name:"NEON · MEGACITY",meta:"มหานครนีออน · กลางคืน",category:"cyber",fx:["neon-grid","laser-sweep","holo-lines"],sky1:"#07051a",sky2:"#25104b",glow:"#ff4dbd",ground:"#080718",accent:"#5df4ff"},
+  {id:"data-alley",name:"DATA · NEON ALLEY",meta:"ตรอกดาต้า · ฝนนีออน",category:"cyber",fx:["digital-rain","rain-soft","scanlines"],sky1:"#030b15",sky2:"#10264a",glow:"#36d9ff",ground:"#050a11",accent:"#ff4bd8"},
+  {id:"holo-market",name:"HOLOGRAM · MARKET",meta:"ตลาดโฮโลแกรม · แสงลอย",category:"cyber",fx:["holo-lines","bokeh","laser-sweep"],sky1:"#08071c",sky2:"#241441",glow:"#ff69cf",ground:"#0b0a19",accent:"#6ef4ff"},
+  {id:"cyber-rain",name:"CYBER · ACID RAIN",meta:"ฝนไซเบอร์ · นีออน",category:"cyber",fx:["rain","digital-rain","glitch"],sky1:"#07101c",sky2:"#1b2d40",glow:"#59f0ff",ground:"#071018",accent:"#ff4fbc"},
+  {id:"synthwave-night",name:"SYNTHWAVE · NIGHT DRIVE",meta:"เรโทรไซไฟ · นีออน",category:"cyber",fx:["neon-grid","sunset","scanlines"],sky1:"#130524",sky2:"#46175d",glow:"#ff4ca8",ground:"#080516",accent:"#6df7ff"},
+  {id:"neon-core",name:"NEON · CITY CORE",meta:"แกนเมืองนีออน",category:"cyber",fx:["energy-core","holo-lines","scanlines"],sky1:"#070916",sky2:"#25124a",glow:"#a65cff",ground:"#060812",accent:"#47edff"},
+  {id:"matrix-green",name:"MATRIX · GREEN RAIN",meta:"เมทริกซ์ · ฝนข้อมูล",category:"cyber",fx:["digital-rain","scanlines","data-nodes"],sky1:"#020b0d",sky2:"#06302d",glow:"#00ffa3",ground:"#010908",accent:"#59ffc1"},
+  {id:"magenta-grid",name:"MAGENTA · GRID CITY",meta:"กริดสีม่วงแดง",category:"cyber",fx:["neon-grid","laser-sweep","glitch"],sky1:"#080414",sky2:"#2c0b34",glow:"#ff47b7",ground:"#07040e",accent:"#8ef7ff"},
+  {id:"blue-hologram",name:"BLUE · HOLOGRAM DISTRICT",meta:"เขตโฮโลแกรมสีน้ำเงิน",category:"cyber",fx:["holo-lines","data-nodes","scanlines"],sky1:"#020817",sky2:"#092b50",glow:"#3cbcff",ground:"#030814",accent:"#7dfcff"},
+  {id:"cyber-sunrise",name:"CYBER · SYNTH DAWN",meta:"รุ่งเช้าโลกไซเบอร์",category:"cyber",fx:["neon-grid","sunset","holo-lines"],sky1:"#19102b",sky2:"#7b3159",glow:"#ff7ca8",ground:"#130b1d",accent:"#69e7ff"},
+  {id:"red-alert-city",name:"CYBER · RED ALERT",meta:"เมืองไซเบอร์ · สัญญาณแดง",category:"cyber",fx:["scanlines","glitch","laser-sweep"],sky1:"#100407",sky2:"#3c0a14",glow:"#ff243f",ground:"#090305",accent:"#5be5ff"},
+  {id:"violet-terminal",name:"VIOLET · TERMINAL",meta:"เทอร์มินัลสีม่วง",category:"cyber",fx:["digital-rain","data-nodes","holo-lines"],sky1:"#09051d",sky2:"#27105a",glow:"#a05cff",ground:"#060411",accent:"#65eaff"},
+  {id:"cyan-district",name:"CYAN · DISTRICT 07",meta:"เขตไซแอน · หมายเลข 07",category:"cyber",fx:["neon-grid","holo-lines","bokeh"],sky1:"#030a13",sky2:"#0a3241",glow:"#30f2e7",ground:"#03090f",accent:"#90fff8"},
+  {id:"cyber-fog",name:"CYBER · NEON FOG",meta:"หมอกไซเบอร์ · แสงนีออน",category:"cyber",fx:["mist","laser-sweep","scanlines"],sky1:"#0c0c1a",sky2:"#21233c",glow:"#7c5cff",ground:"#090a13",accent:"#ff62d6"},
+  {id:"hacker-terminal",name:"HACKER · TERMINAL",meta:"เทอร์มินัลแฮกเกอร์",category:"cyber",fx:["digital-rain","scanlines","glitch"],sky1:"#010807",sky2:"#05251a",glow:"#00ff84",ground:"#010604",accent:"#8dffc5"},
+  {id:"neon-pulse",name:"NEON · PULSE WAVE",meta:"คลื่นนีออน · ชีพจร",category:"cyber",fx:["wave-lines","laser-sweep","bokeh"],sky1:"#08051a",sky2:"#251149",glow:"#ff56cd",ground:"#05040e",accent:"#59edff"},
+  {id:"chrome-city",name:"CHROME · NIGHT CITY",meta:"เมืองโครม · กลางคืน",category:"cyber",fx:["holo-lines","scanlines","prism"],sky1:"#080b12",sky2:"#252e3c",glow:"#a6bbd8",ground:"#06080d",accent:"#7cecff"},
+  {id:"digital-storm",name:"DIGITAL · STORM",meta:"พายุดิจิทัล",category:"cyber",fx:["digital-rain","lightning","glitch"],sky1:"#040815",sky2:"#14213f",glow:"#6e8dff",ground:"#030610",accent:"#ff56cb"},
+  {id:"neon-void",name:"NEON · VOID",meta:"ห้วงนีออน · มืดลึก",category:"cyber",fx:["energy-core","laser-sweep","scanlines"],sky1:"#02020a",sky2:"#100822",glow:"#ff37bc",ground:"#010106",accent:"#55ecff"},
+  {id:"deep-space",name:"DEEP SPACE · NEBULA",meta:"อวกาศลึก · เนบิวลา",category:"space",fx:["nebula","stars","cosmic-dust"],sky1:"#02030d",sky2:"#160b34",glow:"#8c5bff",ground:"#03040b",accent:"#5df2ff"},
+  {id:"warp-drive",name:"WARP DRIVE · HYPERSPACE",meta:"ไฮเปอร์สเปซ · ความเร็วแสง",category:"space",fx:["warp-stars","holo-lines","sparkle"],sky1:"#020714",sky2:"#071f45",glow:"#63ddff",ground:"#02040b",accent:"#b7f5ff"},
+  {id:"black-hole",name:"BLACK HOLE · EVENT HORIZON",meta:"หลุมดำ · ขอบฟ้าเหตุการณ์",category:"space",fx:["black-hole","stars","cosmic-dust"],sky1:"#010104",sky2:"#090616",glow:"#ff8c42",ground:"#010103",accent:"#a770ff"},
+  {id:"orbital-earth",name:"ORBITAL · EARTHLIGHT",meta:"วงโคจร · แสงโลก",category:"space",fx:["stars","orbital-rings","holo-lines"],sky1:"#01040d",sky2:"#06162f",glow:"#4ea7ff",ground:"#010309",accent:"#72f1ff"},
+  {id:"supernova",name:"SUPERNOVA · IGNITION",meta:"ซูเปอร์โนวา · จุดระเบิด",category:"space",fx:["energy-core","nebula","cosmic-dust"],sky1:"#09020b",sky2:"#381027",glow:"#ff7438",ground:"#050105",accent:"#ffd37a"},
+  {id:"asteroid-field",name:"ASTEROID · DEEP FIELD",meta:"สนามดาวเคราะห์น้อย",category:"space",fx:["meteors","stars","cosmic-dust"],sky1:"#02040c",sky2:"#111b32",glow:"#7f9fd8",ground:"#02030a",accent:"#c4d8ff"},
+  {id:"alien-violet",name:"EXOPLANET · VIOLET DUSK",meta:"ดาวต่างระบบ · สนธยาม่วง",category:"space",fx:["nebula","stars","moon-glow"],sky1:"#09051b",sky2:"#321560",glow:"#ff74df",ground:"#090715",accent:"#8fc5ff"},
+  {id:"blue-giant",name:"BLUE GIANT · SOLAR WIND",meta:"ดาวยักษ์น้ำเงิน · ลมสุริยะ",category:"space",fx:["energy-core","wave-lines","cosmic-dust"],sky1:"#020818",sky2:"#09265c",glow:"#4eb4ff",ground:"#020511",accent:"#a8e9ff"},
+  {id:"red-planet",name:"RED PLANET · DUST ORBIT",meta:"ดาวแดง · ฝุ่นวงโคจร",category:"space",fx:["dust","orbital-rings","stars"],sky1:"#120408",sky2:"#4b1c17",glow:"#ff714a",ground:"#0d0304",accent:"#ffc27b"},
+  {id:"ice-moon",name:"ICE MOON · ECLIPSE",meta:"ดวงจันทร์น้ำแข็ง · คราส",category:"space",fx:["moon-glow","stars","frost"],sky1:"#020612",sky2:"#10213f",glow:"#c5e8ff",ground:"#02050d",accent:"#9fdfff"},
+  {id:"galaxy-core",name:"GALAXY · CORE LIGHT",meta:"แกนกาแล็กซี · แสงเข้ม",category:"space",fx:["nebula","energy-core","stars"],sky1:"#050312",sky2:"#26104b",glow:"#d16aff",ground:"#03020a",accent:"#78ecff"},
+  {id:"wormhole",name:"WORMHOLE · TRANSIT",meta:"รูหนอน · การเดินทาง",category:"space",fx:["portal","warp-stars","orbital-rings"],sky1:"#03040c",sky2:"#0c1d3d",glow:"#57d8ff",ground:"#020309",accent:"#c381ff"},
+  {id:"solar-flare",name:"SOLAR · FLARE",meta:"เปลวสุริยะ",category:"space",fx:["energy-core","light-beams","cosmic-dust"],sky1:"#120603",sky2:"#4d2108",glow:"#ff9f34",ground:"#0b0301",accent:"#ffe08a"},
+  {id:"dark-matter",name:"DARK MATTER · FLOW",meta:"สสารมืด · การไหล",category:"space",fx:["liquid","nebula","stars"],sky1:"#010107",sky2:"#09051a",glow:"#7f4cff",ground:"#010105",accent:"#4ff3ff"},
+  {id:"comet-tail",name:"COMET · ICE TAIL",meta:"ดาวหาง · หางน้ำแข็ง",category:"space",fx:["comet","stars","cosmic-dust"],sky1:"#020611",sky2:"#10233c",glow:"#95dfff",ground:"#02040c",accent:"#e4fbff"},
+  {id:"saturn-rings",name:"RINGWORLD · SATURN",meta:"โลกวงแหวน · แซทเทิร์น",category:"space",fx:["orbital-rings","moon-glow","stars"],sky1:"#050611",sky2:"#25213a",glow:"#d4b27a",ground:"#03040a",accent:"#b7cfff"},
+  {id:"zero-gravity",name:"ZERO-G · PARTICLE FIELD",meta:"ไร้น้ำหนัก · สนามอนุภาค",category:"space",fx:["cosmic-dust","bokeh","stars"],sky1:"#02040b",sky2:"#0c1428",glow:"#679dff",ground:"#020309",accent:"#a6f4ff"},
+  {id:"space-station",name:"SPACE STATION · NIGHT SHIFT",meta:"สถานีอวกาศ · กะกลางคืน",category:"space",fx:["holo-lines","stars","orbital-rings"],sky1:"#01050c",sky2:"#07192c",glow:"#54d8ff",ground:"#010308",accent:"#c2f8ff"},
+  {id:"gamma-burst",name:"GAMMA · RAY BURST",meta:"รังสีแกมมา · ระเบิดพลังงาน",category:"space",fx:["light-beams","energy-core","warp-stars"],sky1:"#04030d",sky2:"#1a1244",glow:"#9a72ff",ground:"#020208",accent:"#5ffff1"},
+  {id:"cosmic-ocean",name:"COSMIC · OCEAN",meta:"มหาสมุทรจักรวาล",category:"space",fx:["liquid","nebula","sparkle"],sky1:"#020618",sky2:"#0c2750",glow:"#4ca8ff",ground:"#02040d",accent:"#78f0ff"},
+  {id:"magic-forest",name:"MAGIC FOREST · MOONLIGHT",meta:"ป่าเวทมนตร์ · แสงจันทร์",category:"fantasy",fx:["magic-dust","mist","moon-glow"],sky1:"#07151c",sky2:"#123c36",glow:"#84e6be",ground:"#0a211a",accent:"#b8ffcd"},
+  {id:"crystal-cave",name:"CRYSTAL · CAVE",meta:"ถ้ำคริสตัล · เรืองแสง",category:"fantasy",fx:["crystal-glow","sparkle","mist"],sky1:"#08061a",sky2:"#291c50",glow:"#9a70ff",ground:"#080713",accent:"#66f5ff"},
+  {id:"floating-isles",name:"FLOATING · ISLANDS",meta:"เกาะลอยฟ้า · หมอก",category:"fantasy",fx:["mist","magic-dust","light-beams"],sky1:"#526fa0",sky2:"#b7b8df",glow:"#efc9ff",ground:"#4c5478",accent:"#8cecff"},
+  {id:"moon-kingdom",name:"MOON KINGDOM · SILVER NIGHT",meta:"อาณาจักรจันทรา",category:"fantasy",fx:["moon-glow","stars","magic-dust"],sky1:"#05091a",sky2:"#17234d",glow:"#e9edff",ground:"#070a16",accent:"#b9c8ff"},
+  {id:"dragon-sky",name:"DRAGON SKY · EMBER CLOUDS",meta:"ฟ้ามังกร · เมฆเพลิง",category:"fantasy",fx:["embers","cloud-glow","lightning"],sky1:"#1b0c14",sky2:"#612433",glow:"#ff875d",ground:"#12070b",accent:"#ffd06e"},
+  {id:"magic-portal",name:"ARCANE · PORTAL",meta:"ประตูเวท · อาร์เคน",category:"fantasy",fx:["portal","rune-grid","magic-dust"],sky1:"#08061b",sky2:"#26134c",glow:"#ad67ff",ground:"#070514",accent:"#5ef3ff"},
+  {id:"enchanted-rain",name:"ENCHANTED · RAIN",meta:"ฝนเวทมนตร์",category:"fantasy",fx:["rain-soft","magic-dust","prism"],sky1:"#18283f",sky2:"#58708a",glow:"#b7d9ff",ground:"#1a2934",accent:"#d2a8ff"},
+  {id:"fairy-dust",name:"FAIRY · STAR DUST",meta:"ผงนางฟ้า · ดวงดาว",category:"fantasy",fx:["magic-dust","bokeh","sparkle"],sky1:"#160c2f",sky2:"#513472",glow:"#ffb6f0",ground:"#100823",accent:"#9cf8ff"},
+  {id:"ancient-runes",name:"ANCIENT · RUNES",meta:"อักษรรูน · พลังโบราณ",category:"fantasy",fx:["rune-grid","energy-core","mist"],sky1:"#0d1017",sky2:"#293036",glow:"#9fd7c0",ground:"#0b0e12",accent:"#ffd77e"},
+  {id:"celestial-temple",name:"CELESTIAL · TEMPLE LIGHT",meta:"แสงวิหารสวรรค์",category:"fantasy",fx:["light-beams","magic-dust","cloud-glow"],sky1:"#273054",sky2:"#8190b7",glow:"#fff0c8",ground:"#293046",accent:"#ffe6a3"},
+  {id:"emerald-realm",name:"EMERALD · REALM",meta:"อาณาจักรมรกต",category:"fantasy",fx:["aurora","magic-dust","mist"],sky1:"#061916",sky2:"#144c3e",glow:"#63efad",ground:"#08251d",accent:"#b1ffce"},
+  {id:"ruby-realm",name:"RUBY · REALM",meta:"อาณาจักรทับทิม",category:"fantasy",fx:["embers","bokeh","light-beams"],sky1:"#180608",sky2:"#57131e",glow:"#ff5f6f",ground:"#100405",accent:"#ffc2a8"},
+  {id:"frozen-magic",name:"FROZEN · MAGIC",meta:"เวทน้ำแข็ง · พายุคริสตัล",category:"fantasy",fx:["snow-soft","crystal-glow","sparkle"],sky1:"#0b1730",sky2:"#3a5d89",glow:"#d5f5ff",ground:"#0e1b2d",accent:"#a8e9ff"},
+  {id:"dream-castle",name:"DREAM · CELESTIAL SKY",meta:"โลกความฝัน · ฟ้าสวรรค์",category:"fantasy",fx:["cloud-glow","prism","magic-dust"],sky1:"#3c426f",sky2:"#b983b2",glow:"#ffd0ed",ground:"#3b3d62",accent:"#c3f0ff"},
+  {id:"phoenix-ember",name:"PHOENIX · EMBER SKY",meta:"ฟีนิกซ์ · ฟ้าเถ้าไฟ",category:"fantasy",fx:["embers","sunset","sparkle"],sky1:"#24100b",sky2:"#8a3c26",glow:"#ff9f4b",ground:"#190a07",accent:"#ffd16e"},
+  {id:"quantum-core",name:"QUANTUM · ENERGY CORE",meta:"ควอนตัม · แกนพลังงาน",category:"future",fx:["energy-core","orbital-rings","data-nodes"],sky1:"#020814",sky2:"#082442",glow:"#38f5ff",ground:"#02070e",accent:"#9c6cff"},
+  {id:"ai-core",name:"AI CORE · NEURAL LIGHT",meta:"เอไอคอร์ · โครงข่ายประสาท",category:"future",fx:["data-nodes","holo-lines","energy-core"],sky1:"#020a12",sky2:"#0a293c",glow:"#53dcff",ground:"#02070c",accent:"#7affcb"},
+  {id:"neural-network",name:"NEURAL · NETWORK",meta:"โครงข่ายประสาท · ดาต้าโฟลว์",category:"future",fx:["data-nodes","wave-lines","scanlines"],sky1:"#030813",sky2:"#102142",glow:"#6f8fff",ground:"#02060d",accent:"#6fffe2"},
+  {id:"quantum-lab",name:"QUANTUM · LAB FIELD",meta:"สนามทดลองควอนตัม",category:"future",fx:["orbital-rings","holo-lines","sparkle"],sky1:"#030916",sky2:"#0c3251",glow:"#4ed9ff",ground:"#02070f",accent:"#bd8cff"},
+  {id:"energy-reactor",name:"FUSION · REACTOR",meta:"เตาปฏิกรณ์ฟิวชัน",category:"future",fx:["energy-core","light-beams","plasma"],sky1:"#070812",sky2:"#20214a",glow:"#7f72ff",ground:"#04050d",accent:"#53f3ff"},
+  {id:"hologram-chamber",name:"HOLOGRAM · CHAMBER",meta:"ห้องโฮโลแกรม",category:"future",fx:["holo-lines","scanlines","data-nodes"],sky1:"#03101a",sky2:"#0d3950",glow:"#4deaff",ground:"#020b11",accent:"#a0ffff"},
+  {id:"nanotech-cloud",name:"NANOTECH · SWARM",meta:"ฝูงนาโนเทค",category:"future",fx:["data-nodes","cosmic-dust","wave-lines"],sky1:"#060912",sky2:"#18243a",glow:"#8aa8ff",ground:"#04060b",accent:"#62ffd8"},
+  {id:"singularity-ai",name:"SINGULARITY · AI",meta:"ซิงกูลาริตี้ · ปัญญาประดิษฐ์",category:"future",fx:["black-hole","data-nodes","holo-lines"],sky1:"#020207",sky2:"#0d0b23",glow:"#a66cff",ground:"#010104",accent:"#50eaff"},
+  {id:"future-interface",name:"FUTURE · INTERFACE",meta:"อินเทอร์เฟซอนาคต",category:"future",fx:["holo-lines","laser-sweep","scanlines"],sky1:"#020a10",sky2:"#0b2734",glow:"#39e7ff",ground:"#02070a",accent:"#8affcf"},
+  {id:"time-machine",name:"TIME · MACHINE",meta:"เครื่องย้อนเวลา · ไทม์คอร์",category:"future",fx:["portal","orbital-rings","wave-lines"],sky1:"#040518",sky2:"#171449",glow:"#716dff",ground:"#03040f",accent:"#5ff4ff"},
+  {id:"liquid-glass",name:"LIQUID GLASS · FLOW",meta:"ลิควิดกลาส · การไหล",category:"abstract",fx:["liquid","bokeh","prism"],sky1:"#0b1322",sky2:"#25425c",glow:"#7fd7ff",ground:"#09111d",accent:"#c5f2ff"},
+  {id:"aurora-waves",name:"AURORA · SOFT WAVES",meta:"ออโรรา · คลื่นนุ่ม",category:"abstract",fx:["aurora","wave-lines","bokeh"],sky1:"#07111f",sky2:"#153849",glow:"#71efc1",ground:"#08151c",accent:"#8adfff"},
+  {id:"plasma-dream",name:"PLASMA · DREAM",meta:"พลาสมา · ดรีมสเคป",category:"abstract",fx:["plasma","bokeh","sparkle"],sky1:"#130923",sky2:"#46295c",glow:"#ff6ed3",ground:"#0e0719",accent:"#6eeeff"},
+  {id:"infinite-grid",name:"INFINITE · GRID",meta:"กริดอนันต์",category:"abstract",fx:["neon-grid","wave-lines","scanlines"],sky1:"#050714",sky2:"#111d3a",glow:"#5d87ff",ground:"#03050d",accent:"#63f2ff"},
+  {id:"prism-cloud",name:"PRISM · CLOUD",meta:"เมฆปริซึม",category:"abstract",fx:["prism","cloud-glow","bokeh"],sky1:"#344564",sky2:"#9a8eb0",glow:"#ffd2f0",ground:"#37445a",accent:"#9eefff"},
+  {id:"midnight-bokeh",name:"MIDNIGHT · BOKEH",meta:"โบเก้ · เที่ยงคืน",category:"abstract",fx:["bokeh","sparkle","mist"],sky1:"#050713",sky2:"#121b30",glow:"#7f91ff",ground:"#04060e",accent:"#ff8ed5"},
+  {id:"soft-particles",name:"SOFT · PARTICLE FLOW",meta:"อนุภาคนุ่ม · ไหลช้า",category:"abstract",fx:["cosmic-dust","wave-lines","mist"],sky1:"#08111d",sky2:"#1c3650",glow:"#6ec8ff",ground:"#07101a",accent:"#9effe5"},
+  {id:"glass-spectrum",name:"GLASS · SPECTRUM",meta:"สเปกตรัมกระจก",category:"abstract",fx:["prism","liquid","light-beams"],sky1:"#101321",sky2:"#303958",glow:"#b3d5ff",ground:"#0c101b",accent:"#ffb6e8"},
+  {id:"deep-blue",name:"DEEP BLUE · CALM",meta:"น้ำเงินลึก · สงบ",category:"abstract",fx:["liquid","bokeh","moon-glow"],sky1:"#03101a",sky2:"#0a3348",glow:"#4aaaca",ground:"#020b12",accent:"#82e7ff"},
+  {id:"dream-gradient",name:"DREAM · COLOR FIELD",meta:"ดรีมเกรเดียนต์ · สีไหล",category:"abstract",fx:["plasma","prism","bokeh"],sky1:"#140b26",sky2:"#513b6a",glow:"#f59fd4",ground:"#10081e",accent:"#8befff"},
 ];
 
 export const SEASON_COUNT = seasonAtmospheres.length;
+export const WORLD_CATEGORY_COUNTS = Object.freeze(seasonAtmospheres.reduce((acc,item)=>{acc[item.category]=(acc[item.category]||0)+1;return acc},{}));
