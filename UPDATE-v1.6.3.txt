@@ -1,8 +1,0 @@
-v1.6.3 JAPAN ONLY
-
-- Replaces the 200 world-travel playlist with 100 Japan-focused Pexels videos.
-- Full clip playback remains: video changes only on ended.
-- Crossfade / one-next preload retained.
-- Security warning redesigned with a clean Japanese-inspired layout.
-- Font stack upgraded with Hiragino Sans / Yu Gothic UI / Noto Sans Japanese fallbacks.
-- No sales/API/account logic changed.

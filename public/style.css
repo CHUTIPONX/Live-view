@@ -359,3 +359,153 @@ button{user-select:none;-webkit-tap-highlight-color:transparent}
 @keyframes liveOrderHitV178{0%{opacity:.22;transform:translateY(-9px) scale(.975);box-shadow:0 0 0 rgba(121,255,193,0)}42%{opacity:1;transform:translateY(0) scale(1.016);box-shadow:0 0 34px rgba(121,255,193,.13)}100%{opacity:1;transform:none}}
 @media(max-width:1180px){.live-order.live-order-simple{flex-basis:285px}.live-product-name{font-size:12px}}
 @media(max-width:700px){.live-shop-name{font-size:12.5px}.live-product-name{font-size:11px}.live-product-code{font-size:9.5px}.live-order-price{font-size:20px}}
+
+/* =========================================================
+   v1.9.0 — 100 WORLDS procedural FX
+   ========================================================= */
+.world-cyber .season-gradient,.world-future .season-gradient,.world-space .season-gradient{filter:saturate(1.14) contrast(1.04)}
+.fx-neon-grid{perspective:440px;overflow:hidden}
+.fx-neon-grid:before{content:"";position:absolute;left:-35%;right:-35%;top:45%;bottom:-35%;background-image:linear-gradient(color-mix(in srgb,var(--accent) 27%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--accent) 25%,transparent) 1px,transparent 1px);background-size:56px 42px;transform:rotateX(64deg);transform-origin:50% 0;opacity:.42;animation:fxGrid 6s linear infinite}
+.fx-neon-grid:after{content:"";position:absolute;left:0;right:0;top:45%;height:1px;background:var(--accent);box-shadow:0 0 26px var(--accent);opacity:.42}
+.fx-digital-rain i{position:absolute;left:var(--x);top:-40vh;width:1px;height:var(--h);background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--accent) 84%,white),transparent);box-shadow:0 0 10px color-mix(in srgb,var(--accent) 55%,transparent);opacity:.36;animation:fxDigitalRain 2.9s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-holo-lines i{position:absolute;left:-30%;top:var(--y);width:42%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 50%,transparent);opacity:.28;animation:fxHoloLine 6.5s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-scanlines{background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(255,255,255,.022) 4px,transparent 5px);mix-blend-mode:screen;opacity:.55;animation:fxScan 8s linear infinite}
+.fx-laser-sweep i{position:absolute;left:-45%;top:18%;width:48%;height:1px;background:linear-gradient(90deg,transparent,var(--accent));box-shadow:0 0 22px var(--accent);transform:rotate(-9deg);opacity:.38;animation:fxLaser 7s ease-in-out infinite}.fx-laser-sweep i:nth-child(2){top:68%;animation-delay:-3.6s;transform:rotate(7deg);opacity:.24}
+.fx-glitch i{position:absolute;left:0;right:0;height:12%;top:24%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 14%,transparent),transparent);opacity:0;animation:fxGlitch 5.2s steps(1,end) infinite}.fx-glitch i:nth-child(2){top:61%;animation-delay:-2.4s}
+.fx-data-nodes i{position:absolute;left:var(--x);top:var(--y);width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px var(--accent);opacity:.18;transform:scale(var(--s));animation:fxNode 3.8s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-wave-lines i{position:absolute;left:-10%;right:-10%;top:34%;height:18%;border-top:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:50%;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 40%,transparent));opacity:.24;animation:fxWave 7s ease-in-out infinite}.fx-wave-lines i:nth-child(2){top:48%;animation-delay:-2.3s}.fx-wave-lines i:nth-child(3){top:62%;animation-delay:-4.7s}
+
+.fx-nebula i{position:absolute;width:68vw;height:54vw;border-radius:50%;filter:blur(62px);opacity:.18;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 78%,white),transparent 66%);animation:fxNebula 13s ease-in-out infinite alternate}.fx-nebula i:nth-child(1){left:-18%;top:-14%}.fx-nebula i:nth-child(2){right:-20%;top:22%;animation-delay:-5s;opacity:.12}.fx-nebula i:nth-child(3){left:25%;bottom:-34%;animation-delay:-8s;opacity:.09}
+.fx-cosmic-dust i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:white;opacity:.18;transform:scale(var(--s));box-shadow:0 0 10px color-mix(in srgb,var(--accent) 45%,transparent);animation:fxDustFloat 8s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-orbital-rings{display:grid;place-items:center}.fx-orbital-rings i{position:absolute;width:min(58vw,760px);aspect-ratio:1.9;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:50%;transform:rotate(-12deg);filter:drop-shadow(0 0 12px color-mix(in srgb,var(--accent) 28%,transparent));opacity:.26;animation:fxOrbit 14s linear infinite}.fx-orbital-rings i:nth-child(2){width:min(42vw,560px);transform:rotate(21deg);animation-duration:10s;animation-direction:reverse;opacity:.18}.fx-orbital-rings i:nth-child(3){width:min(72vw,920px);transform:rotate(7deg);animation-duration:19s;opacity:.12}
+.fx-warp-stars i{position:absolute;left:50%;top:50%;width:2px;height:18vh;background:linear-gradient(180deg,transparent,rgba(255,255,255,.92));transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(var(--a)) scaleY(var(--s));opacity:.0;animation:fxWarp 1.35s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-energy-core{display:grid;place-items:center}.fx-energy-core b{position:absolute;width:min(19vw,250px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff 0 4%,var(--accent) 10%,color-mix(in srgb,var(--glow) 70%,transparent) 30%,transparent 68%);box-shadow:0 0 38px var(--accent),0 0 110px color-mix(in srgb,var(--glow) 58%,transparent);animation:fxCore 3.2s ease-in-out infinite}.fx-energy-core i{position:absolute;width:min(32vw,410px);aspect-ratio:1;border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);border-radius:50%;animation:fxOrbit 7s linear infinite}.fx-energy-core i:nth-of-type(2){width:min(42vw,540px);animation-duration:11s;animation-direction:reverse;opacity:.42}
+.fx-black-hole{display:grid;place-items:center}.fx-black-hole b{position:absolute;width:min(25vw,330px);aspect-ratio:1;border-radius:50%;background:#000;box-shadow:0 0 0 9px rgba(255,166,75,.14),0 0 50px rgba(255,127,68,.62),0 0 120px rgba(128,74,255,.35)}.fx-black-hole i{position:absolute;width:min(50vw,650px);aspect-ratio:2.4;border:8px solid transparent;border-top-color:#ff9f54;border-bottom-color:#8d66ff;border-radius:50%;filter:blur(4px);opacity:.55;animation:fxOrbit 4.8s linear infinite}
+.fx-meteors i{position:absolute;left:var(--x);top:var(--y);width:22vw;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.85));transform:rotate(-28deg);opacity:0;animation:fxMeteor 4.8s ease-in infinite;animation-delay:calc(var(--d)*-1)}
+.fx-comet i{position:absolute;left:-25%;top:24%;width:34vw;height:2px;background:linear-gradient(90deg,transparent,var(--accent),white);box-shadow:0 0 22px var(--accent);transform:rotate(-18deg);animation:fxComet 9s ease-in-out infinite}
+.fx-portal{display:grid;place-items:center}.fx-portal b{position:absolute;width:min(28vw,360px);aspect-ratio:1;border-radius:50%;border:4px solid color-mix(in srgb,var(--accent) 72%,white);box-shadow:0 0 30px var(--accent),inset 0 0 34px color-mix(in srgb,var(--accent) 60%,transparent);animation:fxCore 2.6s ease-in-out infinite}.fx-portal i{position:absolute;width:min(38vw,490px);aspect-ratio:1;border:1px dashed color-mix(in srgb,var(--glow) 45%,transparent);border-radius:50%;animation:fxOrbit 8s linear infinite}.fx-portal i:nth-of-type(2){width:min(48vw,620px);animation-direction:reverse;animation-duration:13s;opacity:.4}
+
+.fx-lightning i{position:absolute;left:22%;top:0;width:1px;height:58%;background:linear-gradient(180deg,rgba(255,255,255,.95),transparent);box-shadow:0 0 18px #b9d9ff;opacity:0;transform:rotate(9deg);animation:fxLightning 7s steps(1,end) infinite}.fx-lightning i:nth-child(2){left:66%;height:42%;animation-delay:-2.4s}.fx-lightning i:nth-child(3){left:48%;height:35%;animation-delay:-4.8s}
+.fx-wind-lines i{position:absolute;left:-30%;top:var(--y);width:var(--w);height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);opacity:.34;animation:fxWind 5.4s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-water-shimmer i{position:absolute;left:-10%;right:-10%;bottom:8%;height:18%;background:repeating-linear-gradient(175deg,transparent 0 9px,color-mix(in srgb,var(--accent) 16%,transparent) 10px,transparent 12px);filter:blur(1px);opacity:.34;animation:fxWater 6s ease-in-out infinite}.fx-water-shimmer i:nth-child(2){bottom:19%;opacity:.18;animation-delay:-2s}.fx-water-shimmer i:nth-child(3){bottom:30%;opacity:.12;animation-delay:-4s}
+.fx-light-beams i{position:absolute;top:-20%;left:10%;width:12%;height:125%;background:linear-gradient(180deg,color-mix(in srgb,var(--glow) 18%,transparent),transparent 72%);filter:blur(18px);transform:rotate(14deg);opacity:.42;animation:fxBeam 9s ease-in-out infinite}.fx-light-beams i:nth-child(2){left:47%;animation-delay:-3s;transform:rotate(-9deg)}.fx-light-beams i:nth-child(3){left:78%;animation-delay:-6s}
+.fx-fireflies i,.fx-magic-dust i{position:absolute;left:var(--x);top:var(--y);width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent);opacity:.16;transform:scale(var(--s));animation:fxFirefly 4.5s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-dust i{position:absolute;left:var(--x);top:var(--y);width:7px;height:3px;border-radius:50%;background:color-mix(in srgb,var(--accent) 55%,#d9b07a);filter:blur(1px);opacity:.18;transform:scale(var(--s));animation:fxDustFloat 6s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+
+.fx-rune-grid{display:grid;place-items:center}.fx-rune-grid i{position:absolute;width:min(44vw,560px);aspect-ratio:1;border:1px dashed color-mix(in srgb,var(--accent) 28%,transparent);border-radius:50%;box-shadow:inset 0 0 40px color-mix(in srgb,var(--accent) 12%,transparent);animation:fxOrbit 18s linear infinite}.fx-rune-grid i:nth-child(2){width:min(28vw,360px);animation-direction:reverse;animation-duration:12s}
+.fx-crystal-glow i{position:absolute;left:18%;bottom:-12%;width:18vw;height:42vh;background:linear-gradient(150deg,transparent 10%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 72%);clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 0 22px var(--accent));opacity:.28;animation:fxCrystal 7s ease-in-out infinite}.fx-crystal-glow i:nth-child(2){left:48%;height:34vh;animation-delay:-2.4s}.fx-crystal-glow i:nth-child(3){left:70%;height:48vh;animation-delay:-4.8s}
+.fx-embers i{position:absolute;left:var(--x);bottom:-5vh;width:4px;height:4px;border-radius:50%;background:#ff9c55;box-shadow:0 0 15px #ff6a3c;opacity:.45;transform:scale(var(--s));animation:fxEmber 7.5s linear infinite;animation-delay:calc(var(--d)*-1)}
+
+.fx-plasma i,.fx-liquid i{position:absolute;width:58vw;height:48vw;border-radius:45% 55% 58% 42%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 34%,transparent),transparent 67%);filter:blur(48px);opacity:.22;animation:fxLiquid 12s ease-in-out infinite alternate}.fx-plasma i:nth-child(1),.fx-liquid i:nth-child(1){left:-16%;top:-12%}.fx-plasma i:nth-child(2),.fx-liquid i:nth-child(2){right:-20%;bottom:-18%;animation-delay:-5s}.fx-plasma i:nth-child(3){left:35%;top:25%;animation-delay:-8s;opacity:.13}
+.fx-bokeh i{position:absolute;left:var(--x);top:var(--y);width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--accent) 34%,white);filter:blur(5px);opacity:.09;transform:scale(var(--s));animation:fxBokeh 6s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-prism i{position:absolute;inset:-20%;background:conic-gradient(from 130deg at 50% 50%,transparent,#ff5aa514,#6fffea16,#836fff14,transparent 48%);filter:blur(24px);opacity:.55;animation:fxPrism 14s linear infinite}.fx-prism i:nth-child(2){animation-direction:reverse;animation-duration:21s;opacity:.35}
+.fx-moon-glow{background:radial-gradient(circle at 72% 22%,rgba(255,255,255,.64) 0 2.3%,color-mix(in srgb,var(--accent) 24%,transparent) 4%,transparent 16%);filter:drop-shadow(0 0 30px color-mix(in srgb,var(--accent) 35%,transparent))}
+
+@keyframes fxGrid{to{background-position:0 42px,56px 0}}
+@keyframes fxDigitalRain{to{transform:translateY(150vh)}}
+@keyframes fxHoloLine{from{transform:translateX(-10vw)}to{transform:translateX(165vw)}}
+@keyframes fxScan{to{background-position:0 120px}}
+@keyframes fxLaser{0%,100%{transform:translateX(-20vw) rotate(-9deg);opacity:0}25%,70%{opacity:.42}55%{transform:translateX(165vw) rotate(-9deg);opacity:.28}}
+@keyframes fxGlitch{0%,90%,100%{opacity:0;transform:translateX(0)}91%{opacity:.5;transform:translateX(-2vw)}92%{opacity:.2;transform:translateX(3vw)}93%{opacity:0}}
+@keyframes fxNode{0%,100%{opacity:.08;transform:scale(calc(var(--s)*.7))}50%{opacity:.54;transform:scale(calc(var(--s)*1.4))}}
+@keyframes fxWave{50%{transform:translateY(4vh) scaleX(.92)}}
+@keyframes fxNebula{to{transform:translate3d(7vw,5vh,0) scale(1.08)}}
+@keyframes fxDustFloat{50%{transform:translate3d(2vw,-2vh,0) scale(calc(var(--s)*1.25));opacity:.42}}
+@keyframes fxOrbit{to{transform:rotate(348deg)}}
+@keyframes fxWarp{0%{opacity:0;transform:translate(-50%,-100%) rotate(var(--a)) scaleY(.05)}35%{opacity:.82}100%{opacity:0;transform:translate(-50%,-100%) rotate(var(--a)) scaleY(2.4)}}
+@keyframes fxCore{50%{transform:scale(1.12);filter:brightness(1.25)}}
+@keyframes fxMeteor{0%,70%{opacity:0;transform:translate(-25vw,-10vh) rotate(-28deg)}74%{opacity:.8}100%{opacity:0;transform:translate(75vw,48vh) rotate(-28deg)}}
+@keyframes fxComet{0%,100%{transform:translate(-30vw,-12vh) rotate(-18deg);opacity:0}20%{opacity:.8}70%{opacity:.4}90%{transform:translate(150vw,62vh) rotate(-18deg);opacity:0}}
+@keyframes fxLightning{0%,91%,94%,100%{opacity:0}92%{opacity:.9}93%{opacity:.18}}
+@keyframes fxWind{to{transform:translateX(165vw)}}
+@keyframes fxWater{50%{transform:translateX(4vw) scaleX(1.06)}}
+@keyframes fxBeam{50%{transform:translateX(11vw) rotate(8deg);opacity:.22}}
+@keyframes fxFirefly{0%,100%{opacity:.08;transform:translate(0,0) scale(var(--s))}50%{opacity:.64;transform:translate(18px,-22px) scale(calc(var(--s)*1.35))}}
+@keyframes fxCrystal{50%{transform:translateY(-2.5vh) scaleX(1.05);opacity:.42}}
+@keyframes fxEmber{to{transform:translate3d(20px,-112vh,0) scale(calc(var(--s)*.7));opacity:0}}
+@keyframes fxLiquid{to{transform:translate3d(8vw,6vh,0) rotate(18deg) scale(1.12)}}
+@keyframes fxBokeh{50%{opacity:.24;transform:translateY(-2vh) scale(calc(var(--s)*1.3))}}
+@keyframes fxPrism{to{transform:rotate(360deg)}}
+
+@media(max-width:700px){
+  .fx-digital-rain i:nth-child(n+23),.fx-warp-stars i:nth-child(n+31),.fx-cosmic-dust i:nth-child(n+29),.fx-data-nodes i:nth-child(n+21),.fx-magic-dust i:nth-child(n+23){display:none}
+  .fx-nebula i,.fx-plasma i,.fx-liquid i{filter:blur(38px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .fx-neon-grid:before,.season-fx i,.season-fx b{animation:none!important}
+}
+
+/* =========================================================
+   v1.9.0 — 100 WORLDS procedural FX
+   ========================================================= */
+.world-cyber .season-gradient,.world-future .season-gradient,.world-space .season-gradient{filter:saturate(1.14) contrast(1.04)}
+.fx-neon-grid{perspective:440px;overflow:hidden}
+.fx-neon-grid:before{content:"";position:absolute;left:-35%;right:-35%;top:45%;bottom:-35%;background-image:linear-gradient(color-mix(in srgb,var(--accent) 27%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--accent) 25%,transparent) 1px,transparent 1px);background-size:56px 42px;transform:rotateX(64deg);transform-origin:50% 0;opacity:.42;animation:fxGrid 6s linear infinite}
+.fx-neon-grid:after{content:"";position:absolute;left:0;right:0;top:45%;height:1px;background:var(--accent);box-shadow:0 0 26px var(--accent);opacity:.42}
+.fx-digital-rain i{position:absolute;left:var(--x);top:-40vh;width:1px;height:var(--h);background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--accent) 84%,white),transparent);box-shadow:0 0 10px color-mix(in srgb,var(--accent) 55%,transparent);opacity:.36;animation:fxDigitalRain 2.9s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-holo-lines i{position:absolute;left:-30%;top:var(--y);width:42%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 50%,transparent);opacity:.28;animation:fxHoloLine 6.5s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-scanlines{background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(255,255,255,.022) 4px,transparent 5px);mix-blend-mode:screen;opacity:.55;animation:fxScan 8s linear infinite}
+.fx-laser-sweep i{position:absolute;left:-45%;top:18%;width:48%;height:1px;background:linear-gradient(90deg,transparent,var(--accent));box-shadow:0 0 22px var(--accent);transform:rotate(-9deg);opacity:.38;animation:fxLaser 7s ease-in-out infinite}.fx-laser-sweep i:nth-child(2){top:68%;animation-delay:-3.6s;transform:rotate(7deg);opacity:.24}
+.fx-glitch i{position:absolute;left:0;right:0;height:12%;top:24%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 14%,transparent),transparent);opacity:0;animation:fxGlitch 5.2s steps(1,end) infinite}.fx-glitch i:nth-child(2){top:61%;animation-delay:-2.4s}
+.fx-data-nodes i{position:absolute;left:var(--x);top:var(--y);width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px var(--accent);opacity:.18;transform:scale(var(--s));animation:fxNode 3.8s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-wave-lines i{position:absolute;left:-10%;right:-10%;top:34%;height:18%;border-top:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:50%;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 40%,transparent));opacity:.24;animation:fxWave 7s ease-in-out infinite}.fx-wave-lines i:nth-child(2){top:48%;animation-delay:-2.3s}.fx-wave-lines i:nth-child(3){top:62%;animation-delay:-4.7s}
+
+.fx-nebula i{position:absolute;width:68vw;height:54vw;border-radius:50%;filter:blur(62px);opacity:.18;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 78%,white),transparent 66%);animation:fxNebula 13s ease-in-out infinite alternate}.fx-nebula i:nth-child(1){left:-18%;top:-14%}.fx-nebula i:nth-child(2){right:-20%;top:22%;animation-delay:-5s;opacity:.12}.fx-nebula i:nth-child(3){left:25%;bottom:-34%;animation-delay:-8s;opacity:.09}
+.fx-cosmic-dust i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:white;opacity:.18;transform:scale(var(--s));box-shadow:0 0 10px color-mix(in srgb,var(--accent) 45%,transparent);animation:fxDustFloat 8s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-orbital-rings{display:grid;place-items:center}.fx-orbital-rings i{position:absolute;width:min(58vw,760px);aspect-ratio:1.9;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:50%;transform:rotate(-12deg);filter:drop-shadow(0 0 12px color-mix(in srgb,var(--accent) 28%,transparent));opacity:.26;animation:fxOrbit 14s linear infinite}.fx-orbital-rings i:nth-child(2){width:min(42vw,560px);transform:rotate(21deg);animation-duration:10s;animation-direction:reverse;opacity:.18}.fx-orbital-rings i:nth-child(3){width:min(72vw,920px);transform:rotate(7deg);animation-duration:19s;opacity:.12}
+.fx-warp-stars i{position:absolute;left:50%;top:50%;width:2px;height:18vh;background:linear-gradient(180deg,transparent,rgba(255,255,255,.92));transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(var(--a)) scaleY(var(--s));opacity:.0;animation:fxWarp 1.35s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-energy-core{display:grid;place-items:center}.fx-energy-core b{position:absolute;width:min(19vw,250px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff 0 4%,var(--accent) 10%,color-mix(in srgb,var(--glow) 70%,transparent) 30%,transparent 68%);box-shadow:0 0 38px var(--accent),0 0 110px color-mix(in srgb,var(--glow) 58%,transparent);animation:fxCore 3.2s ease-in-out infinite}.fx-energy-core i{position:absolute;width:min(32vw,410px);aspect-ratio:1;border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);border-radius:50%;animation:fxOrbit 7s linear infinite}.fx-energy-core i:nth-of-type(2){width:min(42vw,540px);animation-duration:11s;animation-direction:reverse;opacity:.42}
+.fx-black-hole{display:grid;place-items:center}.fx-black-hole b{position:absolute;width:min(25vw,330px);aspect-ratio:1;border-radius:50%;background:#000;box-shadow:0 0 0 9px rgba(255,166,75,.14),0 0 50px rgba(255,127,68,.62),0 0 120px rgba(128,74,255,.35)}.fx-black-hole i{position:absolute;width:min(50vw,650px);aspect-ratio:2.4;border:8px solid transparent;border-top-color:#ff9f54;border-bottom-color:#8d66ff;border-radius:50%;filter:blur(4px);opacity:.55;animation:fxOrbit 4.8s linear infinite}
+.fx-meteors i{position:absolute;left:var(--x);top:var(--y);width:22vw;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.85));transform:rotate(-28deg);opacity:0;animation:fxMeteor 4.8s ease-in infinite;animation-delay:calc(var(--d)*-1)}
+.fx-comet i{position:absolute;left:-25%;top:24%;width:34vw;height:2px;background:linear-gradient(90deg,transparent,var(--accent),white);box-shadow:0 0 22px var(--accent);transform:rotate(-18deg);animation:fxComet 9s ease-in-out infinite}
+.fx-portal{display:grid;place-items:center}.fx-portal b{position:absolute;width:min(28vw,360px);aspect-ratio:1;border-radius:50%;border:4px solid color-mix(in srgb,var(--accent) 72%,white);box-shadow:0 0 30px var(--accent),inset 0 0 34px color-mix(in srgb,var(--accent) 60%,transparent);animation:fxCore 2.6s ease-in-out infinite}.fx-portal i{position:absolute;width:min(38vw,490px);aspect-ratio:1;border:1px dashed color-mix(in srgb,var(--glow) 45%,transparent);border-radius:50%;animation:fxOrbit 8s linear infinite}.fx-portal i:nth-of-type(2){width:min(48vw,620px);animation-direction:reverse;animation-duration:13s;opacity:.4}
+
+.fx-lightning i{position:absolute;left:22%;top:0;width:1px;height:58%;background:linear-gradient(180deg,rgba(255,255,255,.95),transparent);box-shadow:0 0 18px #b9d9ff;opacity:0;transform:rotate(9deg);animation:fxLightning 7s steps(1,end) infinite}.fx-lightning i:nth-child(2){left:66%;height:42%;animation-delay:-2.4s}.fx-lightning i:nth-child(3){left:48%;height:35%;animation-delay:-4.8s}
+.fx-wind-lines i{position:absolute;left:-30%;top:var(--y);width:var(--w);height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);opacity:.34;animation:fxWind 5.4s linear infinite;animation-delay:calc(var(--d)*-1)}
+.fx-water-shimmer i{position:absolute;left:-10%;right:-10%;bottom:8%;height:18%;background:repeating-linear-gradient(175deg,transparent 0 9px,color-mix(in srgb,var(--accent) 16%,transparent) 10px,transparent 12px);filter:blur(1px);opacity:.34;animation:fxWater 6s ease-in-out infinite}.fx-water-shimmer i:nth-child(2){bottom:19%;opacity:.18;animation-delay:-2s}.fx-water-shimmer i:nth-child(3){bottom:30%;opacity:.12;animation-delay:-4s}
+.fx-light-beams i{position:absolute;top:-20%;left:10%;width:12%;height:125%;background:linear-gradient(180deg,color-mix(in srgb,var(--glow) 18%,transparent),transparent 72%);filter:blur(18px);transform:rotate(14deg);opacity:.42;animation:fxBeam 9s ease-in-out infinite}.fx-light-beams i:nth-child(2){left:47%;animation-delay:-3s;transform:rotate(-9deg)}.fx-light-beams i:nth-child(3){left:78%;animation-delay:-6s}
+.fx-fireflies i,.fx-magic-dust i{position:absolute;left:var(--x);top:var(--y);width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent);opacity:.16;transform:scale(var(--s));animation:fxFirefly 4.5s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-dust i{position:absolute;left:var(--x);top:var(--y);width:7px;height:3px;border-radius:50%;background:color-mix(in srgb,var(--accent) 55%,#d9b07a);filter:blur(1px);opacity:.18;transform:scale(var(--s));animation:fxDustFloat 6s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+
+.fx-rune-grid{display:grid;place-items:center}.fx-rune-grid i{position:absolute;width:min(44vw,560px);aspect-ratio:1;border:1px dashed color-mix(in srgb,var(--accent) 28%,transparent);border-radius:50%;box-shadow:inset 0 0 40px color-mix(in srgb,var(--accent) 12%,transparent);animation:fxOrbit 18s linear infinite}.fx-rune-grid i:nth-child(2){width:min(28vw,360px);animation-direction:reverse;animation-duration:12s}
+.fx-crystal-glow i{position:absolute;left:18%;bottom:-12%;width:18vw;height:42vh;background:linear-gradient(150deg,transparent 10%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 72%);clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 0 22px var(--accent));opacity:.28;animation:fxCrystal 7s ease-in-out infinite}.fx-crystal-glow i:nth-child(2){left:48%;height:34vh;animation-delay:-2.4s}.fx-crystal-glow i:nth-child(3){left:70%;height:48vh;animation-delay:-4.8s}
+.fx-embers i{position:absolute;left:var(--x);bottom:-5vh;width:4px;height:4px;border-radius:50%;background:#ff9c55;box-shadow:0 0 15px #ff6a3c;opacity:.45;transform:scale(var(--s));animation:fxEmber 7.5s linear infinite;animation-delay:calc(var(--d)*-1)}
+
+.fx-plasma i,.fx-liquid i{position:absolute;width:58vw;height:48vw;border-radius:45% 55% 58% 42%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 34%,transparent),transparent 67%);filter:blur(48px);opacity:.22;animation:fxLiquid 12s ease-in-out infinite alternate}.fx-plasma i:nth-child(1),.fx-liquid i:nth-child(1){left:-16%;top:-12%}.fx-plasma i:nth-child(2),.fx-liquid i:nth-child(2){right:-20%;bottom:-18%;animation-delay:-5s}.fx-plasma i:nth-child(3){left:35%;top:25%;animation-delay:-8s;opacity:.13}
+.fx-bokeh i{position:absolute;left:var(--x);top:var(--y);width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--accent) 34%,white);filter:blur(5px);opacity:.09;transform:scale(var(--s));animation:fxBokeh 6s ease-in-out infinite;animation-delay:calc(var(--d)*-1)}
+.fx-prism i{position:absolute;inset:-20%;background:conic-gradient(from 130deg at 50% 50%,transparent,#ff5aa514,#6fffea16,#836fff14,transparent 48%);filter:blur(24px);opacity:.55;animation:fxPrism 14s linear infinite}.fx-prism i:nth-child(2){animation-direction:reverse;animation-duration:21s;opacity:.35}
+.fx-moon-glow{background:radial-gradient(circle at 72% 22%,rgba(255,255,255,.64) 0 2.3%,color-mix(in srgb,var(--accent) 24%,transparent) 4%,transparent 16%);filter:drop-shadow(0 0 30px color-mix(in srgb,var(--accent) 35%,transparent))}
+
+@keyframes fxGrid{to{background-position:0 42px,56px 0}}
+@keyframes fxDigitalRain{to{transform:translateY(150vh)}}
+@keyframes fxHoloLine{from{transform:translateX(-10vw)}to{transform:translateX(165vw)}}
+@keyframes fxScan{to{background-position:0 120px}}
+@keyframes fxLaser{0%,100%{transform:translateX(-20vw) rotate(-9deg);opacity:0}25%,70%{opacity:.42}55%{transform:translateX(165vw) rotate(-9deg);opacity:.28}}
+@keyframes fxGlitch{0%,90%,100%{opacity:0;transform:translateX(0)}91%{opacity:.5;transform:translateX(-2vw)}92%{opacity:.2;transform:translateX(3vw)}93%{opacity:0}}
+@keyframes fxNode{0%,100%{opacity:.08;transform:scale(calc(var(--s)*.7))}50%{opacity:.54;transform:scale(calc(var(--s)*1.4))}}
+@keyframes fxWave{50%{transform:translateY(4vh) scaleX(.92)}}
+@keyframes fxNebula{to{transform:translate3d(7vw,5vh,0) scale(1.08)}}
+@keyframes fxDustFloat{50%{transform:translate3d(2vw,-2vh,0) scale(calc(var(--s)*1.25));opacity:.42}}
+@keyframes fxOrbit{to{transform:rotate(348deg)}}
+@keyframes fxWarp{0%{opacity:0;transform:translate(-50%,-100%) rotate(var(--a)) scaleY(.05)}35%{opacity:.82}100%{opacity:0;transform:translate(-50%,-100%) rotate(var(--a)) scaleY(2.4)}}
+@keyframes fxCore{50%{transform:scale(1.12);filter:brightness(1.25)}}
+@keyframes fxMeteor{0%,70%{opacity:0;transform:translate(-25vw,-10vh) rotate(-28deg)}74%{opacity:.8}100%{opacity:0;transform:translate(75vw,48vh) rotate(-28deg)}}
+@keyframes fxComet{0%,100%{transform:translate(-30vw,-12vh) rotate(-18deg);opacity:0}20%{opacity:.8}70%{opacity:.4}90%{transform:translate(150vw,62vh) rotate(-18deg);opacity:0}}
+@keyframes fxLightning{0%,91%,94%,100%{opacity:0}92%{opacity:.9}93%{opacity:.18}}
+@keyframes fxWind{to{transform:translateX(165vw)}}
+@keyframes fxWater{50%{transform:translateX(4vw) scaleX(1.06)}}
+@keyframes fxBeam{50%{transform:translateX(11vw) rotate(8deg);opacity:.22}}
+@keyframes fxFirefly{0%,100%{opacity:.08;transform:translate(0,0) scale(var(--s))}50%{opacity:.64;transform:translate(18px,-22px) scale(calc(var(--s)*1.35))}}
+@keyframes fxCrystal{50%{transform:translateY(-2.5vh) scaleX(1.05);opacity:.42}}
+@keyframes fxEmber{to{transform:translate3d(20px,-112vh,0) scale(calc(var(--s)*.7));opacity:0}}
+@keyframes fxLiquid{to{transform:translate3d(8vw,6vh,0) rotate(18deg) scale(1.12)}}
+@keyframes fxBokeh{50%{opacity:.24;transform:translateY(-2vh) scale(calc(var(--s)*1.3))}}
+@keyframes fxPrism{to{transform:rotate(360deg)}}
+
+@media(max-width:700px){
+  .fx-digital-rain i:nth-child(n+23),.fx-warp-stars i:nth-child(n+31),.fx-cosmic-dust i:nth-child(n+29),.fx-data-nodes i:nth-child(n+21),.fx-magic-dust i:nth-child(n+23){display:none}
+  .fx-nebula i,.fx-plasma i,.fx-liquid i{filter:blur(38px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .fx-neon-grid:before,.season-fx i,.season-fx b{animation:none!important}
+}

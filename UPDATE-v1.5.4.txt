@@ -1,5 +1,0 @@
-Pancake Live Sales Monitor v1.5.4
-
-- Scenic 4K background now changes every 1 minute
-- Keeps the same crisp/no-blur video presentation from v1.5.3
-- Sales, batching, verified totals, and per-order animation logic are unchanged

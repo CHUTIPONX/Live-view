@@ -21,6 +21,9 @@ let latestVerifiedOrders = [];
 const stopSeasonAtmospheres = startSeasonAtmosphereEngine();
 
 let audioCtx = null;
+let audioMaster = null;
+let audioCompressor = null;
+const SALE_SOUND_BOOST = 1.85;
 const savedSoundPreference = localStorage.getItem('plsm_sales_sound_v172') ?? localStorage.getItem('plsm_sales_sound_v171');
 let soundEnabled = savedSoundPreference !== 'off';
 let soundUnlocked = false;
@@ -158,7 +161,20 @@ function getAudioContext(){
   if(audioCtx)return audioCtx;
   const Ctx=window.AudioContext||window.webkitAudioContext;
   if(!Ctx)return null;
-  try{audioCtx=new Ctx()}catch{return null}
+  try{
+    audioCtx=new Ctx();
+    audioMaster=audioCtx.createGain();
+    audioCompressor=audioCtx.createDynamicsCompressor();
+    audioMaster.gain.value=SALE_SOUND_BOOST;
+    audioCompressor.threshold.value=-16;
+    audioCompressor.knee.value=18;
+    audioCompressor.ratio.value=4;
+    audioCompressor.attack.value=.003;
+    audioCompressor.release.value=.18;
+    audioMaster.connect(audioCompressor).connect(audioCtx.destination);
+  }catch{
+    audioCtx=null;audioMaster=null;audioCompressor=null;return null
+  }
   return audioCtx;
 }
 async function unlockSalesAudio(){
@@ -181,8 +197,9 @@ function tone(ctx,frequency,start,duration,gainValue,type='sine',pan=0){
   gain.gain.setValueAtTime(.0001,start);
   gain.gain.exponentialRampToValueAtTime(Math.max(.0002,gainValue),start+.012);
   gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-  if(panner){panner.pan.setValueAtTime(pan,start);osc.connect(gain).connect(panner).connect(ctx.destination)}
-  else{osc.connect(gain).connect(ctx.destination)}
+  const out=audioMaster||ctx.destination;
+  if(panner){panner.pan.setValueAtTime(pan,start);osc.connect(gain).connect(panner).connect(out)}
+  else{osc.connect(gain).connect(out)}
   osc.start(start);osc.stop(start+duration+.02);
 }
 function playSaleImpactSound(amount,index=0){

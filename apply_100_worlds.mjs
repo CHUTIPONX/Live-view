@@ -46,26 +46,33 @@ for (const p of required) must(fs.existsSync(p), `Missing ${p}. Upload the 100 W
 }
 
 // 3) Boost sale audio through a master gain + compressor.
+// v1.9.2: CRLF-safe + repairs a previous half-applied Windows run.
 {
   const p = 'public/app.js';
   let s = read(p);
-  if (!s.includes('SALE_SOUND_BOOST = 1.85')) {
-    must(s.includes('let audioCtx = null;'), 'Audio state marker not found');
-    s = s.replace(
-      'let audioCtx = null;',
-      `let audioCtx = null;
-let audioMaster = null;
-let audioCompressor = null;
-const SALE_SOUND_BOOST = 1.85;`
-    );
 
-    const oldCtx = `function getAudioContext(){
-  if(audioCtx)return audioCtx;
-  const Ctx=window.AudioContext||window.webkitAudioContext;
-  if(!Ctx)return null;
-  try{audioCtx=new Ctx()}catch{return null}
-  return audioCtx;
-}`;
+  // Normalize/ensure the declarations exactly once.
+  if (!s.includes('let audioMaster = null;')) {
+    must(s.includes('let audioCtx = null;'), 'Audio state marker not found');
+    s = s.replace('let audioCtx = null;', 'let audioCtx = null;\nlet audioMaster = null;');
+  }
+  if (!s.includes('let audioCompressor = null;')) {
+    must(s.includes('let audioMaster = null;'), 'Audio master marker not found');
+    s = s.replace('let audioMaster = null;', 'let audioMaster = null;\nlet audioCompressor = null;');
+  }
+  if (!s.includes('const SALE_SOUND_BOOST = 1.85;')) {
+    must(s.includes('let audioCompressor = null;'), 'Audio compressor marker not found');
+    s = s.replace('let audioCompressor = null;', 'let audioCompressor = null;\nconst SALE_SOUND_BOOST = 1.85;');
+  }
+
+  // Replace getAudioContext regardless of LF/CRLF and regardless of whether
+  // declarations were already inserted by an interrupted previous run.
+  const audioCtxRe = /function getAudioContext\(\)\s*\{[\s\S]*?^\}/m;
+  const audioCtxMatch = s.match(audioCtxRe);
+  must(audioCtxMatch, 'getAudioContext() function not found');
+
+  // Only replace when the boosted bus is not already inside the function.
+  if (!audioCtxMatch[0].includes('createDynamicsCompressor')) {
     const newCtx = `function getAudioContext(){
   if(audioCtx)return audioCtx;
   const Ctx=window.AudioContext||window.webkitAudioContext;
@@ -86,17 +93,23 @@ const SALE_SOUND_BOOST = 1.85;`
   }
   return audioCtx;
 }`;
-    must(s.includes(oldCtx), 'AudioContext block changed upstream');
-    s = s.replace(oldCtx, newCtx);
-
-    const oldOut = `if(panner){panner.pan.setValueAtTime(pan,start);osc.connect(gain).connect(panner).connect(ctx.destination)}
-  else{osc.connect(gain).connect(ctx.destination)}`;
-    const newOut = `const out=audioMaster||ctx.destination;
-  if(panner){panner.pan.setValueAtTime(pan,start);osc.connect(gain).connect(panner).connect(out)}
-  else{osc.connect(gain).connect(out)}`;
-    must(s.includes(oldOut), 'Audio output block changed upstream');
-    s = s.replace(oldOut, newOut);
+    s = s.replace(audioCtxRe, newCtx);
   }
+
+  // Route every synthesized tone through the master/compressor.
+  if (!s.includes('const out=audioMaster||ctx.destination;')) {
+    const toneOutRe = /if\(panner\)\{panner\.pan\.setValueAtTime\(pan,start\);osc\.connect\(gain\)\.connect\(panner\)\.connect\(ctx\.destination\)\}\s*else\{osc\.connect\(gain\)\.connect\(ctx\.destination\)\}/;
+    must(toneOutRe.test(s), 'Audio tone output block not found');
+    s = s.replace(
+      toneOutRe,
+      `const out=audioMaster||ctx.destination;
+  if(panner){panner.pan.setValueAtTime(pan,start);osc.connect(gain).connect(panner).connect(out)}
+  else{osc.connect(gain).connect(out)}`
+    );
+  }
+
+  must(s.includes('createDynamicsCompressor'), 'Audio compressor patch did not apply');
+  must(s.includes('const out=audioMaster||ctx.destination;'), 'Audio master output patch did not apply');
   write(p, s);
 }
 
@@ -194,4 +207,4 @@ const SALE_SOUND_BOOST = 1.85;`
   must(JSON.stringify(counts) === JSON.stringify(expected), `Category counts wrong: ${JSON.stringify(counts)}`);
 }
 
-console.log('100 WORLDS APPLY: PASS · Hobby API functions consolidated to <=12');
+console.log('100 WORLDS APPLY: PASS · Windows CRLF safe · Hobby <=12 functions');

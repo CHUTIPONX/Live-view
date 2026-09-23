@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 const files=[
   'server.mjs','lib/core.mjs','lib/handlers.mjs','lib/vercel.mjs','lib/security.mjs','scripts-selftest.mjs',
   'public/app.js','public/live-order-utils.js','public/security.js','public/season-atmospheres.js','public/season-atmosphere-engine.js','public/settings.js','public/login.js',
-  'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/page-health.js','api/facebook-pages.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
+  'api/login.js','api/logout.js','api/security-token.js','api/settings.js','api/shops.js','api/page-health.js','api/sales.js','api/history.js','api/diagnostics.js','api/report-plan.js','api/report-batch.js','api/order-events.js'
 ];
 let fail=false;
 for(const f of files){
@@ -30,12 +30,15 @@ const loginHtml=fs.readFileSync('public/login.html','utf8');
 const vercel=fs.readFileSync('vercel.json','utf8');
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
 const lock=JSON.parse(fs.readFileSync('package-lock.json','utf8'));
+const directApiFunctions=fs.readdirSync('api').filter(name=>name.endsWith('.js'));
+if(directApiFunctions.length>12)throw new Error(`Hobby function count exceeded: ${directApiFunctions.length}/12`);
 
-const ids=[...atmos.matchAll(/\bid:'([^']+)'/g)].map(x=>x[1]);
-if(ids.length!==12)throw new Error(`Expected 12 seasonal atmospheres, found ${ids.length}`);
+
+const ids=[...atmos.matchAll(/\bid:(['"])(.*?)\1/g)].map(x=>x[2]);
+if(ids.length!==100)throw new Error(`Expected 100 world atmospheres, found ${ids.length}`);
 if(new Set(ids).size!==ids.length)throw new Error('Season atmospheres contain duplicate ids');
 if(!atmos.includes('SEASON_DURATION_MS = 60_000'))throw new Error('Season atmosphere must rotate every 60 seconds');
-if((atmos.match(/fx:\[/g)||[]).length!==12)throw new Error('Every season must declare multiple ambient effects');
+if((atmos.match(/fx:\[/g)||[]).length!==100)throw new Error('Every world must declare multiple ambient effects');
 if(!engine.includes('Array.isArray(types)')||!engine.includes("type==='sparkle'")||!engine.includes("type==='stars'")||!engine.includes("type==='cloud-glow'"))throw new Error('Composite atmosphere effect engine is missing');
 for(const required of ['SPRING','SUMMER','MONSOON','TROPICAL','AUTUMN','WINTER','POLAR']){
   if(!atmos.includes(required))throw new Error(`Missing season coverage: ${required}`);
@@ -43,7 +46,7 @@ for(const required of ['SPRING','SUMMER','MONSOON','TROPICAL','AUTUMN','WINTER',
 if(!index.includes('id="seasonAtmosphereRoot"'))throw new Error('Season atmosphere root is missing');
 if(index.includes('worldSceneRoot')||index.includes('LIVE GRAPHICS'))throw new Error('Old world living graphics still present in index');
 if(/<video\b/i.test(index))throw new Error('Dashboard must not contain background video elements');
-if(!app.includes('startSeasonAtmosphereEngine')||!engine.includes('indexForNow')||!engine.includes('SEASON_DURATION_MS'))throw new Error('Minute-synced season atmosphere engine is missing');
+if(!app.includes('startSeasonAtmosphereEngine')||!engine.includes('indexForNow')||!engine.includes('SEASON_DURATION_MS')||!engine.includes('SMART_SHUFFLE_RECENT')||!engine.includes('chooseForMinute'))throw new Error('100 Worlds smart-shuffle atmosphere engine is missing');
 if(app.includes('startWorldSceneEngine')||engine.includes('actorMarkup')||engine.includes('landscapeMarkup'))throw new Error('Old actor/landscape scene runtime remains');
 if(!css.includes('.season-atmosphere')||!css.includes('.season-gradient'))throw new Error('Season atmosphere CSS is missing');
 if(css.includes('.world-actor')||css.includes('@keyframes actorWalk'))throw new Error('People/animal/object graphic CSS still remains');
@@ -60,6 +63,7 @@ if(!css.includes('background:none!important')||!css.includes('@keyframes scoreHi
 if(/\.score-hit span\{[^}]*background:linear-gradient/s.test(css))throw new Error('Score hit still has a pill background');
 if(!app.includes('playSaleSound')||!app.includes('playSaleImpactSound')||!app.includes('AudioContext')||!app.includes('createOscillator'))throw new Error('Two-stage synthesized sale sound is missing');
 if(!index.includes('id="soundBtn"')||!app.includes('unlockSalesAudio'))throw new Error('Sale sound unlock/toggle UI is missing');
+if(!app.includes('SALE_SOUND_BOOST = 1.85')||!app.includes('createDynamicsCompressor'))throw new Error('v1.9.0 boosted sale audio bus is missing');
 if(!app.includes('await sleep(78)'))throw new Error('Verified order hits are not configured for rapid stacking');
 
 if(!security.includes('โค้ดกูอย่ายุ่งไอหน้าปลาดุกน๊อคน้ำ'))throw new Error('Red security warning text is missing');
@@ -84,11 +88,11 @@ if(!core.includes('orderItemsFromRow')||!core.includes('variation_info')||!core.
 if(!core.includes('listShopsWithMeta')||!core.includes('pancakeAccountName')||!handlers.includes('accountName:directory.accountName')||!settingsJs.includes('ACCOUNT_KEY')||!settingsJs.includes('PANCAKE ACCOUNT'))throw new Error('Pancake API account-name discovery/fallback display is missing');
 if(!core.includes('mergeConnectionSources')||!core.includes("'env-json+env'")||!core.includes('shopDirectoryRows')||!core.includes('page_number')||!core.includes('total_price_after_sub_discount'))throw new Error('v1.7.9 account merge / paginated discovery / discount-aware order logic is missing');
 if(!settingsJs.includes('accountContribution')||!settingsJs.includes('unique POS shops'))throw new Error('v1.7.9 per-account unique-shop discovery UI is missing');
-if(!core.includes('discoverFacebookPages')||!handlers.includes('facebookPages')||!settingsHtml.includes('FACEBOOK PAGE DISCOVERY')||!settingsJs.includes('/api/facebook-pages'))throw new Error('v1.8.0 Facebook Page discovery integration is missing');
+if(!core.includes('discoverFacebookPages')||!handlers.includes('facebookPages')||!settingsHtml.includes('FACEBOOK PAGE DISCOVERY')||!settingsJs.includes('/api/facebook-pages')||!vercel.includes('/api/facebook-pages')||!vercel.includes('/api/diagnostics?mode=facebook-pages'))throw new Error('Facebook Page discovery rewrite/merged function integration is missing');
 if(!core.includes('summaryDiscountEvidence')||!settingsHtml.includes('SALES METRIC AUDIT')||!settingsJs.includes('runSalesAudit'))throw new Error('v1.8.0 sales metric audit integration is missing');
-if(pkg.version!=='1.8.0'||lock.version!=='1.8.0'||lock.packages?.['']?.version!=='1.8.0')throw new Error('Package version is not v1.8.0');
+if(pkg.version!=='1.9.0'||lock.version!=='1.9.0'||lock.packages?.['']?.version!=='1.9.0')throw new Error('Package version is not v1.9.0');
 
-console.log('Season checks: 12 atmospheres · 60s rotation · layered ambient FX · no people/animal/object graphics: PASS');
+console.log('100 Worlds checks: 100 atmospheres · smart shuffle · 10-scene anti-repeat · 60s rotation · layered procedural FX: PASS');
 console.log('Verified score-hit checks: real orders · text-only drop/rise overlay · slow final count · two-stage sale chime: PASS');
 console.log('Security checks: CSRF · same-origin · CSP · inspect warning: PASS');
 console.log('Page connection checks: batched access test · all-page list · search/filter · failed-page pinning · known-shop memory: PASS');

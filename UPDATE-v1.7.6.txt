@@ -1,9 +1,0 @@
-Pancake Live Sales Monitor v1.7.6
-
-LIVE ORDERS FIX
-- Latest card changes at the exact moment its verified amount drops over the score.
-- Fixes Pancake naive inserted_at timezone ambiguity by choosing UTC/Bangkok interpretation nearest the live snapshot.
-- Sorts Latest 5 by normalized event time.
-- Cards contain only shop name, product code, and verified price.
-- Enlarged typography and spacing for easier viewing from a distance.
-- No change to Employee Statistic total-source rules or reconciliation safety.

@@ -1,9 +1,0 @@
-Pancake Live Sales Monitor v1.7.7
-
-FIX: LIVE ORDERS list could stay empty even when a verified aggregate sales delta popped on the main score.
-
-- /api/order-events now returns real feedEvents separately from strict verified animation events.
-- LATEST 5 can update from actual Pancake /orders rows even if strict per-order revenue reconciliation fails.
-- Feed rows never alter or split the Employee Statistic total.
-- Individual +price animations still require exact count/sum reconciliation.
-- Latest feed remains shop name + product code + order price only.
