@@ -4,6 +4,12 @@
   "buildCommand": "node apply_100_worlds.mjs && npm test",
   "outputDirectory": "public",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/facebook-pages",
+      "destination": "/api/diagnostics?mode=facebook-pages"
+    }
+  ],
   "functions": {
     "api/*.js": {
       "maxDuration": 30

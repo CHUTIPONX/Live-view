@@ -106,6 +106,26 @@ const SALE_SOUND_BOOST = 1.85;`
   const p = 'scripts-check.mjs';
   let s = read(p);
 
+  // v1.9.1: Hobby-safe API consolidation.
+  // Vercel Hobby allows at most 12 direct /api functions; facebook-pages is
+  // rewritten to the existing diagnostics function, so it must not be treated
+  // as a separate function/check target.
+  s = s.replace(
+    "'api/page-health.js','api/facebook-pages.js','api/sales.js'",
+    "'api/page-health.js','api/sales.js'"
+  );
+
+  const oldFacebookCheck = "if(!core.includes('discoverFacebookPages')||!handlers.includes('facebookPages')||!settingsHtml.includes('FACEBOOK PAGE DISCOVERY')||!settingsJs.includes('/api/facebook-pages'))throw new Error('v1.8.0 Facebook Page discovery integration is missing');";
+  const newFacebookCheck = "if(!core.includes('discoverFacebookPages')||!handlers.includes('facebookPages')||!settingsHtml.includes('FACEBOOK PAGE DISCOVERY')||!settingsJs.includes('/api/facebook-pages')||!vercel.includes('/api/facebook-pages')||!vercel.includes('/api/diagnostics?mode=facebook-pages'))throw new Error('Facebook Page discovery rewrite/merged function integration is missing');";
+  if (s.includes(oldFacebookCheck)) s = s.replace(oldFacebookCheck, newFacebookCheck);
+
+  if (!s.includes('Hobby function count exceeded')) {
+    const countCheck = "\nconst directApiFunctions=fs.readdirSync('api').filter(name=>name.endsWith('.js'));\nif(directApiFunctions.length>12)throw new Error(`Hobby function count exceeded: ${directApiFunctions.length}/12`);\n";
+    const versionMarker = "const lock=JSON.parse(fs.readFileSync('package-lock.json','utf8'));";
+    must(s.includes(versionMarker), 'Could not insert Hobby API function count check');
+    s = s.replace(versionMarker, versionMarker + countCheck);
+  }
+
   const oldIds = String.raw`const ids=[...atmos.matchAll(/\bid:'([^']+)'/g)].map(x=>x[1]);`;
   const newIds = String.raw`const ids=[...atmos.matchAll(/\bid:(['"])(.*?)\1/g)].map(x=>x[2]);`;
   if (s.includes(oldIds)) s = s.replace(oldIds, newIds);
@@ -174,4 +194,4 @@ const SALE_SOUND_BOOST = 1.85;`
   must(JSON.stringify(counts) === JSON.stringify(expected), `Category counts wrong: ${JSON.stringify(counts)}`);
 }
 
-console.log('100 WORLDS APPLY: PASS');
+console.log('100 WORLDS APPLY: PASS · Hobby API functions consolidated to <=12');
