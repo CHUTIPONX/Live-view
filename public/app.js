@@ -26,6 +26,12 @@ let soundEnabled = savedSoundPreference !== 'off';
 let soundUnlocked = false;
 let lastSoundAt = 0;
 
+// v1.8.1: readable rapid-fire pacing. Each verified order gets its own beat,
+// card update, sound and score increment instead of collapsing the batch.
+const SALE_HIT_GAP_MS = 150;
+const SALE_HIT_VISIBLE_MS = 920;
+const SALE_COUNTER_TAIL = 12;
+
 function clock(){
   const d=new Date(),tz={timeZone:'Asia/Bangkok'};
   const t=new Intl.DateTimeFormat('en-GB',{...tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(d);
@@ -49,7 +55,7 @@ function animateNumber(from,to,duration,render){
 
 // Sports-score style counter. Whole baht ticks for normal totals; if Pancake
 // returns satang, preserve that exact precision instead of rounding the verified total.
-function animateScoreCounter(from,to,{duration,render,element,money=false}={}){
+function animateScoreCounter(from,to,{duration,render,element,money=false,tailLimit=null}={}){
   const a=Number(from)||0,b=Number(to)||0;
   const scale=money&&(!Number.isInteger(a)||!Number.isInteger(b))?100:1;
   const start=Math.round(a*scale);
@@ -60,7 +66,8 @@ function animateScoreCounter(from,to,{duration,render,element,money=false}={}){
   const sign=Math.sign(diff);
   const distance=Math.abs(diff);
   const dir=diff>0?'up':'down';
-  const exactTail=Math.min(distance,money?(scale===1?64:120):14);
+  const defaultTail=money?(scale===1?64:120):14;
+  const exactTail=Math.min(distance,Number.isFinite(Number(tailLimit))?Math.max(0,Math.round(Number(tailLimit))):defaultTail);
   const fastDistance=Math.max(0,distance-exactTail);
   const fastTarget=start+(sign*fastDistance);
 
@@ -440,21 +447,61 @@ function comparableSnapshots(previous,current){
 }
 
 async function playVerifiedOrderEvents(previous,current,events){
-  const verified=(events||[]).map(e=>({...e,amount:Number(e.amount)||0})).filter(e=>Math.abs(e.amount)>.001);
-  const nodes=await burstVerifiedOrderEvents(verified);
+  const reference=Date.now();
+  const verified=(events||[])
+    .map((e,i)=>({...e,amount:Number(e.amount)||0,__i:i,__ms:Number.isFinite(Number(e?.insertedAtMs))?Number(e.insertedAtMs):pancakeEventTimeMs(e?.insertedAt,reference)}))
+    .filter(e=>Math.abs(e.amount)>.001)
+    .sort((a,b)=>(Number(a.__ms)||reference)-(Number(b.__ms)||reference)||a.__i-b.__i);
 
-  // Let the real order values hit over the last digits while the main verified score
-  // runs continuously to the new Employee Statistic total. No fake split is created.
-  await sleep(140);
-  const count=Promise.all([
-    animateScoreCounter(totalShown,current.total,{render:renderMainScore,element:$('#mega'),money:true}),
-    animateScoreCounter(ordersShown,current.orders,{duration:Math.max(520,Math.min(1200,verified.length*115)),render:renderOrderScore,element:$('#orders')})
-  ]);
+  let runningTotal=Number(previous?.total)||0;
+  let runningOrders=Math.round(Number(previous?.orders)||0);
 
-  // Keep several real prices overlapped on the right-most score digits, then fade them
-  // in the same rapid rhythm they arrived. The main score always ends on verified truth.
-  nodes.forEach((node,i)=>removeScoreHit(node,780+i*85));
-  await count;
+  // Important: do NOT burst the whole batch first. Every real order gets one visual beat:
+  // +199 -> Latest card -> score counts to +199, then +99, then +65, etc.
+  for(let i=0;i<verified.length;i++){
+    const event=verified[i];
+    const node=createScoreHit(event.amount,i,verified.length);
+
+    // Same frame as the green amount starts falling: pin this exact order on top.
+    rememberVerifiedOrder(event,{render:true,pinTop:true});
+    playSaleSound(event.amount,i);
+
+    const nextTotal=Math.round((runningTotal+event.amount)*100)/100;
+    const nextOrders=runningOrders+1;
+
+    // Give the text a short landing lead-in, then count this order into the score.
+    await sleep(170);
+    await Promise.all([
+      animateScoreCounter(totalShown,nextTotal,{
+        duration:320,
+        tailLimit:SALE_COUNTER_TAIL,
+        render:renderMainScore,
+        element:$('#mega'),
+        money:true
+      }),
+      animateScoreCounter(ordersShown,nextOrders,{
+        duration:280,
+        tailLimit:4,
+        render:renderOrderScore,
+        element:$('#orders')
+      })
+    ]);
+
+    removeScoreHit(node,Math.max(0,SALE_HIT_VISIBLE_MS-520));
+    runningTotal=nextTotal;
+    runningOrders=nextOrders;
+
+    if(i<verified.length-1)await sleep(SALE_HIT_GAP_MS);
+  }
+
+  // Employee Statistic remains the source of truth. Tiny rounding differences snap here;
+  // no invented price event is created for the remainder.
+  if(Math.abs(Number(current.total)-runningTotal)>.001 || Math.round(Number(current.orders))!==runningOrders){
+    await Promise.all([
+      animateScoreCounter(totalShown,current.total,{duration:300,tailLimit:8,render:renderMainScore,element:$('#mega'),money:true}),
+      animateScoreCounter(ordersShown,current.orders,{duration:260,tailLimit:3,render:renderOrderScore,element:$('#orders')})
+    ]);
+  }
   drawNumbers(current,{animate:false,showDelta:false});
 }
 
