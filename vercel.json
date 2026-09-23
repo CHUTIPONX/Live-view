@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "buildCommand": "node apply_100_worlds.mjs && npm test",
   "outputDirectory": "public",
   "cleanUrls": true,
   "functions": {
