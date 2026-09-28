@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080a10">
+  <title>LINE Tracking · Pancake Live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/line-tracking.css">
+</head>
+<body class="line-track-page">
+  <div class="line-track-bg" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <nav class="line-track-nav liquid-pill">
+    <a class="line-track-brand" href="/" aria-label="กลับหน้าหลัก">
+      <i></i><span>LINE TRACKING</span>
+    </a>
+    <div class="line-track-nav-actions">
+      <a class="icon-btn" href="/" title="ยอดขาย" aria-label="ยอดขาย">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>
+      </a>
+      <a class="icon-btn" href="/settings" title="ตั้งค่า" aria-label="ตั้งค่า">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M19.4 13.5c.1-.5.1-1 0-1.5l1.7-1.3-2-3.4-2 .8a7.3 7.3 0 0 0-1.3-.8L15.5 5h-4l-.3 2.3c-.5.2-.9.5-1.3.8l-2-.8-2 3.4L7.6 12a8 8 0 0 0 0 1.5l-1.7 1.3 2 3.4 2-.8c.4.3.8.6 1.3.8l.3 2.3h4l.3-2.3c.5-.2.9-.5 1.3-.8l2 .8 2-3.4-1.7-1.3Z"/></svg>
+      </a>
+      <button id="lineLogoutBtn" class="icon-btn" title="ออกจากระบบ" aria-label="ออกจากระบบ">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4M14 8l4 4-4 4M18 12H9"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main class="line-track-shell">
+    <header class="line-track-head">
+      <div>
+        <div class="micro-label">AUTOMATIC REPLY TRACKER</div>
+        <h1>เลขพัสดุจาก LINE</h1>
+        <p>จับเฉพาะงานที่ส่งขอเลข และ Reply ที่มีเลขพัสดุ โดยไม่เก็บชื่อหรือข้อมูลลูกค้าบนเว็บ</p>
+      </div>
+      <div id="agentBadge" class="line-agent-badge offline"><i></i><span>AGENT OFFLINE</span></div>
+    </header>
+
+    <section class="line-stats" aria-label="สรุปสถานะ">
+      <article><span>รอเลข</span><strong id="waitingCount">0</strong><small>ภายใน 2 วัน</small></article>
+      <article><span>เกินกำหนด</span><strong id="overdueCount">0</strong><small>รอเกิน 2 วัน</small></article>
+      <article><span>ได้วันนี้</span><strong id="receivedCount">0</strong><small>Reply สำเร็จ</small></article>
+      <article><span>จับคู่ไม่ได้</span><strong id="unmatchedCount">0</strong><small>ตรวจสอบเอง</small></article>
+    </section>
+
+    <section class="line-track-card liquid-glass">
+      <div class="line-toolbar">
+        <label class="line-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+          <input id="trackingSearch" type="search" autocomplete="off" placeholder="ค้นหาเลขพัสดุ...">
+        </label>
+        <div id="filterBar" class="line-filters">
+          <button class="active" data-filter="all">ทั้งหมด</button>
+          <button data-filter="waiting">รอเลข</button>
+          <button data-filter="overdue">เกิน 2 วัน</button>
+          <button data-filter="received">ได้เลขแล้ว</button>
+          <button data-filter="unmatched">จับคู่ไม่ได้</button>
+        </div>
+      </div>
+
+      <div class="line-track-meta">
+        <span id="lastSync">กำลังเชื่อมต่อ...</span>
+        <span id="lineConnection">LINE —</span>
+      </div>
+
+      <div id="trackingError" class="line-track-error hidden"></div>
+      <div id="trackingList" class="tracking-list">
+        <div class="line-empty">กำลังโหลดข้อมูล…</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/security.js"></script>
+  <script src="/line-tracking.js" type="module"></script>
+</body>
+</html>
