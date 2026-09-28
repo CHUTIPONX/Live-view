@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { diagnostics, facebookPages, getSettings, history, login, logout, orderEvents, pageHealth, reportBatch, reportPlan, sales, saveSettings, securityToken, shops } from './lib/handlers.mjs';
+import { lineTrackingRoute } from './lib/line-tracking.mjs';
 import { SECURITY_HEADERS } from './lib/security.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -16,6 +17,7 @@ const api = {
   '/api/settings:post':saveSettings,
   '/api/shops':shops,
   '/api/facebook-pages':facebookPages,
+  '/api/line-tracking':lineTrackingRoute,
   '/api/page-health':pageHealth,
   '/api/sales':sales,
   '/api/history':history,
@@ -34,7 +36,7 @@ const server=http.createServer(async(req,res)=>{
   if(key==='/api/settings') key += req.method==='POST'?':post':':get';
   const handler=api[key];
   if(handler){const out=await handler({method:req.method,headers:req.headers,body:await parseBody(req),query:Object.fromEntries(u.searchParams)});return send(res,out)}
-  const routes={'/':'index.html','/login':'login.html','/settings':'settings.html'};
+  const routes={'/':'index.html','/login':'login.html','/settings':'settings.html','/line-tracking':'line-tracking.html'};
   const rel=routes[u.pathname]||u.pathname.replace(/^\//,'');
   const file=path.normalize(path.join(pub,rel));
   if(!file.startsWith(pub)){res.writeHead(403);return res.end('Forbidden')}

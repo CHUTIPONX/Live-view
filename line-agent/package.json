@@ -1,0 +1,8 @@
+{
+  "name": "line-tracking-local-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "dependencies": { "chrome-remote-interface": "0.33.3" }
+}

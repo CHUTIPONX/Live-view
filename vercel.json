@@ -8,6 +8,10 @@
     {
       "source": "/api/facebook-pages",
       "destination": "/api/diagnostics?mode=facebook-pages"
+    },
+    {
+      "source": "/api/line-tracking",
+      "destination": "/api/diagnostics?mode=line-tracking"
     }
   ],
   "functions": {
